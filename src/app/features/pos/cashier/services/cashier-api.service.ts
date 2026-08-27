@@ -65,6 +65,10 @@ export class CashierApiService {
     return this.http.post<void>(`${this.apiUrl}/${id}/print`, {});
   }
 
+  public getReceiptPreviewUrl(id: number): string {
+    return `${this.apiUrl}/${id}/preview`;
+  }
+
   // --------- Refill API ---------
   
   public validateRefill(payload: import('../../core/models/pos.models').RefillValidateRequest): Observable<import('../../core/models/pos.models').RefillValidateResponse> {
