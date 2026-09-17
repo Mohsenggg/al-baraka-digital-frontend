@@ -1,9 +1,9 @@
 
 export const environment = {
       production: false,
-      apiUrl2: 'http://localhost:8080/api/v1',
+      apiUrl2: '/api/v1',
 
-      apiUrl: 'http://localhost:8080/api',
+      apiUrl: '/api',
       firebase: {
             apiKey: 'AIzaSyBeEkn02NimObccgjEL3Xqo7ZB0CDS4DfA',
             authDomain: 'tree-f0d91.firebaseapp.com',

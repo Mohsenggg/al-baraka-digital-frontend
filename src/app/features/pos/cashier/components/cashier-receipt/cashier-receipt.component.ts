@@ -88,6 +88,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       popupInitialQuery = '';
       searchTerm = '';
       private lastAddedProductId: number | null = null;
+      private isSelectingFromPopup = false;
 
       get today() { return new Date(); }
       get searchTriggerEl(): HTMLElement | undefined {
@@ -142,8 +143,40 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
             this.updateCustomerPhone.emit((event.target as HTMLInputElement).value);
       }
 
-      submitInputRow() {
-            const term = (this.inputForm.get('barcode')?.value || '').trim();
+      private isBarcodeValue(value: string, currentItem: CartItem): boolean {
+            const trimmed = (value || '').trim();
+            if (!trimmed) return false;
+
+            // 1. If it matches the current item's barcode exactly, it is definitely a repeated scan
+            if (currentItem.product?.barcode && trimmed.toLowerCase() === currentItem.product.barcode.toLowerCase()) {
+                  return true;
+            }
+
+            // 2. If it contains non-numeric characters (alphanumeric barcodes)
+            if (!/^\d+(\.\d+)?$/.test(trimmed)) {
+                  return true;
+            }
+
+            // 3. If it exceeds reasonable quantity digits (integer part > 4 digits or value > 9999)
+            const num = parseFloat(trimmed);
+            const integerPart = trimmed.split('.')[0];
+            if (integerPart.length > 4 || (!isNaN(num) && num > 9999)) {
+                  return true;
+            }
+
+            // 4. If it exactly matches any other product's barcode in the catalog (length >= 3)
+            if (trimmed.length >= 3) {
+                  const exactMatch = this.productSearch.findExactByCode(this.products, trimmed);
+                  if (exactMatch) {
+                        return true;
+                  }
+            }
+
+            return false;
+      }
+
+      processBarcode(rawCode: string): void {
+            const term = (rawCode || '').trim();
             if (!term) return;
 
             const exact = this.productSearch.findExactByCode(this.products, term);
@@ -160,7 +193,18 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
 
             if (matches.length > 1) {
                   this.openProductPopup(term);
+                  return;
             }
+
+            // If no match found, place the code in the search input and focus it
+            this.inputForm.patchValue({ barcode: term });
+            this.focusBarcodeScanner();
+      }
+
+      submitInputRow() {
+            const term = (this.inputForm.get('barcode')?.value || '').trim();
+            if (!term) return;
+            this.processBarcode(term);
       }
 
       onSearchClicked(): void {
@@ -168,7 +212,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
             if (!term) {
                   return;
             }
-            this.submitInputRow();
+            this.processBarcode(term);
       }
 
       onSearchDoubleClick(event: MouseEvent): void {
@@ -182,17 +226,23 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
 
             if (event.key === 'Enter') {
                   event.preventDefault();
+                  event.stopPropagation();
                   this.submitInputRow();
             }
       }
 
       onPopupProductSelected(product: Product): void {
+            this.isSelectingFromPopup = true;
             this.onSelectProduct(product);
       }
 
       onPopupClosed(): void {
             this.popupOpen = false;
             this.cdr.markForCheck();
+            if (this.isSelectingFromPopup) {
+                  this.isSelectingFromPopup = false;
+                  return;
+            }
             setTimeout(() => this.searchInput?.nativeElement?.focus());
       }
 
@@ -204,10 +254,64 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
             this.popupOpen = false;
             this.cdr.markForCheck();
 
-            setTimeout(() => this.focusAddedRowQuantity(), 80);
+            this.focusProductAmount(product.id);
       }
 
       @Output() updateItemField = new EventEmitter<{ item: CartItem, field: 'sellingPrice' | 'quantity' | 'total', value: number }>();
+
+      onQuantityFocus(event: FocusEvent): void {
+            const input = event.target as HTMLInputElement;
+            input.select();
+      }
+
+      onQuantityKeyDown(item: CartItem, event: KeyboardEvent): void {
+            if (event.key === 'Enter') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const input = event.target as HTMLInputElement;
+                  const rawVal = input.value.trim();
+
+                  if (this.isBarcodeValue(rawVal, item)) {
+                        input.value = String(item.quantity);
+                        this.processBarcode(rawVal);
+                  } else {
+                        const qty = parseFloat(rawVal);
+                        if (!isNaN(qty) && qty > 0) {
+                              this.updateItemField.emit({ item, field: 'quantity', value: qty });
+                        } else {
+                              input.value = String(item.quantity);
+                        }
+                        this.focusBarcodeScanner();
+                  }
+            } else if (event.key === 'Tab') {
+                  const input = event.target as HTMLInputElement;
+                  const rawVal = input.value.trim();
+                  if (this.isBarcodeValue(rawVal, item)) {
+                        event.preventDefault();
+                        input.value = String(item.quantity);
+                        this.processBarcode(rawVal);
+                  }
+            }
+      }
+
+      onQuantityBlur(item: CartItem, event: FocusEvent): void {
+            const input = event.target as HTMLInputElement;
+            const rawVal = input.value.trim();
+
+            if (this.isBarcodeValue(rawVal, item)) {
+                  input.value = String(item.quantity);
+                  this.processBarcode(rawVal);
+            } else {
+                  const qty = parseFloat(rawVal);
+                  if (!isNaN(qty) && qty > 0) {
+                        if (qty !== item.quantity) {
+                              this.updateItemField.emit({ item, field: 'quantity', value: qty });
+                        }
+                  } else {
+                        input.value = String(item.quantity);
+                  }
+            }
+      }
 
       onInlineFieldChange(item: CartItem, field: 'sellingPrice' | 'quantity' | 'total', event: Event) {
             const input = event.target as HTMLInputElement;
@@ -268,19 +372,31 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
             this.cdr.markForCheck();
       }
 
-      private focusAddedRowQuantity(): void {
-            const targetId = this.lastAddedProductId;
-            if (targetId != null && this.rowQtyInputs) {
+      private focusProductAmount(productId: number, attempt: number = 0): void {
+            this.cdr.detectChanges();
+
+            const findAndFocus = () => {
+                  if (!this.rowQtyInputs) return false;
                   const inputs = this.rowQtyInputs.toArray();
                   const targetInput = inputs.find(
-                        input => input.nativeElement.getAttribute('data-product-id') === String(targetId)
+                        input => input.nativeElement.getAttribute('data-product-id') === String(productId)
                   );
                   if (targetInput) {
                         targetInput.nativeElement.focus();
                         targetInput.nativeElement.select();
-                        return;
+                        return true;
                   }
+                  return false;
+            };
+
+            if (findAndFocus()) {
+                  return;
             }
-            this.focusBarcodeScanner();
+
+            if (attempt < 6) {
+                  setTimeout(() => {
+                        this.focusProductAmount(productId, attempt + 1);
+                  }, 30 * (attempt + 1));
+            }
       }
 }
