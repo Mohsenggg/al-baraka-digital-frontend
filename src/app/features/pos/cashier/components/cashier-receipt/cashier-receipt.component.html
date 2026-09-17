@@ -153,10 +153,12 @@
                                     <div class="qty-stepper" [class.qty-error]="!!item.stockError">
                                           <button class="stepper-btn" *ngIf="receiptMode !== 'VIEW'"
                                                 (click)="updateQuantity.emit({item: item, delta: -1})">-</button>
-                                          <input type="number" *ngIf="receiptMode !== 'VIEW'"
+                                          <input type="text" inputmode="decimal" *ngIf="receiptMode !== 'VIEW'"
                                                 class="pos-input text-center no-spinner qty-input"
-                                                [value]="item.quantity" (input)="onInlineFieldChange(item, 'quantity', $event)"
-                                                (keyup.enter)="onInlineFieldEnter(item, 'quantity', $event)"
+                                                [value]="item.quantity"
+                                                (keydown)="onQuantityKeyDown(item, $event)"
+                                                (blur)="onQuantityBlur(item, $event)"
+                                                (focus)="onQuantityFocus($event)"
                                                 [attr.data-product-id]="item.productId" #rowQtyInput
                                                 style="width: 60px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; appearance: none; -moz-appearance: textfield;">
                                           <div class="qty-value" *ngIf="receiptMode === 'VIEW'">{{ item.quantity }}
@@ -198,7 +200,7 @@
             <!-- ============================= -->
             <!-- RECEIPT INPUT ROW -->
             <!-- ============================= -->
-            <form [formGroup]="inputForm" (ngSubmit)="submitInputRow()" class="input-row compact-search-row"
+            <form [formGroup]="inputForm" (ngSubmit)="$event.preventDefault(); submitInputRow()" class="input-row compact-search-row"
                   *ngIf="receiptMode !== 'VIEW'">
 
                   <div class="search-field-wrapper">
