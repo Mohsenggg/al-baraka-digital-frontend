@@ -41,7 +41,8 @@ export class ProductStateService {
       public profitValueMax = signal<number | null>(null);
       public profitPercentMin = signal<number | null>(null);
       public profitPercentMax = signal<number | null>(null);
-      public stockStatusFilter = signal<string>('');
+      public stockMin = signal<number | null>(null);
+      public stockMax = signal<number | null>(null);
 
       // Category options extracted from Tree
       public categories = computed(() => {
@@ -271,10 +272,14 @@ export class ProductStateService {
                   });
             }
 
-            // Advanced Filters: Stock Status
-            const stockFilter = this.stockStatusFilter();
-            if (stockFilter && stockFilter !== 'ALL') {
-                  list = list.filter(p => resolveStockStatus(p.stock) === stockFilter);
+            // Advanced Filters: Stock Quantity Range
+            const stMin = this.stockMin();
+            const stMax = this.stockMax();
+            if (stMin != null) {
+                  list = list.filter(p => (p.stock != null ? p.stock >= stMin : false));
+            }
+            if (stMax != null) {
+                  list = list.filter(p => (p.stock != null ? p.stock <= stMax : false));
             }
 
             return list;
@@ -381,7 +386,8 @@ export class ProductStateService {
             profitValueMax?: number | null;
             profitPercentMin?: number | null;
             profitPercentMax?: number | null;
-            stockStatusFilter?: string;
+            stockMin?: number | null;
+            stockMax?: number | null;
       }): void {
             if (filters.buyingPriceMin !== undefined) this.buyingPriceMin.set(filters.buyingPriceMin);
             if (filters.buyingPriceMax !== undefined) this.buyingPriceMax.set(filters.buyingPriceMax);
@@ -391,7 +397,8 @@ export class ProductStateService {
             if (filters.profitValueMax !== undefined) this.profitValueMax.set(filters.profitValueMax);
             if (filters.profitPercentMin !== undefined) this.profitPercentMin.set(filters.profitPercentMin);
             if (filters.profitPercentMax !== undefined) this.profitPercentMax.set(filters.profitPercentMax);
-            if (filters.stockStatusFilter !== undefined) this.stockStatusFilter.set(filters.stockStatusFilter);
+            if (filters.stockMin !== undefined) this.stockMin.set(filters.stockMin);
+            if (filters.stockMax !== undefined) this.stockMax.set(filters.stockMax);
             this.currentPage.set(1);
       }
 
@@ -404,7 +411,8 @@ export class ProductStateService {
             this.profitValueMax.set(null);
             this.profitPercentMin.set(null);
             this.profitPercentMax.set(null);
-            this.stockStatusFilter.set('');
+            this.stockMin.set(null);
+            this.stockMax.set(null);
             this.currentPage.set(1);
       }
 
@@ -433,7 +441,8 @@ export class ProductStateService {
                   this.profitValueMax() != null ||
                   this.profitPercentMin() != null ||
                   this.profitPercentMax() != null ||
-                  (this.stockStatusFilter() && this.stockStatusFilter() !== 'ALL')
+                  this.stockMin() != null ||
+                  this.stockMax() != null
             );
       }
 

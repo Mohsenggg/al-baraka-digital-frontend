@@ -71,7 +71,8 @@ export class ProductsMainPageComponent implements OnInit {
       localProfitValueMax = signal<number | null>(null);
       localProfitPercentMin = signal<number | null>(null);
       localProfitPercentMax = signal<number | null>(null);
-      localStockStatusFilter = signal<string>('');
+      localStockMin = signal<number | null>(null);
+      localStockMax = signal<number | null>(null);
 
       hoveredProductId = signal<number | null>(null);
       openMenuId = signal<number | null>(null);
@@ -223,11 +224,12 @@ export class ProductsMainPageComponent implements OnInit {
                   this.state.profitValueMax() != null ||
                   this.state.profitPercentMin() != null ||
                   this.state.profitPercentMax() != null ||
-                  (!!this.state.stockStatusFilter() && this.state.stockStatusFilter() !== 'ALL')
+                  this.state.stockMin() != null ||
+                  this.state.stockMax() != null
             );
       }
 
-      updateNumberFilter(filterName: 'buyingMin' | 'buyingMax' | 'sellingMin' | 'sellingMax' | 'profitValMin' | 'profitValMax' | 'profitPctMin' | 'profitPctMax', event: Event): void {
+      updateNumberFilter(filterName: 'buyingMin' | 'buyingMax' | 'sellingMin' | 'sellingMax' | 'profitValMin' | 'profitValMax' | 'profitPctMin' | 'profitPctMax' | 'stockMin' | 'stockMax', event: Event): void {
             const input = event.target as HTMLInputElement;
             const val = input.value.trim() === '' ? null : Number(input.value);
             switch (filterName) {
@@ -239,12 +241,9 @@ export class ProductsMainPageComponent implements OnInit {
                   case 'profitValMax': this.localProfitValueMax.set(val); break;
                   case 'profitPctMin': this.localProfitPercentMin.set(val); break;
                   case 'profitPctMax': this.localProfitPercentMax.set(val); break;
+                  case 'stockMin': this.localStockMin.set(val); break;
+                  case 'stockMax': this.localStockMax.set(val); break;
             }
-      }
-
-      updateStockFilter(event: Event): void {
-            const select = event.target as HTMLSelectElement;
-            this.localStockStatusFilter.set(select.value);
       }
 
       applyAdvancedFilters(): void {
@@ -258,7 +257,8 @@ export class ProductsMainPageComponent implements OnInit {
                   profitValueMax: this.localProfitValueMax(),
                   profitPercentMin: this.localProfitPercentMin(),
                   profitPercentMax: this.localProfitPercentMax(),
-                  stockStatusFilter: this.localStockStatusFilter()
+                  stockMin: this.localStockMin(),
+                  stockMax: this.localStockMax()
             });
       }
 
@@ -272,7 +272,8 @@ export class ProductsMainPageComponent implements OnInit {
             this.localProfitValueMax.set(null);
             this.localProfitPercentMin.set(null);
             this.localProfitPercentMax.set(null);
-            this.localStockStatusFilter.set('');
+            this.localStockMin.set(null);
+            this.localStockMax.set(null);
             this.state.clearAdvancedFilters();
       }
 
@@ -287,7 +288,8 @@ export class ProductsMainPageComponent implements OnInit {
             this.localProfitValueMax.set(null);
             this.localProfitPercentMin.set(null);
             this.localProfitPercentMax.set(null);
-            this.localStockStatusFilter.set('');
+            this.localStockMin.set(null);
+            this.localStockMax.set(null);
             this.state.clearFilters();
       }
 
