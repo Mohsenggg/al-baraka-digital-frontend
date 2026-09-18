@@ -8,7 +8,8 @@ import type {
       ProductListItemDto, 
       ProductManagePayload,
       NamedEntity,
-      ProductAttributeOption
+      ProductAttributeOption,
+      BulkMoveProductsResponse
 } from '../models/product.models';
 
 @Injectable({
@@ -114,6 +115,28 @@ export class ProductApiService {
 
       public deleteProductGroup(id: number | string): Observable<void> {
             return this.http.delete<void>(`${this.apiUrl}/tree/groups/${id}`);
+      }
+
+      public moveBrand(id: number | string, targetCategoryId: number | string): Observable<void> {
+            return this.http.post<void>(`${this.apiUrl}/tree/brands/${id}/move`, { targetCategoryId });
+      }
+
+      public moveProductGroup(id: number | string, targetBrandId: number | string): Observable<void> {
+            return this.http.post<void>(`${this.apiUrl}/tree/groups/${id}/move`, { targetBrandId });
+      }
+
+      public moveProduct(id: number | string, targetGroupId: number | string): Observable<void> {
+            return this.http.post<void>(`${this.apiUrl}/tree/products/${id}/move`, { targetGroupId });
+      }
+
+      public bulkMoveProducts(
+            productIds: Array<number | string>,
+            targetGroupId: number | string
+      ): Observable<BulkMoveProductsResponse> {
+            return this.http.post<BulkMoveProductsResponse>(`${this.apiUrl}/tree/products/bulk-move`, {
+                  productIds,
+                  targetGroupId
+            });
       }
 
       private buildHttpParams(params: any): HttpParams {

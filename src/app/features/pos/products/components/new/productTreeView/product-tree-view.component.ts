@@ -10,7 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { SidebarComponent } from '../../../../../../shared/components/sidebar/sidebar.component';
 import { NotificationService } from '../../../../../../shared/services/notification.service';
 import { ConfirmService } from '../../../../../../shared/services/confirm.service';
@@ -35,6 +35,8 @@ import {
       TreeNodeActionTarget,
       RenameNodeTarget,
       NodeNameValidationResult,
+      MoveNodeTarget,
+      MOVE_DIRECT_BRAND_VALUE,
       TREE_NODE_TYPE_LABELS,
       validateNodeName,
       INITIAL_MOCK_TREE_DATA
@@ -91,6 +93,21 @@ export class ProductTreeViewComponent implements OnInit {
       /** Arabic labels for the editable hierarchy tiers (used by dialogs / toasts). */
       readonly nodeTypeLabels = TREE_NODE_TYPE_LABELS;
 
+      // ─── Move destination dialog state (Task 6) ──────────────────────────
+      moveTarget = signal<MoveNodeTarget | null>(null);
+      moveTargetCategoryId = signal<string>('');
+      moveTargetBrandId = signal<string>('');
+      moveTargetGroupId = signal<string>('');
+      moveError = signal<string | null>(null);
+
+      isMoveSubmitting = computed(() => {
+            const target = this.moveTarget();
+            return !!target && this.nodeActionKey() === this.moveActionKeyOf(target);
+      });
+
+      /** Sentinel exposed for the template: "groups directly under a category". */
+      readonly directBrandValue = MOVE_DIRECT_BRAND_VALUE;
+
       // Formatters imported from product.models
       readonly getStockClass = getStockClass;
       readonly getStockLabel = getStockLabel;
@@ -102,12 +119,15 @@ export class ProductTreeViewComponent implements OnInit {
             this.loadTreeData();
       }
 
-      loadTreeData(): void {
+      loadTreeData(preserveExpansion: boolean = false): void {
+            const expansionState = preserveExpansion ? this.captureExpansionState() : null;
+
             this.isLoading.set(true);
             this.errorMessage.set(null);
             this.productApiService.getProductTree().subscribe({
                   next: (res: any) => {
-                        this.treeData.set(res.tree || []);
+                        const tree: CategoryNode[] = res.tree || [];
+                        this.treeData.set(expansionState ? this.applyExpansionState(tree, expansionState) : tree);
                         this.isLoading.set(false);
                   },
                   error: (err: any) => {
@@ -116,6 +136,48 @@ export class ProductTreeViewComponent implements OnInit {
                         this.isLoading.set(false);
                   }
             });
+      }
+
+      /** Snapshot of the current expansion state, keyed by node tier + id. */
+      private captureExpansionState(): Map<string, boolean> {
+            const state = new Map<string, boolean>();
+
+            for (const category of this.treeData()) {
+                  state.set(`category:${this.nodeKey(category.id)}`, !!category.expanded);
+
+                  for (const brand of category.brands || []) {
+                        state.set(`brand:${this.nodeKey(brand.id)}`, !!brand.expanded);
+                        for (const group of brand.groups || []) {
+                              state.set(`group:${this.nodeKey(group.id)}`, !!group.expanded);
+                        }
+                  }
+
+                  for (const group of category.directGroups || []) {
+                        state.set(`group:${this.nodeKey(group.id)}`, !!group.expanded);
+                  }
+            }
+
+            return state;
+      }
+
+      /** Re-applies a previously captured expansion state to a freshly loaded tree. */
+      private applyExpansionState(tree: CategoryNode[], state: Map<string, boolean>): CategoryNode[] {
+            return tree.map(category => ({
+                  ...category,
+                  expanded: state.get(`category:${this.nodeKey(category.id)}`) ?? !!category.expanded,
+                  brands: (category.brands || []).map(brand => ({
+                        ...brand,
+                        expanded: state.get(`brand:${this.nodeKey(brand.id)}`) ?? !!brand.expanded,
+                        groups: (brand.groups || []).map(group => ({
+                              ...group,
+                              expanded: state.get(`group:${this.nodeKey(group.id)}`) ?? !!group.expanded
+                        }))
+                  })),
+                  directGroups: (category.directGroups || []).map(group => ({
+                        ...group,
+                        expanded: state.get(`group:${this.nodeKey(group.id)}`) ?? !!group.expanded
+                  }))
+            }));
       }
 
       // Sidebar toggle
@@ -392,6 +454,7 @@ export class ProductTreeViewComponent implements OnInit {
             if (!nextMode) {
                   this.clearSelection();
                   this.closeRenameDialog(true);
+                  this.closeMoveDialog(true);
             }
       }
 
@@ -499,17 +562,22 @@ export class ProductTreeViewComponent implements OnInit {
             return !this.nodesWithChildren()[type].has(this.nodeKey(id));
       }
 
-      /** True while a rename / delete request for this exact node is in flight. */
-      isNodeActionPending(type: TreeNodeType, id: number | string): boolean {
+      /** True while a rename / delete / move request for this exact node is in flight. */
+      isNodeActionPending(type: TreeNodeType | 'product', id: number | string): boolean {
             return this.nodeActionKey() === this.nodeActionKeyOf('rename', type, id) ||
-                  this.nodeActionKey() === this.nodeActionKeyOf('delete', type, id);
+                  this.nodeActionKey() === this.nodeActionKeyOf('delete', type, id) ||
+                  this.nodeActionKey() === this.nodeActionKeyOf('move', type, id);
       }
 
       private nodeKey(id: number | string): string {
             return String(id);
       }
 
-      private nodeActionKeyOf(action: 'rename' | 'delete', type: TreeNodeType, id: number | string): string {
+      private nodeActionKeyOf(
+            action: 'rename' | 'delete' | 'move',
+            type: TreeNodeType | 'product',
+            id: number | string
+      ): string {
             return `${action}:${type}:${this.nodeKey(id)}`;
       }
 
@@ -803,6 +871,263 @@ export class ProductTreeViewComponent implements OnInit {
             return fallback;
       }
 
+      /* ============================= */
+      /* NODE MOVE (Task 6)            */
+      /* ============================= */
+
+      openMoveBrand(category: CategoryNode, brand: BrandNode, event?: Event): void {
+            if (event) event.stopPropagation();
+
+            this.openMoveDialog({
+                  mode: 'brand',
+                  nodeType: 'brand',
+                  nodeId: brand.id,
+                  productIds: [],
+                  label: brand.name,
+                  currentParentId: category.id
+            });
+      }
+
+      openMoveGroup(category: CategoryNode, brand: BrandNode | null, group: ProductGroupNode, event?: Event): void {
+            if (event) event.stopPropagation();
+
+            this.openMoveDialog({
+                  mode: 'group',
+                  nodeType: 'group',
+                  nodeId: group.id,
+                  productIds: [],
+                  label: group.name,
+                  currentParentId: brand ? brand.id : null
+            });
+      }
+
+      openMoveProduct(group: ProductGroupNode, product: TreeProductItem, event?: Event): void {
+            if (event) event.stopPropagation();
+
+            this.openMoveDialog({
+                  mode: 'single-product',
+                  nodeType: null,
+                  nodeId: product.id,
+                  productIds: [product.id],
+                  label: product.name,
+                  currentParentId: group.id
+            });
+      }
+
+      /** Opens the dialog for every product currently selected across the tree. */
+      openBulkMoveDialog(): void {
+            const productIds = Array.from(this.selectedProductIds());
+            if (!this.isEditMode() || productIds.length === 0) return;
+
+            this.openMoveDialog({
+                  mode: 'bulk-products',
+                  nodeType: null,
+                  nodeId: null,
+                  productIds,
+                  label: `${productIds.length} منتج`,
+                  currentParentId: null
+            });
+      }
+
+      closeMoveDialog(force: boolean = false): void {
+            if (!force && this.isMoveSubmitting()) return;
+
+            this.moveTarget.set(null);
+            this.moveTargetCategoryId.set('');
+            this.moveTargetBrandId.set('');
+            this.moveTargetGroupId.set('');
+            this.moveError.set(null);
+      }
+
+      onMoveCategoryChange(value: string): void {
+            this.moveTargetCategoryId.set(value);
+            this.moveTargetBrandId.set('');
+            this.moveTargetGroupId.set('');
+            this.moveError.set(null);
+      }
+
+      onMoveBrandChange(value: string): void {
+            this.moveTargetBrandId.set(value);
+            this.moveTargetGroupId.set('');
+            this.moveError.set(null);
+      }
+
+      onMoveGroupChange(value: string): void {
+            this.moveTargetGroupId.set(value);
+            this.moveError.set(null);
+      }
+
+      private openMoveDialog(target: MoveNodeTarget): void {
+            if (this.nodeActionKey()) return;
+
+            this.moveError.set(null);
+            this.moveTargetCategoryId.set('');
+            this.moveTargetBrandId.set('');
+            this.moveTargetGroupId.set('');
+            this.moveTarget.set(target);
+      }
+
+      /* ─── Destination picker (always built from the raw tree) ───────────── */
+
+      /** Which destination tiers the current move mode requires. */
+      moveNeedsBrand = computed(() => {
+            const mode = this.moveTarget()?.mode;
+            return mode === 'group' || mode === 'single-product' || mode === 'bulk-products';
+      });
+
+      moveNeedsGroup = computed(() => {
+            const mode = this.moveTarget()?.mode;
+            return mode === 'single-product' || mode === 'bulk-products';
+      });
+
+      moveCategoryOptions = computed(() => {
+            const target = this.moveTarget();
+            const excludedId = target?.mode === 'brand' ? target.currentParentId : null;
+
+            return this.treeData().map(category => ({
+                  id: category.id,
+                  label: category.name,
+                  disabled: excludedId !== null && this.nodeKey(category.id) === this.nodeKey(excludedId)
+            }));
+      });
+
+      moveBrandOptions = computed(() => {
+            const target = this.moveTarget();
+            const category = this.findCategoryById(this.moveTargetCategoryId());
+            if (!category) return [];
+
+            const excludedId = target?.mode === 'group' ? target.currentParentId : null;
+            const options: Array<{ id: number | string; label: string; disabled: boolean }> = (category.brands || []).map((brand: BrandNode) => ({
+                  id: brand.id,
+                  label: brand.name,
+                  disabled: excludedId !== null && this.nodeKey(brand.id) === this.nodeKey(excludedId)
+            }));
+
+            // Groups may also live directly under a category (no brand in between).
+            // That destination is invalid when a group itself is being moved (a brand is required).
+            if (target?.mode !== 'group' && (category.directGroups || []).length > 0) {
+                  options.push({
+                        id: MOVE_DIRECT_BRAND_VALUE,
+                        label: 'بدون شركة (مجموعات القسم المباشرة)',
+                        disabled: false
+                  });
+            }
+
+            return options;
+      });
+
+      moveGroupOptions = computed(() => {
+            const category = this.findCategoryById(this.moveTargetCategoryId());
+            if (!category) return [];
+
+            const brandValue = this.moveTargetBrandId();
+            const groups: ProductGroupNode[] = brandValue === MOVE_DIRECT_BRAND_VALUE
+                  ? category.directGroups || []
+                  : this.findBrandInCategory(category, brandValue)?.groups || [];
+
+            const target = this.moveTarget();
+            const excludedId = target?.mode === 'single-product' ? target.currentParentId : null;
+
+            return groups.map((group: ProductGroupNode) => ({
+                  id: group.id,
+                  label: group.name,
+                  disabled: excludedId !== null && this.nodeKey(group.id) === this.nodeKey(excludedId)
+            }));
+      });
+
+      isMoveSelectionValid = computed(() => {
+            const target = this.moveTarget();
+            if (!target) return false;
+
+            const catId = this.moveTargetCategoryId();
+            if (!catId) return false;
+
+            if (target.mode === 'brand') {
+                  return true;
+            }
+
+            const brandId = this.moveTargetBrandId();
+            if (!brandId) return false;
+
+            if (target.mode === 'group') {
+                  return brandId !== MOVE_DIRECT_BRAND_VALUE;
+            }
+
+            const groupId = this.moveTargetGroupId();
+            return !!groupId;
+      });
+
+      submitMove(): void {
+            const target = this.moveTarget();
+            if (!target || this.isMoveSubmitting() || !this.isMoveSelectionValid()) return;
+
+            const actionKey = this.moveActionKeyOf(target);
+            this.nodeActionKey.set(actionKey);
+            this.moveError.set(null);
+
+            let moveObs: Observable<unknown>;
+            let successMsg: string;
+
+            if (target.mode === 'brand') {
+                  const targetCatId = this.moveTargetCategoryId();
+                  const targetCat = this.findCategoryById(targetCatId);
+                  moveObs = this.productApiService.moveBrand(target.nodeId!, targetCatId);
+                  successMsg = `تم نقل الشركة "${target.label}" بنجاح إلى قسم "${targetCat?.name || ''}"`;
+            } else if (target.mode === 'group') {
+                  const targetBrandId = this.moveTargetBrandId();
+                  const targetCat = this.findCategoryById(this.moveTargetCategoryId());
+                  const targetBrand = targetCat ? this.findBrandInCategory(targetCat, targetBrandId) : undefined;
+                  moveObs = this.productApiService.moveProductGroup(target.nodeId!, targetBrandId);
+                  successMsg = `تم نقل المجموعة "${target.label}" بنجاح إلى شركة "${targetBrand?.name || ''}"`;
+            } else if (target.mode === 'single-product') {
+                  const targetGroupId = this.moveTargetGroupId();
+                  moveObs = this.productApiService.moveProduct(target.nodeId!, targetGroupId);
+                  successMsg = `تم نقل المنتج "${target.label}" بنجاح`;
+            } else {
+                  // bulk-products
+                  const targetGroupId = this.moveTargetGroupId();
+                  moveObs = this.productApiService.bulkMoveProducts(target.productIds, targetGroupId);
+                  successMsg = `تم نقل ${target.productIds.length} منتجات بنجاح`;
+            }
+
+            moveObs.subscribe({
+                  next: () => {
+                        this.nodeActionKey.set(null);
+                        if (target.mode === 'bulk-products') {
+                              this.clearSelection();
+                        }
+                        this.closeMoveDialog(true);
+                        this.notificationService.success(successMsg);
+                        this.loadTreeData(true);
+                  },
+                  error: (err: unknown) => {
+                        this.nodeActionKey.set(null);
+                        this.moveError.set(
+                              this.resolveErrorMessage(err, 'تعذر إتمام عملية النقل. يرجى المحاولة مرة أخرى.')
+                        );
+                  }
+            });
+      }
+
+      private findCategoryById(categoryId: string | number): CategoryNode | undefined {
+            if (!categoryId) return undefined;
+            const key = this.nodeKey(categoryId);
+            return this.treeData().find(category => this.nodeKey(category.id) === key);
+      }
+
+      private findBrandInCategory(category: CategoryNode, brandId: string | number): BrandNode | undefined {
+            if (!category || !brandId || brandId === MOVE_DIRECT_BRAND_VALUE) return undefined;
+            const key = this.nodeKey(brandId);
+            return (category.brands || []).find(brand => this.nodeKey(brand.id) === key);
+      }
+
+      private moveActionKeyOf(target: MoveNodeTarget): string {
+            if (target.mode === 'bulk-products') {
+                  return `move:bulk:${target.productIds.length}`;
+            }
+            return this.nodeActionKeyOf('move', target.nodeType || 'product', target.nodeId || 'bulk');
+      }
+
       toggleMenu(productId: number | string, event: Event): void {
             event.stopPropagation();
             this.openMenuProductId.set(this.openMenuProductId() === productId ? null : productId);
@@ -823,6 +1148,11 @@ export class ProductTreeViewComponent implements OnInit {
 
       @HostListener('document:keydown.escape')
       handleEscapeKey(): void {
+            if (this.moveTarget()) {
+                  this.closeMoveDialog();
+                  return;
+            }
+
             if (this.renameTarget()) {
                   this.closeRenameDialog();
             }

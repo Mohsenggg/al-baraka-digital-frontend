@@ -122,6 +122,37 @@ export function validateNodeName(name: string, siblingNames: string[]): NodeName
       return { valid: true, error: null };
 }
 
+/* ============================= */
+/* EDIT MODE (MOVE)              */
+/* ============================= */
+
+/** Destination flows supported by the Move dialog. */
+export type MoveNodeMode = 'brand' | 'group' | 'single-product' | 'bulk-products';
+
+/**
+ * Sentinel value used by the destination picker for the product groups that belong
+ * directly to a category (no brand in between).
+ */
+export const MOVE_DIRECT_BRAND_VALUE = '__direct__';
+
+/** Describes what the Move dialog is about to relocate. */
+export interface MoveNodeTarget {
+      mode: MoveNodeMode;
+      /** Tier of the node being moved; `null` for product moves. */
+      nodeType: 'brand' | 'group' | null;
+      /** Id of the node being moved (brand / group / single product); `null` for bulk moves. */
+      nodeId: number | string | null;
+      /** Product ids moved together (bulk mode only). */
+      productIds: Array<number | string>;
+      /** Name / label of the moved item(s), used by titles, summaries and toasts. */
+      label: string;
+      /**
+       * Current parent, which must never be offered as destination
+       * (category id for brands, brand id for groups, group id for products).
+       */
+      currentParentId: number | string | null;
+}
+
 export function computeTreeStats(categories: CategoryNode[]): TreeStatistics {
       let totalBrands = 0;
       let totalGroups = 0;

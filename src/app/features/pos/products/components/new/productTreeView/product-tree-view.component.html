@@ -182,7 +182,7 @@
             <!-- ============================= -->
             <!-- TREE CONTENT WRAPPER -->
             <!-- ============================= -->
-            <div class="tree-viewport">
+            <div class="tree-viewport" [class.has-bulk-bar]="isEditMode() && selectedProductsCount() > 0">
 
                   <!-- Loading State -->
                   <div class="tree-loading-state" *ngIf="isLoading()">
@@ -341,6 +341,12 @@
                                                                         title="إعادة تسمية الشركة / العلامة التجارية">
                                                                         <span class="material-icons-outlined">drive_file_rename_outline</span>
                                                                   </button>
+                                                                  <button type="button" class="btn-node-action btn-move"
+                                                                        [disabled]="isNodeActionPending('brand', brand.id)"
+                                                                        (click)="openMoveBrand(category, brand, $event)"
+                                                                        title="نقل الشركة إلى قسم آخر">
+                                                                        <span class="material-icons-outlined">drive_file_move</span>
+                                                                  </button>
                                                                   <button type="button" class="btn-node-action btn-node-delete"
                                                                         [disabled]="!isNodeDeletable('brand', brand.id) || isNodeActionPending('brand', brand.id)"
                                                                         (click)="openDeleteBrand(category, brand, $event)"
@@ -405,6 +411,12 @@
                                                                                     (click)="openRenameGroup(category, brand, group, $event)"
                                                                                     title="إعادة تسمية المجموعة">
                                                                                     <span class="material-icons-outlined">drive_file_rename_outline</span>
+                                                                              </button>
+                                                                              <button type="button" class="btn-node-action btn-move"
+                                                                                    [disabled]="isNodeActionPending('group', group.id)"
+                                                                                    (click)="openMoveGroup(category, brand, group, $event)"
+                                                                                    title="نقل المجموعة إلى شركة أخرى">
+                                                                                    <span class="material-icons-outlined">drive_file_move</span>
                                                                               </button>
                                                                               <button type="button" class="btn-node-action btn-node-delete"
                                                                                     [disabled]="!isNodeDeletable('group', group.id) || isNodeActionPending('group', group.id)"
@@ -484,6 +496,12 @@
                                                                         title="إعادة تسمية المجموعة">
                                                                         <span class="material-icons-outlined">drive_file_rename_outline</span>
                                                                   </button>
+                                                                  <button type="button" class="btn-node-action btn-move"
+                                                                        [disabled]="isNodeActionPending('group', group.id)"
+                                                                        (click)="openMoveGroup(category, null, group, $event)"
+                                                                        title="نقل المجموعة إلى شركة أخرى">
+                                                                        <span class="material-icons-outlined">drive_file_move</span>
+                                                                  </button>
                                                                   <button type="button" class="btn-node-action btn-node-delete"
                                                                         [disabled]="!isNodeDeletable('group', group.id) || isNodeActionPending('group', group.id)"
                                                                         (click)="openDeleteGroup(category, null, group, $event)"
@@ -510,6 +528,26 @@
 
                   </div>
 
+            </div>
+
+            <!-- ============================= -->
+            <!-- FLOATING BULK ACTIONS BAR (Task 6) -->
+            <!-- ============================= -->
+            <div class="floating-bulk-bar" *ngIf="isEditMode() && selectedProductsCount() > 0">
+                  <div class="bulk-bar-info">
+                        <span class="material-icons-outlined">inventory_2</span>
+                        <span class="bulk-count">تم تحديد {{ selectedProductsCount() }} منتج</span>
+                  </div>
+                  <div class="bulk-bar-actions">
+                        <button type="button" class="btn-bulk-move" (click)="openBulkMoveDialog()">
+                              <span class="material-icons-outlined">drive_file_move</span>
+                              <span>نقل المنتجات المحددة</span>
+                        </button>
+                        <button type="button" class="btn-bulk-clear" (click)="clearSelection()">
+                              <span class="material-icons-outlined">close</span>
+                              <span>إلغاء التحديد</span>
+                        </button>
+                  </div>
             </div>
 
       </div>
@@ -557,6 +595,85 @@
                               (click)="submitRename()">
                               <span class="material-icons-outlined" *ngIf="isRenameSaving()">hourglass_top</span>
                               <span>{{ isRenameSaving() ? 'جارٍ الحفظ...' : 'حفظ الاسم' }}</span>
+                        </button>
+                  </div>
+            </div>
+      </div>
+
+      <!-- ============================= -->
+      <!-- EDIT MODE: MOVE DESTINATION MODAL (Task 6) -->
+      <!-- ============================= -->
+      <div class="node-modal-overlay" *ngIf="moveTarget() as target" (click)="closeMoveDialog()">
+            <div class="node-modal move-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+                  <div class="node-modal-header">
+                        <div class="node-modal-icon move-icon">
+                              <span class="material-icons-outlined">drive_file_move</span>
+                        </div>
+                        <div>
+                              <h3 *ngIf="target.mode === 'brand'">نقل الشركة: {{ target.label }}</h3>
+                              <h3 *ngIf="target.mode === 'group'">نقل المجموعة: {{ target.label }}</h3>
+                              <h3 *ngIf="target.mode === 'single-product'">نقل المنتج: {{ target.label }}</h3>
+                              <h3 *ngIf="target.mode === 'bulk-products'">نقل ({{ target.productIds.length }}) منتجات محددة</h3>
+
+                              <p *ngIf="target.mode === 'brand'">اختر القسم الجديد لنقل الشركة وجميع مجموعاتها ومنتجاتها إليه</p>
+                              <p *ngIf="target.mode === 'group'">اختر الشركة الجديدة لنقل المجموعة وجميع منتجاتها إليها</p>
+                              <p *ngIf="target.mode === 'single-product' || target.mode === 'bulk-products'">اختر وجهة النقل (القسم &larr; الشركة &larr; المجموعة)</p>
+                        </div>
+                  </div>
+
+                  <div class="node-modal-body">
+                        <!-- Step 1: Category Selector -->
+                        <div class="modal-form-group">
+                              <label class="node-modal-label" for="move-category-select">القسم الوجهة <span class="req-star">*</span></label>
+                              <select id="move-category-select" class="node-modal-select" [value]="moveTargetCategoryId()"
+                                    (change)="onMoveCategoryChange($any($event.target).value)">
+                                    <option value="">-- اختر القسم الوجهة --</option>
+                                    <option *ngFor="let cat of moveCategoryOptions()" [value]="cat.id" [disabled]="cat.disabled">
+                                          {{ cat.label }}{{ cat.disabled ? ' (القسم الحالي)' : '' }}
+                                    </option>
+                              </select>
+                        </div>
+
+                        <!-- Step 2: Brand Selector (for group, single-product, bulk-products) -->
+                        <div class="modal-form-group" *ngIf="moveNeedsBrand() && moveTargetCategoryId()">
+                              <label class="node-modal-label" for="move-brand-select">الشركة / العلامة التجارية <span class="req-star">*</span></label>
+                              <select id="move-brand-select" class="node-modal-select" [value]="moveTargetBrandId()"
+                                    (change)="onMoveBrandChange($any($event.target).value)">
+                                    <option value="">-- اختر الشركة --</option>
+                                    <option *ngFor="let brand of moveBrandOptions()" [value]="brand.id" [disabled]="brand.disabled">
+                                          {{ brand.label }}{{ brand.disabled ? ' (الشركة الحالية)' : '' }}
+                                    </option>
+                              </select>
+                        </div>
+
+                        <!-- Step 3: Product Group Selector (for single-product, bulk-products) -->
+                        <div class="modal-form-group" *ngIf="moveNeedsGroup() && moveTargetBrandId()">
+                              <label class="node-modal-label" for="move-group-select">مجموعة المنتجات الوجهة <span class="req-star">*</span></label>
+                              <select id="move-group-select" class="node-modal-select" [value]="moveTargetGroupId()"
+                                    (change)="onMoveGroupChange($any($event.target).value)">
+                                    <option value="">-- اختر المجموعة --</option>
+                                    <option *ngFor="let group of moveGroupOptions()" [value]="group.id" [disabled]="group.disabled">
+                                          {{ group.label }}{{ group.disabled ? ' (المجموعة الحالية)' : '' }}
+                                    </option>
+                              </select>
+                        </div>
+
+                        <!-- Error Message if any -->
+                        <div class="node-modal-error" *ngIf="moveError()">
+                              <span class="material-icons-outlined">error_outline</span>
+                              <span>{{ moveError() }}</span>
+                        </div>
+                  </div>
+
+                  <div class="node-modal-actions">
+                        <button type="button" class="btn-modal btn-modal-cancel" [disabled]="isMoveSubmitting()"
+                              (click)="closeMoveDialog()">إلغاء</button>
+                        <button type="button" class="btn-modal btn-modal-save"
+                              [disabled]="isMoveSubmitting() || !isMoveSelectionValid()"
+                              (click)="submitMove()">
+                              <span class="material-icons-outlined" *ngIf="isMoveSubmitting()">hourglass_top</span>
+                              <span class="material-icons-outlined" *ngIf="!isMoveSubmitting()">drive_file_move</span>
+                              <span>{{ isMoveSubmitting() ? 'جارٍ النقل...' : 'تأكيد النقل' }}</span>
                         </button>
                   </div>
             </div>
@@ -684,6 +801,12 @@
                                           <button type="button" class="btn-action btn-edit"
                                                 (click)="onEditProduct(product)" title="تعديل المنتج">
                                                 <span class="material-icons-outlined">edit</span>
+                                          </button>
+                                          <button type="button" class="btn-action btn-move-group" *ngIf="isEditMode()"
+                                                [disabled]="isNodeActionPending('product', product.id)"
+                                                (click)="openMoveProduct(group, product, $event)"
+                                                title="نقل لمجموعة أخرى">
+                                                <span class="material-icons-outlined">drive_file_move</span>
                                           </button>
                                           <button type="button" class="btn-action btn-delete"
                                                 (click)="onDeleteProduct(product, group, $event)" title="حذف المنتج">

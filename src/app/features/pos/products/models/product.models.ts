@@ -108,6 +108,13 @@ export interface NamedEntity {
       name: string;
 }
 
+/** Response of `POST /api/products/tree/products/bulk-move`. */
+export interface BulkMoveProductsResponse {
+      movedCount: number;
+      targetGroupId: number | string;
+      message: string;
+}
+
 export interface ProductAttributeFormValue {
       id: number;
       name: string;
