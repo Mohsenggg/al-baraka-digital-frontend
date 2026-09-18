@@ -57,6 +57,71 @@ export interface TreeStatistics {
       activeProductsCount: number;
 }
 
+/* ============================= */
+/* EDIT MODE (RENAME / DELETE)   */
+/* ============================= */
+
+/** Hierarchy tiers that can be renamed or deleted while Edit Mode is active. */
+export type TreeNodeType = 'category' | 'brand' | 'group';
+
+/** Arabic labels for each editable hierarchy tier. */
+export const TREE_NODE_TYPE_LABELS: Record<TreeNodeType, string> = {
+      category: 'القسم',
+      brand: 'الشركة / العلامة التجارية',
+      group: 'مجموعة المنتجات'
+};
+
+export const NODE_NAME_MIN_LENGTH = 2;
+export const NODE_NAME_MAX_LENGTH = 255;
+
+/** Identifies the tree node an Edit Mode action (rename / delete) targets. */
+export interface TreeNodeActionTarget {
+      type: TreeNodeType;
+      id: number | string;
+      name: string;
+      /** Parent scope used by the backend uniqueness rules (category id for brands, brand/category id for groups). */
+      parentId?: number | string | null;
+}
+
+/** Rename specific payload: adds the sibling scope used by the uniqueness rules. */
+export interface RenameNodeTarget extends TreeNodeActionTarget {
+      /** Names of the siblings inside the same parent scope (the target itself is excluded). */
+      siblingNames: string[];
+      /** Contextual description shown inside dialogs, e.g. `داخل قسم: مساحيق التنظيف`. */
+      contextLabel: string;
+}
+
+export interface NodeNameValidationResult {
+      valid: boolean;
+      error: string | null;
+}
+
+/**
+ * Client side validation of a node name. It mirrors the backend rules (Task 2 of the CR)
+ * so users get immediate feedback; the backend stays the source of truth.
+ */
+export function validateNodeName(name: string, siblingNames: string[]): NodeNameValidationResult {
+      const trimmed = (name || '').trim();
+
+      if (!trimmed) {
+            return { valid: false, error: 'اسم العنصر مطلوب' };
+      }
+      if (trimmed.length < NODE_NAME_MIN_LENGTH) {
+            return { valid: false, error: `يجب أن يكون الاسم ${NODE_NAME_MIN_LENGTH} أحرف على الأقل` };
+      }
+      if (trimmed.length > NODE_NAME_MAX_LENGTH) {
+            return { valid: false, error: `يجب ألا يتجاوز الاسم ${NODE_NAME_MAX_LENGTH} حرفاً` };
+      }
+
+      const normalized = trimmed.toLowerCase();
+      const duplicated = (siblingNames || []).some(sibling => sibling.trim().toLowerCase() === normalized);
+      if (duplicated) {
+            return { valid: false, error: 'يوجد عنصر آخر بنفس الاسم داخل نفس النطاق' };
+      }
+
+      return { valid: true, error: null };
+}
+
 export function computeTreeStats(categories: CategoryNode[]): TreeStatistics {
       let totalBrands = 0;
       let totalGroups = 0;

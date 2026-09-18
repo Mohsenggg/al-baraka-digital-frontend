@@ -1,5 +1,5 @@
 <div class="products-layout">
-      <div class="products-container" dir="rtl">
+      <div class="products-container" dir="rtl" [class.edit-mode-active]="isEditMode()">
 
             <!-- ============================= -->
             <!-- HEADER SECTION -->
@@ -34,11 +34,45 @@
                                     </button>
                               </div>
 
+                              <!-- Edit Mode toggle (Task 4) -->
+                              <button type="button" class="btn-edit-mode" [class.active]="isEditMode()"
+                                    (click)="toggleEditMode()"
+                                    [title]="isEditMode() ? 'إنهاء وضع التعديل' : 'تفعيل وضع تعديل الهيكل'">
+                                    <span class="material-icons-outlined">{{ isEditMode() ? 'check_circle' : 'tune'
+                                          }}</span>
+                                    <span>{{ isEditMode() ? 'إنهاء التعديل' : 'تعديل الهيكل' }}</span>
+                              </button>
+
                               <button class="btn-add-product" routerLink="/pos/product/manage">
                                     <span class="material-icons-outlined">add_circle</span>
                                     <span>إضافة منتج</span>
                               </button>
                         </div>
+                  </div>
+            </div>
+
+            <!-- ============================= -->
+            <!-- EDIT MODE BANNER (Task 4) -->
+            <!-- ============================= -->
+            <div class="edit-mode-banner" *ngIf="isEditMode()">
+                  <div class="edit-banner-content">
+                        <span class="material-icons-outlined edit-banner-icon">tune</span>
+                        <div class="edit-banner-text">
+                              <strong>وضع تعديل الهيكل مفعل</strong>
+                              <p>يمكنك الآن إعادة التسمية، النقل الفردي أو الجماعي للمنتجات، أو حذف المجموعات الفارغة.</p>
+                        </div>
+                  </div>
+
+                  <div class="edit-banner-actions">
+                        <span class="selection-chip" *ngIf="selectedProductsCount() > 0">
+                              <span class="material-icons-outlined">check_box</span>
+                              تم تحديد {{ selectedProductsCount() }} منتج
+                        </span>
+                        <button type="button" class="btn-clear-selection" *ngIf="selectedProductsCount() > 0"
+                              (click)="clearSelection()">
+                              <span class="material-icons-outlined">deselect</span>
+                              إلغاء التحديد
+                        </button>
                   </div>
             </div>
 
@@ -226,6 +260,21 @@
                                                       {{ getCategoryProductsCount(category) }} منتج
                                                 </span>
                                           </div>
+                                          <!-- Edit Mode actions: rename / delete category (Task 5) -->
+                                          <div class="node-edit-actions" *ngIf="isEditMode()">
+                                                <button type="button" class="btn-node-action btn-rename"
+                                                      [disabled]="isNodeActionPending('category', category.id)"
+                                                      (click)="openRenameCategory(category, $event)"
+                                                      title="إعادة تسمية القسم">
+                                                      <span class="material-icons-outlined">drive_file_rename_outline</span>
+                                                </button>
+                                                <button type="button" class="btn-node-action btn-node-delete"
+                                                      [disabled]="!isNodeDeletable('category', category.id) || isNodeActionPending('category', category.id)"
+                                                      (click)="openDeleteCategory(category, $event)"
+                                                      [title]="isNodeDeletable('category', category.id) ? 'حذف القسم (الأقسام الفارغة فقط)' : 'لا يمكن حذف عنصر يحتوي على بيانات تابعة'">
+                                                      <span class="material-icons-outlined">delete_outline</span>
+                                                </button>
+                                          </div>
                                     </div>
                               </div>
 
@@ -284,6 +333,21 @@
                                                                         {{ getBrandProductsCount(brand) }} منتج
                                                                   </span>
                                                             </div>
+                                                            <!-- Edit Mode actions: rename / delete brand (Task 5) -->
+                                                            <div class="node-edit-actions" *ngIf="isEditMode()">
+                                                                  <button type="button" class="btn-node-action btn-rename"
+                                                                        [disabled]="isNodeActionPending('brand', brand.id)"
+                                                                        (click)="openRenameBrand(category, brand, $event)"
+                                                                        title="إعادة تسمية الشركة / العلامة التجارية">
+                                                                        <span class="material-icons-outlined">drive_file_rename_outline</span>
+                                                                  </button>
+                                                                  <button type="button" class="btn-node-action btn-node-delete"
+                                                                        [disabled]="!isNodeDeletable('brand', brand.id) || isNodeActionPending('brand', brand.id)"
+                                                                        (click)="openDeleteBrand(category, brand, $event)"
+                                                                        [title]="isNodeDeletable('brand', brand.id) ? 'حذف الشركة (الشركات الفارغة فقط)' : 'لا يمكن حذف عنصر يحتوي على بيانات تابعة'">
+                                                                        <span class="material-icons-outlined">delete_outline</span>
+                                                                  </button>
+                                                            </div>
                                                       </div>
                                                 </div>
 
@@ -334,6 +398,21 @@
                                                                                     class="material-icons-outlined pill-icon">inventory_2</span>
                                                                               {{ group.products.length }} منتج
                                                                         </span>
+                                                                        <!-- Edit Mode actions: rename / delete group (Task 5) -->
+                                                                        <div class="node-edit-actions" *ngIf="isEditMode()">
+                                                                              <button type="button" class="btn-node-action btn-rename"
+                                                                                    [disabled]="isNodeActionPending('group', group.id)"
+                                                                                    (click)="openRenameGroup(category, brand, group, $event)"
+                                                                                    title="إعادة تسمية المجموعة">
+                                                                                    <span class="material-icons-outlined">drive_file_rename_outline</span>
+                                                                              </button>
+                                                                              <button type="button" class="btn-node-action btn-node-delete"
+                                                                                    [disabled]="!isNodeDeletable('group', group.id) || isNodeActionPending('group', group.id)"
+                                                                                    (click)="openDeleteGroup(category, brand, group, $event)"
+                                                                                    [title]="isNodeDeletable('group', group.id) ? 'حذف المجموعة (المجموعات الفارغة فقط)' : 'لا يمكن حذف عنصر يحتوي على بيانات تابعة'">
+                                                                                    <span class="material-icons-outlined">delete_outline</span>
+                                                                              </button>
+                                                                        </div>
                                                                   </div>
                                                             </div>
 
@@ -397,6 +476,21 @@
                                                                         class="material-icons-outlined pill-icon">inventory_2</span>
                                                                   {{ group.products.length }} منتج
                                                             </span>
+                                                            <!-- Edit Mode actions: rename / delete group (Task 5) -->
+                                                            <div class="node-edit-actions" *ngIf="isEditMode()">
+                                                                  <button type="button" class="btn-node-action btn-rename"
+                                                                        [disabled]="isNodeActionPending('group', group.id)"
+                                                                        (click)="openRenameGroup(category, null, group, $event)"
+                                                                        title="إعادة تسمية المجموعة">
+                                                                        <span class="material-icons-outlined">drive_file_rename_outline</span>
+                                                                  </button>
+                                                                  <button type="button" class="btn-node-action btn-node-delete"
+                                                                        [disabled]="!isNodeDeletable('group', group.id) || isNodeActionPending('group', group.id)"
+                                                                        (click)="openDeleteGroup(category, null, group, $event)"
+                                                                        [title]="isNodeDeletable('group', group.id) ? 'حذف المجموعة (المجموعات الفارغة فقط)' : 'لا يمكن حذف عنصر يحتوي على بيانات تابعة'">
+                                                                        <span class="material-icons-outlined">delete_outline</span>
+                                                                  </button>
+                                                            </div>
                                                       </div>
                                                 </div>
 
@@ -422,6 +516,51 @@
 
       <!-- SIDEBAR: NAVIGATION -->
       <app-sidebar [expanded]="sidebarVisible()" (toggle)="onToggleSidebar()"></app-sidebar>
+
+      <!-- ============================= -->
+      <!-- EDIT MODE: RENAME NODE DIALOG (Task 5) -->
+      <!-- ============================= -->
+      <div class="node-modal-overlay" *ngIf="renameTarget() as target" (click)="closeRenameDialog()">
+            <div class="node-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+                  <div class="node-modal-header">
+                        <div class="node-modal-icon">
+                              <span class="material-icons-outlined">drive_file_rename_outline</span>
+                        </div>
+                        <div>
+                              <h3>إعادة تسمية {{ nodeTypeLabels[target.type] }}</h3>
+                              <p>{{ target.contextLabel }}</p>
+                        </div>
+                  </div>
+
+                  <div class="node-modal-body">
+                        <label class="node-modal-label" for="node-rename-input">الاسم الجديد</label>
+                        <input id="node-rename-input" type="text" class="node-modal-input" dir="auto" maxlength="255"
+                              autocomplete="off" [value]="renameValue()" (input)="onRenameInput($event)"
+                              (keydown)="onRenameKeydown($event)">
+
+                        <div class="node-modal-hint">
+                              <span class="material-icons-outlined">info</span>
+                              <span>يجب أن يكون الاسم بين 2 و 255 حرفاً، وفريداً داخل نفس النطاق.</span>
+                        </div>
+
+                        <div class="node-modal-error" *ngIf="renameError()">
+                              <span class="material-icons-outlined">error_outline</span>
+                              <span>{{ renameError() }}</span>
+                        </div>
+                  </div>
+
+                  <div class="node-modal-actions">
+                        <button type="button" class="btn-modal btn-modal-cancel" [disabled]="isRenameSaving()"
+                              (click)="closeRenameDialog()">إلغاء</button>
+                        <button type="button" class="btn-modal btn-modal-save"
+                              [disabled]="isRenameSaving() || !renameValue().trim() || !!renameError()"
+                              (click)="submitRename()">
+                              <span class="material-icons-outlined" *ngIf="isRenameSaving()">hourglass_top</span>
+                              <span>{{ isRenameSaving() ? 'جارٍ الحفظ...' : 'حفظ الاسم' }}</span>
+                        </button>
+                  </div>
+            </div>
+      </div>
 </div>
 
 <!-- ============================================================== -->
@@ -438,6 +577,14 @@
             <table class="leaf-products-table" *ngIf="products && products.length > 0">
                   <thead>
                         <tr>
+                              <th class="col-tree-select" *ngIf="isEditMode()">
+                                    <label class="row-checkbox" title="تحديد كل منتجات المجموعة">
+                                          <input type="checkbox" [checked]="isGroupAllSelected(group)"
+                                                [indeterminate]="isGroupPartiallySelected(group)"
+                                                (change)="selectAllInGroup(group, $event)"
+                                                aria-label="تحديد كل منتجات المجموعة">
+                                    </label>
+                              </th>
                               <th class="col-tree-prod">المنتج والباركود</th>
                               <th class="col-tree-buying">سعر الشراء</th>
                               <th class="col-tree-selling">سعر البيع</th>
@@ -447,7 +594,16 @@
                         </tr>
                   </thead>
                   <tbody>
-                        <tr class="leaf-product-row" *ngFor="let product of products; trackBy: trackByProductId">
+                        <tr class="leaf-product-row" *ngFor="let product of products; trackBy: trackByProductId" [class.row-selected]="isEditMode() && isProductSelected(product.id)">
+
+                              <!-- Edit Mode: product selection checkbox (Task 4) -->
+                              <td class="col-tree-select" *ngIf="isEditMode()">
+                                    <label class="row-checkbox">
+                                          <input type="checkbox" [checked]="isProductSelected(product.id)"
+                                                (change)="toggleProductSelection(product.id, $event)"
+                                                [attr.aria-label]="'تحديد المنتج ' + product.name">
+                                    </label>
+                              </td>
 
                               <!-- Product Name & SKU -->
                               <td class="col-tree-prod">

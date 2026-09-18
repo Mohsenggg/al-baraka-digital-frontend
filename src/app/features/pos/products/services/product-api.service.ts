@@ -90,6 +90,32 @@ export class ProductApiService {
             });
       }
 
+      // ─── Tree hierarchy mutations (Product Tree Edit Mode) ────────────────
+
+      public renameCategory(id: number | string, name: string): Observable<void> {
+            return this.http.patch<void>(`${this.apiUrl}/tree/categories/${id}/rename`, { name });
+      }
+
+      public renameBrand(id: number | string, name: string): Observable<void> {
+            return this.http.patch<void>(`${this.apiUrl}/tree/brands/${id}/rename`, { name });
+      }
+
+      public renameProductGroup(id: number | string, name: string): Observable<void> {
+            return this.http.patch<void>(`${this.apiUrl}/tree/groups/${id}/rename`, { name });
+      }
+
+      public deleteCategory(id: number | string): Observable<void> {
+            return this.http.delete<void>(`${this.apiUrl}/tree/categories/${id}`);
+      }
+
+      public deleteBrand(id: number | string): Observable<void> {
+            return this.http.delete<void>(`${this.apiUrl}/tree/brands/${id}`);
+      }
+
+      public deleteProductGroup(id: number | string): Observable<void> {
+            return this.http.delete<void>(`${this.apiUrl}/tree/groups/${id}`);
+      }
+
       private buildHttpParams(params: any): HttpParams {
             const normalized: Record<string, string | number> = { ...params };
 
