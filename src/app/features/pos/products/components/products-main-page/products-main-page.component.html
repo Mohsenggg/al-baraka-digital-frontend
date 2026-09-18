@@ -16,39 +16,36 @@
                               <!-- Search Field (cashier-receipt style) -->
                               <div class="search-field-wrapper">
                                     <input type="text" class="pos-input search-input"
-                                          placeholder="بحث بالاسم أو الباركود..."
-                                          [value]="localSearchTerm()"
-                                          (input)="onSearchInput($event)"
-                                          (keydown)="onSearchKeyDown($event)"
-                                          autocomplete="off"
-                                          dir="rtl">
-                                    <button type="button" class="search-icon-button"
+                                          placeholder="بحث بالاسم أو الباركود..." [value]="localSearchTerm()"
+                                          (input)="onSearchInput($event)" (keydown)="onSearchKeyDown($event)"
+                                          autocomplete="off" dir="rtl">
+                                    <!-- <button type="button" class="search-icon-button"
                                           (click)="executeSearch()"
                                           [disabled]="!localSearchTerm()"
                                           aria-label="بحث">
                                           <span class="material-icons-outlined">search</span>
-                                    </button>
+                                    </button> -->
                                     <button type="button" class="clear-icon-button"
-                                          *ngIf="localSearchTerm() || searchQuery()"
-                                          (click)="clearSearch()"
+                                          *ngIf="localSearchTerm() || searchQuery()" (click)="clearSearch()"
                                           aria-label="مسح">
                                           <span class="material-icons-outlined">close</span>
                                     </button>
                               </div>
 
                               <!-- Category Multi-select -->
-                              <div class="filter-item custom-multiselect" [class.has-value]="selectedCategories().length > 0">
+                              <div class="filter-item custom-multiselect"
+                                    [class.has-value]="selectedCategories().length > 0">
                                     <div class="multiselect-trigger" (click)="toggleDropdown('category', $event)">
                                           <span class="filter-select-icon material-icons-outlined">category</span>
                                           <span class="selected-text">{{ getCategoriesLabel() }}</span>
                                           <span class="material-icons-outlined arrow-icon">expand_more</span>
                                     </div>
-                                    <div class="multiselect-dropdown" *ngIf="activeDropdown() === 'category'" (click)="$event.stopPropagation()">
+                                    <div class="multiselect-dropdown" *ngIf="activeDropdown() === 'category'"
+                                          (click)="$event.stopPropagation()">
                                           <div class="dropdown-options">
                                                 <label class="option-label" *ngFor="let cat of categories()">
-                                                      <input type="checkbox" 
-                                                             [checked]="isCategorySelected(cat.id)" 
-                                                             (change)="toggleCategorySelection(cat.id)">
+                                                      <input type="checkbox" [checked]="isCategorySelected(cat.id)"
+                                                            (change)="toggleCategorySelection(cat.id)">
                                                       <span>{{ cat.name }}</span>
                                                 </label>
                                           </div>
@@ -56,21 +53,22 @@
                               </div>
 
                               <!-- Brand Multi-select -->
-                              <div class="filter-item custom-multiselect" [class.has-value]="selectedBrands().length > 0">
+                              <div class="filter-item custom-multiselect"
+                                    [class.has-value]="selectedBrands().length > 0">
                                     <div class="multiselect-trigger" (click)="toggleDropdown('brand', $event)">
                                           <span class="filter-select-icon material-icons-outlined">business</span>
                                           <span class="selected-text">{{ getBrandsLabel() }}</span>
                                           <span class="material-icons-outlined arrow-icon">expand_more</span>
                                     </div>
-                                    <div class="multiselect-dropdown" *ngIf="activeDropdown() === 'brand'" (click)="$event.stopPropagation()">
+                                    <div class="multiselect-dropdown" *ngIf="activeDropdown() === 'brand'"
+                                          (click)="$event.stopPropagation()">
                                           <div class="dropdown-options">
                                                 <div class="no-options-msg" *ngIf="availableBrands().length === 0">
                                                       لا توجد شركات متاحة
                                                 </div>
                                                 <label class="option-label" *ngFor="let brand of availableBrands()">
-                                                      <input type="checkbox" 
-                                                             [checked]="isBrandSelected(brand.id)" 
-                                                             (change)="toggleBrandSelection(brand.id)">
+                                                      <input type="checkbox" [checked]="isBrandSelected(brand.id)"
+                                                            (change)="toggleBrandSelection(brand.id)">
                                                       <span>{{ brand.name }}</span>
                                                 </label>
                                           </div>
@@ -78,21 +76,23 @@
                               </div>
 
                               <!-- Product Group Multi-select -->
-                              <div class="filter-item custom-multiselect" [class.has-value]="selectedProductGroups().length > 0">
+                              <div class="filter-item custom-multiselect"
+                                    [class.has-value]="selectedProductGroups().length > 0">
                                     <div class="multiselect-trigger" (click)="toggleDropdown('group', $event)">
                                           <span class="filter-select-icon material-icons-outlined">layers</span>
                                           <span class="selected-text">{{ getProductGroupsLabel() }}</span>
                                           <span class="material-icons-outlined arrow-icon">expand_more</span>
                                     </div>
-                                    <div class="multiselect-dropdown" *ngIf="activeDropdown() === 'group'" (click)="$event.stopPropagation()">
+                                    <div class="multiselect-dropdown" *ngIf="activeDropdown() === 'group'"
+                                          (click)="$event.stopPropagation()">
                                           <div class="dropdown-options">
                                                 <div class="no-options-msg" *ngIf="availableGroups().length === 0">
                                                       لا توجد مجموعات متاحة
                                                 </div>
                                                 <label class="option-label" *ngFor="let group of availableGroups()">
-                                                      <input type="checkbox" 
-                                                             [checked]="isProductGroupSelected(group.id)" 
-                                                             (change)="toggleProductGroupSelection(group.id)">
+                                                      <input type="checkbox"
+                                                            [checked]="isProductGroupSelected(group.id)"
+                                                            (change)="toggleProductGroupSelection(group.id)">
                                                       <span>{{ group.name }}</span>
                                                 </label>
                                           </div>
@@ -102,8 +102,7 @@
                               <!-- Advanced Filters Toggle Button -->
                               <button type="button" class="btn-more-filters"
                                     [class.active]="showAdvancedFilters() || hasAdvancedFiltersActive()"
-                                    (click)="toggleAdvancedFilters()"
-                                    title="تصفية متقدمة">
+                                    (click)="toggleAdvancedFilters()" title="تصفية متقدمة">
                                     <span class="material-icons-outlined">tune</span>
                                     <span>متقدمة</span>
                               </button>
@@ -237,11 +236,13 @@
 
                         <!-- Inline Action Buttons -->
                         <div class="adv-inline-actions">
-                              <button type="button" class="btn-adv-apply" (click)="applyAdvancedFilters()" title="تطبيق التصفية المتقدمة">
+                              <button type="button" class="btn-adv-apply" (click)="applyAdvancedFilters()"
+                                    title="تطبيق التصفية المتقدمة">
                                     <span class="material-icons-outlined">filter_alt</span>
                                     <span>تطبيق</span>
                               </button>
-                              <button type="button" class="btn-adv-clear" (click)="clearAdvancedFilters()" title="مسح حقول التصفية المتقدمة">
+                              <button type="button" class="btn-adv-clear" (click)="clearAdvancedFilters()"
+                                    title="مسح حقول التصفية المتقدمة">
                                     <span class="material-icons-outlined">restart_alt</span>
                                     <span>مسح</span>
                               </button>
@@ -278,7 +279,8 @@
                               </tr>
                         </thead>
                         <tbody *ngIf="!isLoading()">
-                              <tr class="leaf-product-row" *ngFor="let product of products(); trackBy: trackByProductId">
+                              <tr class="leaf-product-row"
+                                    *ngFor="let product of products(); trackBy: trackByProductId">
 
                                     <!-- Product Name & SKU -->
                                     <td class="col-tree-prod">
@@ -294,7 +296,8 @@
 
                                     <!-- Buying Price Column -->
                                     <td class="col-tree-buying">
-                                          <span class="price-val buying-price" *ngIf="product.buyingPrice; else noBuying">
+                                          <span class="price-val buying-price"
+                                                *ngIf="product.buyingPrice; else noBuying">
                                                 {{ product.buyingPrice | number:'1.2-2' }}
                                                 <small class="curr">ج.م</small>
                                           </span>
@@ -316,11 +319,13 @@
                                           <ng-container *ngIf="product.buyingPrice; else noProfit">
                                                 <span class="profit-cell">
                                                       <span class="profit-amount">
-                                                            {{ (product.sellingPrice - product.buyingPrice) | number:'1.2-2' }}
+                                                            {{ (product.sellingPrice - product.buyingPrice) |
+                                                            number:'1.2-2' }}
                                                             <small class="curr">ج.م</small>
                                                       </span>
                                                       <span class="profit-pct">
-                                                            ({{ ((product.sellingPrice - product.buyingPrice) / product.buyingPrice * 100) | number:'1.1-1' }}%)
+                                                            ({{ ((product.sellingPrice - product.buyingPrice) /
+                                                            product.buyingPrice * 100) | number:'1.1-1' }}%)
                                                       </span>
                                                 </span>
                                           </ng-container>
@@ -361,12 +366,24 @@
                         <!-- Loading Body -->
                         <tbody *ngIf="isLoading()" class="loading-tbody">
                               <tr class="skeleton-table-row" *ngFor="let i of [1,2,3,4,5,6,7,8]">
-                                    <td class="col-tree-prod"><div class="skeleton-cell" style="height: 32px; max-width: 80%;"></div></td>
-                                    <td class="col-tree-buying"><div class="skeleton-cell"></div></td>
-                                    <td class="col-tree-selling"><div class="skeleton-cell"></div></td>
-                                    <td class="col-tree-profit"><div class="skeleton-cell"></div></td>
-                                    <td class="col-tree-stock"><div class="skeleton-cell"></div></td>
-                                    <td class="col-tree-actions"><div class="skeleton-cell"></div></td>
+                                    <td class="col-tree-prod">
+                                          <div class="skeleton-cell" style="height: 32px; max-width: 80%;"></div>
+                                    </td>
+                                    <td class="col-tree-buying">
+                                          <div class="skeleton-cell"></div>
+                                    </td>
+                                    <td class="col-tree-selling">
+                                          <div class="skeleton-cell"></div>
+                                    </td>
+                                    <td class="col-tree-profit">
+                                          <div class="skeleton-cell"></div>
+                                    </td>
+                                    <td class="col-tree-stock">
+                                          <div class="skeleton-cell"></div>
+                                    </td>
+                                    <td class="col-tree-actions">
+                                          <div class="skeleton-cell"></div>
+                                    </td>
                               </tr>
                         </tbody>
                   </table>
@@ -378,12 +395,15 @@
             <!-- ============================= -->
             <div class="pagination-section" *ngIf="!isLoading() && totalProducts() > 0">
                   <div class="results-summary">
-                        <span>عرض <strong>{{ (currentPage() - 1) * pageSize() + 1 }}–{{ Math.min(currentPage() * pageSize(), totalProducts()) }}</strong> من إجمالي <strong>{{ totalProducts() }}</strong> منتج</span>
+                        <span>عرض <strong>{{ (currentPage() - 1) * pageSize() + 1 }}–{{ Math.min(currentPage() *
+                                    pageSize(), totalProducts()) }}</strong> من إجمالي <strong>{{ totalProducts()
+                                    }}</strong> منتج</span>
                   </div>
 
                   <div class="pagination-controls">
                         <!-- Next button (in RTL this moves to next page / left arrow) -->
-                        <button type="button" class="btn-pagination" [disabled]="currentPage() >= totalPages()" (click)="nextPage()" title="الصفحة التالية">
+                        <button type="button" class="btn-pagination" [disabled]="currentPage() >= totalPages()"
+                              (click)="nextPage()" title="الصفحة التالية">
                               <span class="material-icons-outlined">chevron_right</span>
                               <span>التالي</span>
                         </button>
@@ -400,7 +420,8 @@
                         </div>
 
                         <!-- Prev button (in RTL this moves to previous page / right arrow) -->
-                        <button type="button" class="btn-pagination" [disabled]="currentPage() <= 1" (click)="previousPage()" title="الصفحة السابقة">
+                        <button type="button" class="btn-pagination" [disabled]="currentPage() <= 1"
+                              (click)="previousPage()" title="الصفحة السابقة">
                               <span>السابق</span>
                               <span class="material-icons-outlined">chevron_left</span>
                         </button>
