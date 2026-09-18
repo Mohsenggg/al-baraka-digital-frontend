@@ -29,7 +29,7 @@
                                           <span class="material-icons-outlined">search</span>
                                     </button>
                                     <button type="button" class="clear-icon-button"
-                                          *ngIf="searchQuery()"
+                                          *ngIf="localSearchTerm() || searchQuery()"
                                           (click)="clearSearch()"
                                           aria-label="مسح">
                                           <span class="material-icons-outlined">close</span>
@@ -99,10 +99,20 @@
                                     </div>
                               </div>
 
+                              <!-- Advanced Filters Toggle Button -->
+                              <button type="button" class="btn-more-filters"
+                                    [class.active]="showAdvancedFilters() || hasAdvancedFiltersActive()"
+                                    (click)="toggleAdvancedFilters()"
+                                    title="تصفية متقدمة">
+                                    <span class="material-icons-outlined">tune</span>
+                                    <span>متقدمة</span>
+                              </button>
+
                               <!-- Reset Filters -->
                               <button type="button" class="btn-clear-filters" *ngIf="hasActiveFilters()"
-                                    (click)="clearFilters()" title="مسح التصفية">
+                                    (click)="clearFilters()" title="مسح كل التصفية">
                                     <span class="material-icons-outlined">filter_alt_off</span>
+                                    <span>مسح</span>
                               </button>
                         </div>
 
@@ -122,6 +132,95 @@
                               <button class="btn-add-product" routerLink="/pos/product/manage">
                                     <span class="material-icons-outlined">add_circle</span>
                                     <span>إضافة منتج</span>
+                              </button>
+                        </div>
+                  </div>
+            </div>
+
+            <!-- ============================= -->
+            <!-- ADVANCED FILTERS PANEL -->
+            <!-- ============================= -->
+            <div class="advanced-filters-panel" [class.expanded]="showAdvancedFilters()">
+                  <div class="filters-content">
+                        <div class="filter-row">
+                              <!-- Buying Price Range -->
+                              <div class="filter-group">
+                                    <label>سعر الشراء (ج.م)</label>
+                                    <div class="dual-input">
+                                          <input type="number" class="filter-input" placeholder="من"
+                                                [value]="localBuyingPriceMin() ?? ''"
+                                                (input)="updateNumberFilter('buyingMin', $event)">
+                                          <span class="to-label">إلى</span>
+                                          <input type="number" class="filter-input" placeholder="إلى"
+                                                [value]="localBuyingPriceMax() ?? ''"
+                                                (input)="updateNumberFilter('buyingMax', $event)">
+                                    </div>
+                              </div>
+
+                              <!-- Selling Price Range -->
+                              <div class="filter-group">
+                                    <label>سعر البيع (ج.م)</label>
+                                    <div class="dual-input">
+                                          <input type="number" class="filter-input" placeholder="من"
+                                                [value]="localSellingPriceMin() ?? ''"
+                                                (input)="updateNumberFilter('sellingMin', $event)">
+                                          <span class="to-label">إلى</span>
+                                          <input type="number" class="filter-input" placeholder="إلى"
+                                                [value]="localSellingPriceMax() ?? ''"
+                                                (input)="updateNumberFilter('sellingMax', $event)">
+                                    </div>
+                              </div>
+
+                              <!-- Profit Value Range -->
+                              <div class="filter-group">
+                                    <label>الربح بالقيمة (ج.م)</label>
+                                    <div class="dual-input">
+                                          <input type="number" class="filter-input" placeholder="من"
+                                                [value]="localProfitValueMin() ?? ''"
+                                                (input)="updateNumberFilter('profitValMin', $event)">
+                                          <span class="to-label">إلى</span>
+                                          <input type="number" class="filter-input" placeholder="إلى"
+                                                [value]="localProfitValueMax() ?? ''"
+                                                (input)="updateNumberFilter('profitValMax', $event)">
+                                    </div>
+                              </div>
+
+                              <!-- Profit Margin % Range -->
+                              <div class="filter-group">
+                                    <label>نسبة الربح (%)</label>
+                                    <div class="dual-input">
+                                          <input type="number" class="filter-input" placeholder="من"
+                                                [value]="localProfitPercentMin() ?? ''"
+                                                (input)="updateNumberFilter('profitPctMin', $event)">
+                                          <span class="to-label">إلى</span>
+                                          <input type="number" class="filter-input" placeholder="إلى"
+                                                [value]="localProfitPercentMax() ?? ''"
+                                                (input)="updateNumberFilter('profitPctMax', $event)">
+                                    </div>
+                              </div>
+
+                              <!-- Stock Status Filter -->
+                              <div class="filter-group">
+                                    <label>حالة المخزون</label>
+                                    <select class="filter-input"
+                                          [value]="localStockStatusFilter()"
+                                          (change)="updateStockFilter($event)">
+                                          <option value="">الكل</option>
+                                          <option value="healthy">متوفر (جيد)</option>
+                                          <option value="low">مخزون منخفض</option>
+                                          <option value="critical">حرج (أوشك على النفاد)</option>
+                                          <option value="outofstock">نفد من المخزون</option>
+                                    </select>
+                              </div>
+                        </div>
+
+                        <div class="filters-actions">
+                              <button type="button" class="btn-filter-clear" (click)="clearAdvancedFilters()">
+                                    مسح الحقول
+                              </button>
+                              <button type="button" class="btn-filter-apply" (click)="applyAdvancedFilters()">
+                                    <span class="material-icons-outlined">search</span>
+                                    <span>تطبيق التصفية</span>
                               </button>
                         </div>
                   </div>

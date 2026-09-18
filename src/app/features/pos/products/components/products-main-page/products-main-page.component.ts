@@ -61,6 +61,18 @@ export class ProductsMainPageComponent implements OnInit {
       // Active dropdown state ('category' | 'brand' | 'group' | null)
       activeDropdown = signal<string | null>(null);
 
+      // Advanced filters visibility & local form values
+      showAdvancedFilters = signal<boolean>(false);
+      localBuyingPriceMin = signal<number | null>(null);
+      localBuyingPriceMax = signal<number | null>(null);
+      localSellingPriceMin = signal<number | null>(null);
+      localSellingPriceMax = signal<number | null>(null);
+      localProfitValueMin = signal<number | null>(null);
+      localProfitValueMax = signal<number | null>(null);
+      localProfitPercentMin = signal<number | null>(null);
+      localProfitPercentMax = signal<number | null>(null);
+      localStockStatusFilter = signal<string>('');
+
       hoveredProductId = signal<number | null>(null);
       openMenuId = signal<number | null>(null);
 
@@ -89,6 +101,8 @@ export class ProductsMainPageComponent implements OnInit {
       onSearchInput(event: Event): void {
             const input = event.target as HTMLInputElement;
             this.localSearchTerm.set(input.value);
+            this.resetScroll();
+            this.state.setSearchQuery(input.value);
       }
 
       onSearchKeyDown(event: KeyboardEvent): void {
@@ -195,9 +209,85 @@ export class ProductsMainPageComponent implements OnInit {
             return `المجموعات (${selected.length})`;
       }
 
+      toggleAdvancedFilters(): void {
+            this.showAdvancedFilters.update(v => !v);
+      }
+
+      hasAdvancedFiltersActive(): boolean {
+            return (
+                  this.state.buyingPriceMin() != null ||
+                  this.state.buyingPriceMax() != null ||
+                  this.state.sellingPriceMin() != null ||
+                  this.state.sellingPriceMax() != null ||
+                  this.state.profitValueMin() != null ||
+                  this.state.profitValueMax() != null ||
+                  this.state.profitPercentMin() != null ||
+                  this.state.profitPercentMax() != null ||
+                  (!!this.state.stockStatusFilter() && this.state.stockStatusFilter() !== 'ALL')
+            );
+      }
+
+      updateNumberFilter(filterName: 'buyingMin' | 'buyingMax' | 'sellingMin' | 'sellingMax' | 'profitValMin' | 'profitValMax' | 'profitPctMin' | 'profitPctMax', event: Event): void {
+            const input = event.target as HTMLInputElement;
+            const val = input.value.trim() === '' ? null : Number(input.value);
+            switch (filterName) {
+                  case 'buyingMin': this.localBuyingPriceMin.set(val); break;
+                  case 'buyingMax': this.localBuyingPriceMax.set(val); break;
+                  case 'sellingMin': this.localSellingPriceMin.set(val); break;
+                  case 'sellingMax': this.localSellingPriceMax.set(val); break;
+                  case 'profitValMin': this.localProfitValueMin.set(val); break;
+                  case 'profitValMax': this.localProfitValueMax.set(val); break;
+                  case 'profitPctMin': this.localProfitPercentMin.set(val); break;
+                  case 'profitPctMax': this.localProfitPercentMax.set(val); break;
+            }
+      }
+
+      updateStockFilter(event: Event): void {
+            const select = event.target as HTMLSelectElement;
+            this.localStockStatusFilter.set(select.value);
+      }
+
+      applyAdvancedFilters(): void {
+            this.resetScroll();
+            this.state.setAdvancedFilters({
+                  buyingPriceMin: this.localBuyingPriceMin(),
+                  buyingPriceMax: this.localBuyingPriceMax(),
+                  sellingPriceMin: this.localSellingPriceMin(),
+                  sellingPriceMax: this.localSellingPriceMax(),
+                  profitValueMin: this.localProfitValueMin(),
+                  profitValueMax: this.localProfitValueMax(),
+                  profitPercentMin: this.localProfitPercentMin(),
+                  profitPercentMax: this.localProfitPercentMax(),
+                  stockStatusFilter: this.localStockStatusFilter()
+            });
+      }
+
+      clearAdvancedFilters(): void {
+            this.resetScroll();
+            this.localBuyingPriceMin.set(null);
+            this.localBuyingPriceMax.set(null);
+            this.localSellingPriceMin.set(null);
+            this.localSellingPriceMax.set(null);
+            this.localProfitValueMin.set(null);
+            this.localProfitValueMax.set(null);
+            this.localProfitPercentMin.set(null);
+            this.localProfitPercentMax.set(null);
+            this.localStockStatusFilter.set('');
+            this.state.clearAdvancedFilters();
+      }
+
       clearFilters(): void {
             this.resetScroll();
             this.localSearchTerm.set('');
+            this.localBuyingPriceMin.set(null);
+            this.localBuyingPriceMax.set(null);
+            this.localSellingPriceMin.set(null);
+            this.localSellingPriceMax.set(null);
+            this.localProfitValueMin.set(null);
+            this.localProfitValueMax.set(null);
+            this.localProfitPercentMin.set(null);
+            this.localProfitPercentMax.set(null);
+            this.localStockStatusFilter.set('');
             this.state.clearFilters();
       }
 

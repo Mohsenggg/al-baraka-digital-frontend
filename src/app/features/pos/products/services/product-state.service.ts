@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { BehaviorSubject, Observable, catchError, Subject, tap, throwError } from 'rxjs';
 import { ProductApiService } from './product-api.service';
-import type { ProductListItem } from '../models/product.models';
+import { calculateProfitMargin, resolveStockStatus, type ProductListItem } from '../models/product.models';
 
 @Injectable({
       providedIn: 'root'
@@ -31,6 +31,17 @@ export class ProductStateService {
       public selectedCategories = signal<(number | string)[]>([]);
       public selectedBrands = signal<(number | string)[]>([]);
       public selectedProductGroups = signal<(number | string)[]>([]);
+
+      // Advanced Filters
+      public buyingPriceMin = signal<number | null>(null);
+      public buyingPriceMax = signal<number | null>(null);
+      public sellingPriceMin = signal<number | null>(null);
+      public sellingPriceMax = signal<number | null>(null);
+      public profitValueMin = signal<number | null>(null);
+      public profitValueMax = signal<number | null>(null);
+      public profitPercentMin = signal<number | null>(null);
+      public profitPercentMax = signal<number | null>(null);
+      public stockStatusFilter = signal<string>('');
 
       // Category options extracted from Tree
       public categories = computed(() => {
@@ -223,6 +234,49 @@ export class ProductStateService {
                   list = list.filter(p => p.status === status);
             }
 
+            // Advanced Filters: Buying Price Range
+            const bMin = this.buyingPriceMin();
+            const bMax = this.buyingPriceMax();
+            if (bMin != null) {
+                  list = list.filter(p => (p.buyingPrice != null ? p.buyingPrice >= bMin : false));
+            }
+            if (bMax != null) {
+                  list = list.filter(p => (p.buyingPrice != null ? p.buyingPrice <= bMax : false));
+            }
+
+            // Advanced Filters: Selling Price Range
+            const sMin = this.sellingPriceMin();
+            const sMax = this.sellingPriceMax();
+            if (sMin != null) {
+                  list = list.filter(p => (p.sellingPrice != null ? p.sellingPrice >= sMin : false));
+            }
+            if (sMax != null) {
+                  list = list.filter(p => (p.sellingPrice != null ? p.sellingPrice <= sMax : false));
+            }
+
+            // Advanced Filters: Profit Value & Margin %
+            const pvMin = this.profitValueMin();
+            const pvMax = this.profitValueMax();
+            const ppMin = this.profitPercentMin();
+            const ppMax = this.profitPercentMax();
+
+            if (pvMin != null || pvMax != null || ppMin != null || ppMax != null) {
+                  list = list.filter(p => {
+                        const margin = calculateProfitMargin(p.buyingPrice || 0, p.sellingPrice || 0);
+                        if (pvMin != null && margin.value < pvMin) return false;
+                        if (pvMax != null && margin.value > pvMax) return false;
+                        if (ppMin != null && margin.percentage < ppMin) return false;
+                        if (ppMax != null && margin.percentage > ppMax) return false;
+                        return true;
+                  });
+            }
+
+            // Advanced Filters: Stock Status
+            const stockFilter = this.stockStatusFilter();
+            if (stockFilter && stockFilter !== 'ALL') {
+                  list = list.filter(p => resolveStockStatus(p.stock) === stockFilter);
+            }
+
             return list;
       });
 
@@ -318,12 +372,49 @@ export class ProductStateService {
             this.currentPage.set(1);
       }
 
+      public setAdvancedFilters(filters: {
+            buyingPriceMin?: number | null;
+            buyingPriceMax?: number | null;
+            sellingPriceMin?: number | null;
+            sellingPriceMax?: number | null;
+            profitValueMin?: number | null;
+            profitValueMax?: number | null;
+            profitPercentMin?: number | null;
+            profitPercentMax?: number | null;
+            stockStatusFilter?: string;
+      }): void {
+            if (filters.buyingPriceMin !== undefined) this.buyingPriceMin.set(filters.buyingPriceMin);
+            if (filters.buyingPriceMax !== undefined) this.buyingPriceMax.set(filters.buyingPriceMax);
+            if (filters.sellingPriceMin !== undefined) this.sellingPriceMin.set(filters.sellingPriceMin);
+            if (filters.sellingPriceMax !== undefined) this.sellingPriceMax.set(filters.sellingPriceMax);
+            if (filters.profitValueMin !== undefined) this.profitValueMin.set(filters.profitValueMin);
+            if (filters.profitValueMax !== undefined) this.profitValueMax.set(filters.profitValueMax);
+            if (filters.profitPercentMin !== undefined) this.profitPercentMin.set(filters.profitPercentMin);
+            if (filters.profitPercentMax !== undefined) this.profitPercentMax.set(filters.profitPercentMax);
+            if (filters.stockStatusFilter !== undefined) this.stockStatusFilter.set(filters.stockStatusFilter);
+            this.currentPage.set(1);
+      }
+
+      public clearAdvancedFilters(): void {
+            this.buyingPriceMin.set(null);
+            this.buyingPriceMax.set(null);
+            this.sellingPriceMin.set(null);
+            this.sellingPriceMax.set(null);
+            this.profitValueMin.set(null);
+            this.profitValueMax.set(null);
+            this.profitPercentMin.set(null);
+            this.profitPercentMax.set(null);
+            this.stockStatusFilter.set('');
+            this.currentPage.set(1);
+      }
+
       public clearFilters(): void {
             this.searchQuery.set('');
             this.selectedCategories.set([]);
             this.selectedBrands.set([]);
             this.selectedProductGroups.set([]);
             this.selectedStatus.set('');
+            this.clearAdvancedFilters();
             this.currentPage.set(1);
       }
 
@@ -333,7 +424,16 @@ export class ProductStateService {
                   this.selectedCategories().length > 0 ||
                   this.selectedBrands().length > 0 ||
                   this.selectedProductGroups().length > 0 ||
-                  this.selectedStatus()
+                  this.selectedStatus() ||
+                  this.buyingPriceMin() != null ||
+                  this.buyingPriceMax() != null ||
+                  this.sellingPriceMin() != null ||
+                  this.sellingPriceMax() != null ||
+                  this.profitValueMin() != null ||
+                  this.profitValueMax() != null ||
+                  this.profitPercentMin() != null ||
+                  this.profitPercentMax() != null ||
+                  (this.stockStatusFilter() && this.stockStatusFilter() !== 'ALL')
             );
       }
 
