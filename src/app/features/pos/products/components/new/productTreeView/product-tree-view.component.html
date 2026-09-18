@@ -14,6 +14,10 @@
                                                 <span class="material-icons-outlined">account_tree</span>
                                                 هيكل هرمي
                                           </span>
+                                          <span class="edit-pill-badge" *ngIf="isEditMode()">
+                                                <span class="material-icons-outlined">tune</span>
+                                                وضع التعديل
+                                          </span>
                                     </div>
                                     <p class="page-subtitle">استعراض وتصفح دليل المنتجات وفق الهيكل الهرمي (قسم &larr;
                                           شركة &larr; مجموعة &larr; منتج)</p>
@@ -48,31 +52,6 @@
                                     <span>إضافة منتج</span>
                               </button>
                         </div>
-                  </div>
-            </div>
-
-            <!-- ============================= -->
-            <!-- EDIT MODE BANNER (Task 4) -->
-            <!-- ============================= -->
-            <div class="edit-mode-banner" *ngIf="isEditMode()">
-                  <div class="edit-banner-content">
-                        <span class="material-icons-outlined edit-banner-icon">tune</span>
-                        <div class="edit-banner-text">
-                              <strong>وضع تعديل الهيكل مفعل</strong>
-                              <p>يمكنك الآن إعادة التسمية، النقل الفردي أو الجماعي للمنتجات، أو حذف المجموعات الفارغة.</p>
-                        </div>
-                  </div>
-
-                  <div class="edit-banner-actions">
-                        <span class="selection-chip" *ngIf="selectedProductsCount() > 0">
-                              <span class="material-icons-outlined">check_box</span>
-                              تم تحديد {{ selectedProductsCount() }} منتج
-                        </span>
-                        <button type="button" class="btn-clear-selection" *ngIf="selectedProductsCount() > 0"
-                              (click)="clearSelection()">
-                              <span class="material-icons-outlined">deselect</span>
-                              إلغاء التحديد
-                        </button>
                   </div>
             </div>
 

@@ -108,6 +108,29 @@
       font-size: 0.85rem;
 }
 
+.edit-pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 20px;
+      border: 1px solid #fcd34d;
+      animation: badge-pop 0.2s ease-out;
+}
+
+.edit-pill-badge .material-icons-outlined {
+      font-size: 0.85rem;
+}
+
+@keyframes badge-pop {
+      from { opacity: 0; transform: scale(0.9); }
+      to   { opacity: 1; transform: scale(1); }
+}
+
 .page-subtitle {
       margin: 4px 0 0 0;
       font-size: 0.82rem;
