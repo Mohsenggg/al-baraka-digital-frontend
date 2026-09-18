@@ -69,7 +69,8 @@
                                           "buildTarget": "R_Front_Project:build:production"
                                     },
                                     "development": {
-                                          "buildTarget": "R_Front_Project:build:development"
+                                          "buildTarget": "R_Front_Project:build:development",
+                                          "proxyConfig": "proxy.conf.json"
                                     }
                               },
                               "defaultConfiguration": "development"

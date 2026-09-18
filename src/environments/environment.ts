@@ -3,7 +3,7 @@ export const environment = {
       production: false,
       apiUrl2: '/api/v1',
 
-      apiUrl: '/api',
+      apiUrl: '/api', // Relative path (single source of truth). Dev: `ng serve` proxies /api -> http://localhost:8080 (proxy.conf.json). Prod: Nginx proxies /api -> http://backend:8080 (nginx.conf).
       firebase: {
             apiKey: 'AIzaSyBeEkn02NimObccgjEL3Xqo7ZB0CDS4DfA',
             authDomain: 'tree-f0d91.firebaseapp.com',

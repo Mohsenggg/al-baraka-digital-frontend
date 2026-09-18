@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
   apiUrl2: '/api/v1',
-  apiUrl: '/api',
+  apiUrl: '/api', // Relative path. Served by Nginx in the production/Docker image: /api -> http://backend:8080 (nginx.conf).
   firebase: {
     apiKey: 'AIzaSyBeEkn02NimObccgjEL3Xqo7ZB0CDS4DfA',
     authDomain: 'tree-f0d91.firebaseapp.com',

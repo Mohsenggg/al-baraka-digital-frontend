@@ -67,3 +67,54 @@ Navigate to the Products Page (by clicking "إدارة المخزون" in the si
 Verify that the mini-sidebar is visible.
 Verify that the active styling correctly highlights "إدارة المخزون" using routerLinkActive.
 Click the menu button next to the title "المنتجات" or the sidebar menu button; verify the sidebar expands overlaying the page.
+
+---
+
+## API Routing: Local Development vs Production
+
+The app always calls the **relative** `/api` base path (`src/environments/environment.ts` -> `apiUrl`,
+`src/app/shared/environment/developments.ts` -> `API_URL`). Only the thing that resolves `/api`
+differs per mode:
+
+| Mode | Command | `/api` handled by | Backend reached |
+| --- | --- | --- | --- |
+| Local development | `npm start` (`ng serve` on http://localhost:4200) | Angular dev-server proxy (`proxy.conf.json`) | `http://localhost:8080` |
+| Production / Docker | `npm run build` served by Nginx (Dockerfile) | Nginx (`nginx.conf`, `location /api`) | `http://backend:8080` |
+
+### 1) Local development (your local backend on 8080)
+
+1. Start your backend so it listens on port `8080`.
+2. Run `npm start` and open http://localhost:4200.
+
+Every `/api/...` call is forwarded by the dev server to `http://localhost:8080/api/...`, so the backend
+sees the same path it gets through Nginx, and the browser stays same-origin (no CORS needed).
+
+If your local backend runs on a different host/port, just edit `target` in `proxy.conf.json`
+(no application code change):
+
+```json
+{
+  "/api": {
+    "target": "http://localhost:8081",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "info"
+  }
+}
+```
+
+If the proxy target is down, the dev server answers proxied requests with an error (e.g. `504` /
+`ECONNREFUSED`) while the Angular app itself keeps working - handy signal that the backend is not up.
+
+### 2) Production / Docker (Nginx)
+
+`angular.json` only attaches `proxy.conf.json` to the **development** serve configuration, so the
+production bundle keeps the plain relative `/api` path and Nginx forwards it to the `backend`
+service on port 8080 (`nginx.conf` -> `proxy_pass http://backend:8080;`). Nothing else to change.
+
+### Alternative: absolute URLs instead of a proxy
+
+If you would rather have the browser call `http://localhost:8080/api` directly in development, set
+`apiUrl` / `API_URL` to that absolute URL in the two development environment files and enable CORS
+on the backend. The proxy setup above is preferred because it keeps dev and prod path-identical and
+avoids CORS/preflight issues.
