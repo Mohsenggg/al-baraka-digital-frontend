@@ -70,6 +70,10 @@ export class ProductTreeViewComponent implements OnInit {
       selectedCategoryId = signal<string>('');
       selectedStockFilter = signal<string>('');
 
+      /** Two-way ngModel bridge for the search input — reads/writes the searchQuery signal. */
+      get searchQueryModel(): string { return this.searchQuery(); }
+      set searchQueryModel(val: string) { this.searchQuery.set(val); }
+
       // UI popups / active menus
       openMenuProductId = signal<number | string | null>(null);
       activePricePopoverProductId = signal<number | string | null>(null);
@@ -380,10 +384,6 @@ export class ProductTreeViewComponent implements OnInit {
       }
 
       // Search & Filters controls
-      onSearchInput(event: Event): void {
-            const input = event.target as HTMLInputElement;
-            this.searchQuery.set(input.value);
-      }
 
       clearSearch(): void {
             this.searchQuery.set('');

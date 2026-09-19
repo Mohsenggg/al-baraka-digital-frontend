@@ -10,17 +10,24 @@
                               <div>
                                     <div class="title-with-badge">
                                           <h1 class="page-title">شجرة المنتجات</h1>
-                                          <span class="view-pill-badge">
-                                                <span class="material-icons-outlined">account_tree</span>
-                                                هيكل هرمي
-                                          </span>
+                                          <!-- Edit Mode toggle -->
+                                          <button type="button" class="btn-edit-mode" [class.active]="isEditMode()"
+                                                (click)="toggleEditMode()"
+                                                [title]="isEditMode() ? 'إنهاء وضع التعديل' : 'تفعيل وضع تعديل الهيكل'">
+                                                <span class="material-icons-outlined">{{ isEditMode() ? 'check_circle' :
+                                                      'tune' }}</span>
+                                                <span>{{ isEditMode() ? 'إنهاء التعديل' : 'وضع التعديل' }}</span>
+                                          </button>
+
                                           <span class="edit-pill-badge" *ngIf="isEditMode()">
                                                 <span class="material-icons-outlined">tune</span>
                                                 وضع التعديل
                                           </span>
                                     </div>
-                                    <p class="page-subtitle">استعراض وتصفح دليل المنتجات وفق الهيكل الهرمي (قسم &larr;
-                                          شركة &larr; مجموعة &larr; منتج)</p>
+                                    <!-- <p class="page-subtitle"> (قسم &larr;
+                                          شركة &larr; مجموعة &larr; منتج)</p> -->
+
+
                               </div>
                         </div>
 
@@ -38,15 +45,6 @@
                                     </button>
                               </div>
 
-                              <!-- Edit Mode toggle (Task 4) -->
-                              <button type="button" class="btn-edit-mode" [class.active]="isEditMode()"
-                                    (click)="toggleEditMode()"
-                                    [title]="isEditMode() ? 'إنهاء وضع التعديل' : 'تفعيل وضع تعديل الهيكل'">
-                                    <span class="material-icons-outlined">{{ isEditMode() ? 'check_circle' : 'tune'
-                                          }}</span>
-                                    <span>{{ isEditMode() ? 'إنهاء التعديل' : 'تعديل الهيكل' }}</span>
-                              </button>
-
                               <button class="btn-add-product" routerLink="/pos/product/manage">
                                     <span class="material-icons-outlined">add_circle</span>
                                     <span>إضافة منتج</span>
@@ -60,21 +58,51 @@
             <!-- ============================= -->
             <div class="toolbar-section">
                   <div class="toolbar-content">
-                        <!-- Search Bar -->
-                        <div class="search-bar-wrapper filter-search">
+                        <div class="tree-stats-strip">
+                              <div class="stat-pill">
+                                    <span class="stat-pill-icon material-icons-outlined cat-color">folder</span>
+                                    <span class="stat-pill-val">{{ stats().totalCategories }}</span>
+                                    <span class="stat-pill-lbl">أقسام</span>
+                              </div>
+                              <div class="stat-sep">/</div>
+                              <div class="stat-pill">
+                                    <span class="stat-pill-icon material-icons-outlined brand-color">storefront</span>
+                                    <span class="stat-pill-val">{{ stats().totalBrands }}</span>
+                                    <span class="stat-pill-lbl">شركات</span>
+                              </div>
+                              <div class="stat-sep">/</div>
+                              <div class="stat-pill">
+                                    <span class="stat-pill-icon material-icons-outlined group-color">layers</span>
+                                    <span class="stat-pill-val">{{ stats().totalGroups }}</span>
+                                    <span class="stat-pill-lbl">مجموعات</span>
+                              </div>
+                              <div class="stat-sep">/</div>
+                              <div class="stat-pill highlight">
+                                    <span class="stat-pill-icon material-icons-outlined prod-color">inventory</span>
+                                    <span class="stat-pill-val">{{ stats().totalProducts }}</span>
+                                    <span class="stat-pill-lbl">منتجات</span>
+                              </div>
+                              <div class="stat-sep">/</div>
+                              <div class="stat-pill">
+                                    <span class="stat-pill-icon material-icons-outlined stock-color">warehouse</span>
+                                    <span class="stat-pill-val">{{ stats().totalStockUnits | number }}</span>
+                                    <span class="stat-pill-lbl">إجمالي الوحدات</span>
+                              </div>
+                        </div>
+                        <!-- <div class="search-bar-wrapper filter-search">
                               <input type="text" class="search-input"
                                     placeholder="بحث بالاسم، الباركود، الكود، القسم أو الشركة..."
-                                    [value]="searchQuery()" (input)="onSearchInput($event)">
+                                    [(ngModel)]="searchQueryModel">
                               <button type="button" class="search-clear-btn" *ngIf="searchQuery()"
                                     (click)="clearSearch()" aria-label="مسح">
                                     <span class="material-icons-outlined">close</span>
                               </button>
                               <span class="search-icon-static material-icons-outlined"
                                     *ngIf="!searchQuery()">search</span>
-                        </div>
+                        </div> -->
 
                         <!-- Filter by Category -->
-                        <div class="filter-item">
+                        <!-- <div class="filter-item">
                               <div class="filter-select-wrapper" [class.has-value]="selectedCategoryId()">
                                     <select class="filter-select" [value]="selectedCategoryId()"
                                           (change)="onCategoryFilterChange($any($event.target).value)">
@@ -85,10 +113,10 @@
                                     </select>
                                     <span class="filter-select-icon material-icons-outlined">category</span>
                               </div>
-                        </div>
+                        </div> -->
 
                         <!-- Filter by Stock Status -->
-                        <div class="filter-item">
+                        <!-- <div class="filter-item">
                               <div class="filter-select-wrapper" [class.has-value]="selectedStockFilter()">
                                     <select class="filter-select" [value]="selectedStockFilter()"
                                           (change)="onStockFilterChange($any($event.target).value)">
@@ -100,7 +128,7 @@
                                     </select>
                                     <span class="filter-select-icon material-icons-outlined">inventory_2</span>
                               </div>
-                        </div>
+                        </div> -->
 
                         <!-- Expand / Collapse All Controls -->
                         <div class="tree-controls-group">
@@ -117,45 +145,15 @@
                         </div>
 
                         <!-- Reset Filters -->
-                        <button type="button" class="btn-clear-filters" *ngIf="hasActiveFilters()"
+                        <!-- <button type="button" class="btn-clear-filters" *ngIf="hasActiveFilters()"
                               (click)="clearAllFilters()">
                               <span class="material-icons-outlined">filter_alt_off</span>
                               <span>مسح التصفية</span>
-                        </button>
+                        </button> -->
                   </div>
 
                   <!-- Statistics summary chip strip -->
-                  <div class="tree-stats-strip">
-                        <div class="stat-pill">
-                              <span class="stat-pill-icon material-icons-outlined cat-color">folder</span>
-                              <span class="stat-pill-val">{{ stats().totalCategories }}</span>
-                              <span class="stat-pill-lbl">أقسام</span>
-                        </div>
-                        <div class="stat-sep">/</div>
-                        <div class="stat-pill">
-                              <span class="stat-pill-icon material-icons-outlined brand-color">storefront</span>
-                              <span class="stat-pill-val">{{ stats().totalBrands }}</span>
-                              <span class="stat-pill-lbl">شركات</span>
-                        </div>
-                        <div class="stat-sep">/</div>
-                        <div class="stat-pill">
-                              <span class="stat-pill-icon material-icons-outlined group-color">layers</span>
-                              <span class="stat-pill-val">{{ stats().totalGroups }}</span>
-                              <span class="stat-pill-lbl">مجموعات</span>
-                        </div>
-                        <div class="stat-sep">/</div>
-                        <div class="stat-pill highlight">
-                              <span class="stat-pill-icon material-icons-outlined prod-color">inventory</span>
-                              <span class="stat-pill-val">{{ stats().totalProducts }}</span>
-                              <span class="stat-pill-lbl">منتجات</span>
-                        </div>
-                        <div class="stat-sep">/</div>
-                        <div class="stat-pill">
-                              <span class="stat-pill-icon material-icons-outlined stock-color">warehouse</span>
-                              <span class="stat-pill-val">{{ stats().totalStockUnits | number }}</span>
-                              <span class="stat-pill-lbl">إجمالي الوحدات</span>
-                        </div>
-                  </div>
+
             </div>
 
             <!-- ============================= -->
@@ -245,7 +243,8 @@
                                                       [disabled]="isNodeActionPending('category', category.id)"
                                                       (click)="openRenameCategory(category, $event)"
                                                       title="إعادة تسمية القسم">
-                                                      <span class="material-icons-outlined">drive_file_rename_outline</span>
+                                                      <span
+                                                            class="material-icons-outlined">drive_file_rename_outline</span>
                                                 </button>
                                                 <button type="button" class="btn-node-action btn-node-delete"
                                                       [disabled]="!isNodeDeletable('category', category.id) || isNodeActionPending('category', category.id)"
@@ -314,23 +313,28 @@
                                                             </div>
                                                             <!-- Edit Mode actions: rename / delete brand (Task 5) -->
                                                             <div class="node-edit-actions" *ngIf="isEditMode()">
-                                                                  <button type="button" class="btn-node-action btn-rename"
+                                                                  <button type="button"
+                                                                        class="btn-node-action btn-rename"
                                                                         [disabled]="isNodeActionPending('brand', brand.id)"
                                                                         (click)="openRenameBrand(category, brand, $event)"
                                                                         title="إعادة تسمية الشركة / العلامة التجارية">
-                                                                        <span class="material-icons-outlined">drive_file_rename_outline</span>
+                                                                        <span
+                                                                              class="material-icons-outlined">drive_file_rename_outline</span>
                                                                   </button>
                                                                   <button type="button" class="btn-node-action btn-move"
                                                                         [disabled]="isNodeActionPending('brand', brand.id)"
                                                                         (click)="openMoveBrand(category, brand, $event)"
                                                                         title="نقل الشركة إلى قسم آخر">
-                                                                        <span class="material-icons-outlined">drive_file_move</span>
+                                                                        <span
+                                                                              class="material-icons-outlined">drive_file_move</span>
                                                                   </button>
-                                                                  <button type="button" class="btn-node-action btn-node-delete"
+                                                                  <button type="button"
+                                                                        class="btn-node-action btn-node-delete"
                                                                         [disabled]="!isNodeDeletable('brand', brand.id) || isNodeActionPending('brand', brand.id)"
                                                                         (click)="openDeleteBrand(category, brand, $event)"
                                                                         [title]="isNodeDeletable('brand', brand.id) ? 'حذف الشركة (الشركات الفارغة فقط)' : 'لا يمكن حذف عنصر يحتوي على بيانات تابعة'">
-                                                                        <span class="material-icons-outlined">delete_outline</span>
+                                                                        <span
+                                                                              class="material-icons-outlined">delete_outline</span>
                                                                   </button>
                                                             </div>
                                                       </div>
@@ -384,24 +388,31 @@
                                                                               {{ group.products.length }} منتج
                                                                         </span>
                                                                         <!-- Edit Mode actions: rename / delete group (Task 5) -->
-                                                                        <div class="node-edit-actions" *ngIf="isEditMode()">
-                                                                              <button type="button" class="btn-node-action btn-rename"
+                                                                        <div class="node-edit-actions"
+                                                                              *ngIf="isEditMode()">
+                                                                              <button type="button"
+                                                                                    class="btn-node-action btn-rename"
                                                                                     [disabled]="isNodeActionPending('group', group.id)"
                                                                                     (click)="openRenameGroup(category, brand, group, $event)"
                                                                                     title="إعادة تسمية المجموعة">
-                                                                                    <span class="material-icons-outlined">drive_file_rename_outline</span>
+                                                                                    <span
+                                                                                          class="material-icons-outlined">drive_file_rename_outline</span>
                                                                               </button>
-                                                                              <button type="button" class="btn-node-action btn-move"
+                                                                              <button type="button"
+                                                                                    class="btn-node-action btn-move"
                                                                                     [disabled]="isNodeActionPending('group', group.id)"
                                                                                     (click)="openMoveGroup(category, brand, group, $event)"
                                                                                     title="نقل المجموعة إلى شركة أخرى">
-                                                                                    <span class="material-icons-outlined">drive_file_move</span>
+                                                                                    <span
+                                                                                          class="material-icons-outlined">drive_file_move</span>
                                                                               </button>
-                                                                              <button type="button" class="btn-node-action btn-node-delete"
+                                                                              <button type="button"
+                                                                                    class="btn-node-action btn-node-delete"
                                                                                     [disabled]="!isNodeDeletable('group', group.id) || isNodeActionPending('group', group.id)"
                                                                                     (click)="openDeleteGroup(category, brand, group, $event)"
                                                                                     [title]="isNodeDeletable('group', group.id) ? 'حذف المجموعة (المجموعات الفارغة فقط)' : 'لا يمكن حذف عنصر يحتوي على بيانات تابعة'">
-                                                                                    <span class="material-icons-outlined">delete_outline</span>
+                                                                                    <span
+                                                                                          class="material-icons-outlined">delete_outline</span>
                                                                               </button>
                                                                         </div>
                                                                   </div>
@@ -469,23 +480,28 @@
                                                             </span>
                                                             <!-- Edit Mode actions: rename / delete group (Task 5) -->
                                                             <div class="node-edit-actions" *ngIf="isEditMode()">
-                                                                  <button type="button" class="btn-node-action btn-rename"
+                                                                  <button type="button"
+                                                                        class="btn-node-action btn-rename"
                                                                         [disabled]="isNodeActionPending('group', group.id)"
                                                                         (click)="openRenameGroup(category, null, group, $event)"
                                                                         title="إعادة تسمية المجموعة">
-                                                                        <span class="material-icons-outlined">drive_file_rename_outline</span>
+                                                                        <span
+                                                                              class="material-icons-outlined">drive_file_rename_outline</span>
                                                                   </button>
                                                                   <button type="button" class="btn-node-action btn-move"
                                                                         [disabled]="isNodeActionPending('group', group.id)"
                                                                         (click)="openMoveGroup(category, null, group, $event)"
                                                                         title="نقل المجموعة إلى شركة أخرى">
-                                                                        <span class="material-icons-outlined">drive_file_move</span>
+                                                                        <span
+                                                                              class="material-icons-outlined">drive_file_move</span>
                                                                   </button>
-                                                                  <button type="button" class="btn-node-action btn-node-delete"
+                                                                  <button type="button"
+                                                                        class="btn-node-action btn-node-delete"
                                                                         [disabled]="!isNodeDeletable('group', group.id) || isNodeActionPending('group', group.id)"
                                                                         (click)="openDeleteGroup(category, null, group, $event)"
                                                                         [title]="isNodeDeletable('group', group.id) ? 'حذف المجموعة (المجموعات الفارغة فقط)' : 'لا يمكن حذف عنصر يحتوي على بيانات تابعة'">
-                                                                        <span class="material-icons-outlined">delete_outline</span>
+                                                                        <span
+                                                                              class="material-icons-outlined">delete_outline</span>
                                                                   </button>
                                                             </div>
                                                       </div>
@@ -592,22 +608,29 @@
                               <h3 *ngIf="target.mode === 'brand'">نقل الشركة: {{ target.label }}</h3>
                               <h3 *ngIf="target.mode === 'group'">نقل المجموعة: {{ target.label }}</h3>
                               <h3 *ngIf="target.mode === 'single-product'">نقل المنتج: {{ target.label }}</h3>
-                              <h3 *ngIf="target.mode === 'bulk-products'">نقل ({{ target.productIds.length }}) منتجات محددة</h3>
+                              <h3 *ngIf="target.mode === 'bulk-products'">نقل ({{ target.productIds.length }}) منتجات
+                                    محددة</h3>
 
-                              <p *ngIf="target.mode === 'brand'">اختر القسم الجديد لنقل الشركة وجميع مجموعاتها ومنتجاتها إليه</p>
-                              <p *ngIf="target.mode === 'group'">اختر الشركة الجديدة لنقل المجموعة وجميع منتجاتها إليها</p>
-                              <p *ngIf="target.mode === 'single-product' || target.mode === 'bulk-products'">اختر وجهة النقل (القسم &larr; الشركة &larr; المجموعة)</p>
+                              <p *ngIf="target.mode === 'brand'">اختر القسم الجديد لنقل الشركة وجميع مجموعاتها ومنتجاتها
+                                    إليه</p>
+                              <p *ngIf="target.mode === 'group'">اختر الشركة الجديدة لنقل المجموعة وجميع منتجاتها إليها
+                              </p>
+                              <p *ngIf="target.mode === 'single-product' || target.mode === 'bulk-products'">اختر وجهة
+                                    النقل (القسم &larr; الشركة &larr; المجموعة)</p>
                         </div>
                   </div>
 
                   <div class="node-modal-body">
                         <!-- Step 1: Category Selector -->
                         <div class="modal-form-group">
-                              <label class="node-modal-label" for="move-category-select">القسم الوجهة <span class="req-star">*</span></label>
-                              <select id="move-category-select" class="node-modal-select" [value]="moveTargetCategoryId()"
+                              <label class="node-modal-label" for="move-category-select">القسم الوجهة <span
+                                          class="req-star">*</span></label>
+                              <select id="move-category-select" class="node-modal-select"
+                                    [value]="moveTargetCategoryId()"
                                     (change)="onMoveCategoryChange($any($event.target).value)">
                                     <option value="">-- اختر القسم الوجهة --</option>
-                                    <option *ngFor="let cat of moveCategoryOptions()" [value]="cat.id" [disabled]="cat.disabled">
+                                    <option *ngFor="let cat of moveCategoryOptions()" [value]="cat.id"
+                                          [disabled]="cat.disabled">
                                           {{ cat.label }}{{ cat.disabled ? ' (القسم الحالي)' : '' }}
                                     </option>
                               </select>
@@ -615,11 +638,13 @@
 
                         <!-- Step 2: Brand Selector (for group, single-product, bulk-products) -->
                         <div class="modal-form-group" *ngIf="moveNeedsBrand() && moveTargetCategoryId()">
-                              <label class="node-modal-label" for="move-brand-select">الشركة / العلامة التجارية <span class="req-star">*</span></label>
+                              <label class="node-modal-label" for="move-brand-select">الشركة / العلامة التجارية <span
+                                          class="req-star">*</span></label>
                               <select id="move-brand-select" class="node-modal-select" [value]="moveTargetBrandId()"
                                     (change)="onMoveBrandChange($any($event.target).value)">
                                     <option value="">-- اختر الشركة --</option>
-                                    <option *ngFor="let brand of moveBrandOptions()" [value]="brand.id" [disabled]="brand.disabled">
+                                    <option *ngFor="let brand of moveBrandOptions()" [value]="brand.id"
+                                          [disabled]="brand.disabled">
                                           {{ brand.label }}{{ brand.disabled ? ' (الشركة الحالية)' : '' }}
                                     </option>
                               </select>
@@ -627,11 +652,13 @@
 
                         <!-- Step 3: Product Group Selector (for single-product, bulk-products) -->
                         <div class="modal-form-group" *ngIf="moveNeedsGroup() && moveTargetBrandId()">
-                              <label class="node-modal-label" for="move-group-select">مجموعة المنتجات الوجهة <span class="req-star">*</span></label>
+                              <label class="node-modal-label" for="move-group-select">مجموعة المنتجات الوجهة <span
+                                          class="req-star">*</span></label>
                               <select id="move-group-select" class="node-modal-select" [value]="moveTargetGroupId()"
                                     (change)="onMoveGroupChange($any($event.target).value)">
                                     <option value="">-- اختر المجموعة --</option>
-                                    <option *ngFor="let group of moveGroupOptions()" [value]="group.id" [disabled]="group.disabled">
+                                    <option *ngFor="let group of moveGroupOptions()" [value]="group.id"
+                                          [disabled]="group.disabled">
                                           {{ group.label }}{{ group.disabled ? ' (المجموعة الحالية)' : '' }}
                                     </option>
                               </select>
@@ -648,8 +675,7 @@
                         <button type="button" class="btn-modal btn-modal-cancel" [disabled]="isMoveSubmitting()"
                               (click)="closeMoveDialog()">إلغاء</button>
                         <button type="button" class="btn-modal btn-modal-save"
-                              [disabled]="isMoveSubmitting() || !isMoveSelectionValid()"
-                              (click)="submitMove()">
+                              [disabled]="isMoveSubmitting() || !isMoveSelectionValid()" (click)="submitMove()">
                               <span class="material-icons-outlined" *ngIf="isMoveSubmitting()">hourglass_top</span>
                               <span class="material-icons-outlined" *ngIf="!isMoveSubmitting()">drive_file_move</span>
                               <span>{{ isMoveSubmitting() ? 'جارٍ النقل...' : 'تأكيد النقل' }}</span>
@@ -690,7 +716,8 @@
                         </tr>
                   </thead>
                   <tbody>
-                        <tr class="leaf-product-row" *ngFor="let product of products; trackBy: trackByProductId" [class.row-selected]="isEditMode() && isProductSelected(product.id)">
+                        <tr class="leaf-product-row" *ngFor="let product of products; trackBy: trackByProductId"
+                              [class.row-selected]="isEditMode() && isProductSelected(product.id)">
 
                               <!-- Edit Mode: product selection checkbox (Task 4) -->
                               <td class="col-tree-select" *ngIf="isEditMode()">

@@ -1480,11 +1480,20 @@
       box-shadow: 0 4px 10px rgba(30, 58, 138, 0.15);
 }
 
+/* Active (done-editing) state — outlined rose/red, same shape as default */
 .btn-edit-mode.active {
-      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-      border-color: #1e3a8a;
-      color: #ffffff;
-      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.28);
+      background-color: #fff8f8;
+      border-color: #e11d48;
+      color: #e11d48;
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.12);
+}
+
+.btn-edit-mode.active:hover {
+      background-color: #fff1f3;
+      border-color: #be123c;
+      color: #be123c;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.22);
 }
 
 .btn-edit-mode .material-icons-outlined {
