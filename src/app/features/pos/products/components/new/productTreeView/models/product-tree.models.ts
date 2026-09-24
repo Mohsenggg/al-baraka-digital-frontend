@@ -26,6 +26,7 @@ export interface ProductGroupNode {
       name: string;
       categoryId: number | string;
       brandId?: number | string | null;
+      isPriceUnified?: boolean;
       products: TreeProductItem[];
       expanded?: boolean;
 }

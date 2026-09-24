@@ -148,10 +148,23 @@ export interface ProductManagePayload {
       categoryId: number | null;
       manufacturerId: number | null;
       supplierIds: number[];
+      productGroupId?: number | string | null;
+      productGroupName?: string | null;
+      isPriceUnified?: boolean;
+      propagateGroupSellingPrice?: boolean;
       hasConversion: boolean;
       conversions: ProductConversionDto[];
       hasComposition: boolean;
       composition: ProductCompositionDto[];
+}
+
+export interface GroupPriceSummary {
+      groupId: number | string;
+      groupName: string;
+      isPriceUnified: boolean;
+      productCount: number;
+      distinctSellingPrices: number[];
+      hasPriceDiscrepancy: boolean;
 }
 
 export interface ProfitMargin {

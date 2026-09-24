@@ -562,11 +562,12 @@ export class ProductTreeViewComponent implements OnInit {
             return !this.nodesWithChildren()[type].has(this.nodeKey(id));
       }
 
-      /** True while a rename / delete / move request for this exact node is in flight. */
+      /** True while a rename / delete / move / price-toggle request for this exact node is in flight. */
       isNodeActionPending(type: TreeNodeType | 'product', id: number | string): boolean {
             return this.nodeActionKey() === this.nodeActionKeyOf('rename', type, id) ||
                   this.nodeActionKey() === this.nodeActionKeyOf('delete', type, id) ||
-                  this.nodeActionKey() === this.nodeActionKeyOf('move', type, id);
+                  this.nodeActionKey() === this.nodeActionKeyOf('move', type, id) ||
+                  this.nodeActionKey() === this.nodeActionKeyOf('price', type, id);
       }
 
       private nodeKey(id: number | string): string {
@@ -574,7 +575,7 @@ export class ProductTreeViewComponent implements OnInit {
       }
 
       private nodeActionKeyOf(
-            action: 'rename' | 'delete' | 'move',
+            action: 'rename' | 'delete' | 'move' | 'price',
             type: TreeNodeType | 'product',
             id: number | string
       ): string {
@@ -1126,6 +1127,56 @@ export class ProductTreeViewComponent implements OnInit {
                   return `move:bulk:${target.productIds.length}`;
             }
             return this.nodeActionKeyOf('move', target.nodeType || 'product', target.nodeId || 'bulk');
+      }
+
+      /* ============================= */
+      /* GROUP PRICE UNIFICATION       */
+      /* ============================= */
+
+      /**
+       * Enables / disables the unified selling price flag of a group.
+       * This never changes existing prices — it only drives the future price update behaviour.
+       */
+      toggleGroupPriceUnification(group: ProductGroupNode, event?: Event): void {
+            if (event) event.stopPropagation();
+            if (this.nodeActionKey()) return;
+
+            const nextValue = !group.isPriceUnified;
+            this.nodeActionKey.set(this.nodeActionKeyOf('price', 'group', group.id));
+
+            this.productApiService.setGroupPriceUnification(group.id, nextValue).subscribe({
+                  next: () => {
+                        this.nodeActionKey.set(null);
+                        this.applyGroupPriceUnification(group.id, nextValue);
+                        this.notificationService.success(
+                              `${nextValue ? 'تم تفعيل' : 'تم إلغاء'} السعر الموحد لمجموعة "${group.name}". لم يتم تعديل الأسعار الحالية.`
+                        );
+                  },
+                  error: (err: unknown) => {
+                        this.nodeActionKey.set(null);
+                        this.notificationService.error(
+                              this.resolveErrorMessage(err, 'تعذر تغيير حالة السعر الموحد للمجموعة. يرجى المحاولة مرة أخرى.')
+                        );
+                  }
+            });
+      }
+
+      /** Flags the group locally so the badge / toggle reflect the new state without a full reload. */
+      private applyGroupPriceUnification(groupId: number | string, isPriceUnified: boolean): void {
+            this.treeData.update(tree =>
+                  tree.map(category => ({
+                        ...category,
+                        brands: (category.brands || []).map(brand => ({
+                              ...brand,
+                              groups: (brand.groups || []).map(group =>
+                                    group.id === groupId ? { ...group, isPriceUnified } : group
+                              )
+                        })),
+                        directGroups: (category.directGroups || []).map(group =>
+                              group.id === groupId ? { ...group, isPriceUnified } : group
+                        )
+                  }))
+            );
       }
 
       toggleMenu(productId: number | string, event: Event): void {

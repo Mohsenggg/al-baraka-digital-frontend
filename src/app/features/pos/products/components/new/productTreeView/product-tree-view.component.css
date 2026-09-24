@@ -693,6 +693,25 @@
       color: var(--pos-primary, #1e3a8a);
 }
 
+/* Unified selling price badge (Phase 3) */
+.unified-price-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 9px;
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      white-space: nowrap;
+}
+
+.unified-price-tag .tag-icon {
+      font-size: 0.85rem;
+}
+
 /* Category Children Body */
 .category-children-container {
       padding: 12px 16px 16px 16px;
@@ -1687,6 +1706,18 @@
       color: #7c3aed;
       background-color: #f3e8ff;
       border-color: #ddd6fe;
+}
+
+.btn-node-action.btn-unify-price:hover:not(:disabled) {
+      color: #047857;
+      background-color: #ecfdf5;
+      border-color: #a7f3d0;
+}
+
+.btn-node-action.btn-unify-price.is-active {
+      color: #047857;
+      background-color: #d1fae5;
+      border-color: #6ee7b7;
 }
 
 .btn-node-action.btn-node-delete:hover:not(:disabled) {

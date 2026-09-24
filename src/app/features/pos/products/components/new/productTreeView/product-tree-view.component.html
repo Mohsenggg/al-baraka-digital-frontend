@@ -375,6 +375,12 @@
                                                                                     <span
                                                                                           class="node-title group-title">{{
                                                                                           group.name }}</span>
+                                                                                    <span class="unified-price-tag"
+                                                                                          *ngIf="group.isPriceUnified"
+                                                                                          title="سعر البيع موحّد لجميع منتجات المجموعة">
+                                                                                          <span class="material-icons-outlined tag-icon">sell</span>
+                                                                                          سعر موحد
+                                                                                    </span>
                                                                                     <!-- <span class="code-tag group-code-tag">كود: {{ group.code }}</span> -->
 
                                                                               </div>
@@ -390,6 +396,15 @@
                                                                         <!-- Edit Mode actions: rename / delete group (Task 5) -->
                                                                         <div class="node-edit-actions"
                                                                               *ngIf="isEditMode()">
+                                                                              <button type="button"
+                                                                                    class="btn-node-action btn-unify-price"
+                                                                                    [class.is-active]="group.isPriceUnified"
+                                                                                    [disabled]="isNodeActionPending('group', group.id)"
+                                                                                    (click)="toggleGroupPriceUnification(group, $event)"
+                                                                                    [title]="group.isPriceUnified ? 'إلغاء السعر الموحد للمجموعة (لن تتغير الأسعار الحالية)' : 'تفعيل السعر الموحد للمجموعة (لن تتغير الأسعار الحالية)'">
+                                                                                    <span
+                                                                                          class="material-icons-outlined">{{ group.isPriceUnified ? 'link_off' : 'link' }}</span>
+                                                                              </button>
                                                                               <button type="button"
                                                                                     class="btn-node-action btn-rename"
                                                                                     [disabled]="isNodeActionPending('group', group.id)"
@@ -467,6 +482,12 @@
 
                                                                         <span class="node-title group-title">{{
                                                                               group.name }}</span>
+                                                                        <span class="unified-price-tag"
+                                                                              *ngIf="group.isPriceUnified"
+                                                                              title="سعر البيع موحّد لجميع منتجات المجموعة">
+                                                                              <span class="material-icons-outlined tag-icon">sell</span>
+                                                                              سعر موحد
+                                                                        </span>
                                                                         <!-- <span class="code-tag group-code-tag">كود: {{ group.code }}</span> -->
                                                                   </div>
                                                             </div>
@@ -480,6 +501,15 @@
                                                             </span>
                                                             <!-- Edit Mode actions: rename / delete group (Task 5) -->
                                                             <div class="node-edit-actions" *ngIf="isEditMode()">
+                                                                  <button type="button"
+                                                                        class="btn-node-action btn-unify-price"
+                                                                        [class.is-active]="group.isPriceUnified"
+                                                                        [disabled]="isNodeActionPending('group', group.id)"
+                                                                        (click)="toggleGroupPriceUnification(group, $event)"
+                                                                        [title]="group.isPriceUnified ? 'إلغاء السعر الموحد للمجموعة (لن تتغير الأسعار الحالية)' : 'تفعيل السعر الموحد للمجموعة (لن تتغير الأسعار الحالية)'">
+                                                                        <span
+                                                                              class="material-icons-outlined">{{ group.isPriceUnified ? 'link_off' : 'link' }}</span>
+                                                                  </button>
                                                                   <button type="button"
                                                                         class="btn-node-action btn-rename"
                                                                         [disabled]="isNodeActionPending('group', group.id)"

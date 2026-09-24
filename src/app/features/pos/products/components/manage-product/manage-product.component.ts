@@ -21,6 +21,25 @@ import { calculateProfitMargin } from '../../models/product.models';
 import { ProductApiService } from '../../services/product-api.service';
 import { NotificationService } from '../../../../../shared/services/notification.service';
 
+/** Prompt 1 choice: update the whole unified group, only this product, or abort the save. */
+export type UnifiedPriceChoice = 'all' | 'single' | 'cancel';
+
+/** View state of Prompt 1 (bulk selling price update choice). */
+export interface UnifiedPricePromptState {
+      groupName: string;
+      newPrice: number;
+}
+
+/** View state of Prompt 2 (warning shown when the group currently has different selling prices). */
+export interface PriceDiscrepancyPromptState {
+      groupName: string;
+      newPrice: number;
+      existingPrices: number[];
+}
+
+/** Tolerance used to ignore floating point noise when comparing selling prices (نصف قرش). */
+const SELLING_PRICE_EPSILON = 0.004;
+
 @Component({
       selector: 'app-manage-product',
       standalone: true,
@@ -67,6 +86,19 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       allProducts = signal<any[]>([]);
       popupOpen = signal(false);
       activeSearchContext = signal<{ type: 'composition' | 'conversion', index: number } | null>(null);
+
+      // ─── Unified selling price state (Phase 3) ────────────────────────────
+      /** Group the edited product belongs to (null while creating / ungrouped products). */
+      readonly productGroupId = this.state.productGroupId;
+      readonly productGroupName = this.state.productGroupName;
+      readonly isPriceUnified = this.state.isPriceUnified;
+
+      /** Prompt 1: apply the new selling price to the whole group or only this product? */
+      readonly unifiedPricePrompt = signal<UnifiedPricePromptState | null>(null);
+      /** Prompt 2: extra confirmation when the group currently holds different selling prices. */
+      readonly priceDiscrepancyPrompt = signal<PriceDiscrepancyPromptState | null>(null);
+      /** True while the group price summary is being fetched. */
+      readonly isPricePromptBusy = signal(false);
 
       get productForm() {
             return this.state.productForm;
@@ -330,12 +362,113 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       }
 
       onCancel(): void {
+            this.unifiedPricePrompt.set(null);
+            this.priceDiscrepancyPrompt.set(null);
             this.router.navigate(['/pos/products']);
       }
 
       onSave(): void {
+            if (this.isPricePromptBusy()) return;
+
+            if (this.requiresGroupPriceDecision()) {
+                  this.unifiedPricePrompt.set({
+                        groupName: this.state.productGroupName() || 'مجموعة المنتجات',
+                        newPrice: this.state.getCurrentSellingPrice() ?? 0
+                  });
+                  return;
+            }
+
+            this.persistProduct();
+      }
+
+      /* ============================= */
+      /* UNIFIED SELLING PRICE FLOW    */
+      /* ============================= */
+
+      /** Prompt 1 handler: group-wide update, single product update, or cancel the save. */
+      onUnifiedPriceChoice(choice: UnifiedPriceChoice): void {
+            if (this.isPricePromptBusy()) return;
+
+            this.unifiedPricePrompt.set(null);
+
+            if (choice === 'cancel') return;
+            if (choice === 'single') {
+                  this.persistProduct(false);
+                  return;
+            }
+
+            this.resolveBulkPriceUpdate();
+      }
+
+      /** Prompt 2 handler: explicit confirmation before overwriting the different existing prices. */
+      onPriceDiscrepancyDecision(confirmed: boolean): void {
+            if (this.isPricePromptBusy()) return;
+
+            this.priceDiscrepancyPrompt.set(null);
+            if (!confirmed) return;
+
+            this.persistProduct(true);
+      }
+
+      /** True when the edited product changed its selling price inside a price-unified group. */
+      private requiresGroupPriceDecision(): boolean {
+            if (!this.state.isEditMode()) return false;
+            if (!this.state.isPriceUnified()) return false;
+            if (this.state.productGroupId() == null) return false;
+
+            const initial = this.state.initialSellingPrice();
+            const current = this.state.getCurrentSellingPrice();
+            if (initial === null || current === null) return false;
+
+            return Math.abs(current - initial) > SELLING_PRICE_EPSILON;
+      }
+
+      /**
+       * Loads the group price summary and either warns about a discrepancy (Prompt 2)
+       * or propagates the new selling price right away.
+       */
+      private resolveBulkPriceUpdate(): void {
+            const groupId = this.state.productGroupId();
+            const newPrice = this.state.getCurrentSellingPrice();
+
+            if (groupId == null || newPrice === null) return;
+
+            this.isPricePromptBusy.set(true);
+            this.api.getGroupPriceSummary(groupId).subscribe({
+                  next: summary => {
+                        this.isPricePromptBusy.set(false);
+
+                        // Edge case: a single-product group has nothing to unify — skip Prompt 2.
+                        if (summary.productCount <= 1) {
+                              this.persistProduct(true);
+                              return;
+                        }
+
+                        const distinctPrices = summary.distinctSellingPrices || [];
+                        if (summary.hasPriceDiscrepancy || distinctPrices.length > 1) {
+                              this.priceDiscrepancyPrompt.set({
+                                    groupName: summary.groupName || this.state.productGroupName() || 'مجموعة المنتجات',
+                                    newPrice,
+                                    existingPrices: distinctPrices
+                              });
+                              return;
+                        }
+
+                        this.persistProduct(true);
+                  },
+                  error: (err: unknown) => {
+                        this.isPricePromptBusy.set(false);
+                        this.notifications.error(
+                              this.resolveErrorMessage(err, 'تعذر التحقق من أسعار المجموعة. يرجى المحاولة مرة أخرى.')
+                        );
+                  }
+            });
+      }
+
+      /** Saves the product, optionally propagating the selling price to the whole group. */
+      private persistProduct(propagateGroupSellingPrice?: boolean): void {
             const isCreating = !this.state.isEditMode();
-            const result = this.state.saveProduct();
+            const result = this.state.saveProduct(propagateGroupSellingPrice);
             if (!result) {
                   if (this.state.saveError()) {
                         if (this.productForm.get('composition')?.invalid && this.productForm.get('hasComposition')?.value) {
@@ -348,17 +481,44 @@ export class ManageProductComponent implements OnInit, OnDestroy {
                   }
                   return;
             }
+
             result.subscribe({
                   next: () => {
+                        // Keep the baseline price in sync so later saves compare against the persisted value.
+                        const savedPrice = this.state.getCurrentSellingPrice();
+                        if (savedPrice !== null) {
+                              this.state.initialSellingPrice.set(savedPrice);
+                        }
+
                         if (isCreating) {
                               // Navigate immediately to product list, then show the toast
                               // The toast is rendered at the app root level so it persists across navigation
                               this.router.navigate(['/pos/products']).then(() => {
                                     this.notifications.success('تم حفظ المنتج بنجاح');
                               });
+                        } else if (propagateGroupSellingPrice) {
+                              this.notifications.success('تم توحيد سعر البيع لجميع منتجات المجموعة');
                         }
                         // In edit mode, saveSuccess signal handles inline feedback
                   }
             });
+      }
+
+      /** Extracts the backend (or network) error message, falling back to a localized default. */
+      private resolveErrorMessage(err: unknown, fallback: string): string {
+            const httpError = err as { error?: { message?: string; error?: string } | string; message?: string } | null;
+            const body = httpError?.error;
+
+            if (typeof body === 'string' && body.trim()) {
+                  return body.trim();
+            }
+            if (body && typeof body === 'object') {
+                  const message = body.message || body.error;
+                  if (message) return message;
+            }
+            if (httpError?.message) {
+                  return httpError.message;
+            }
+            return fallback;
       }
 }

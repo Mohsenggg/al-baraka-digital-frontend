@@ -247,6 +247,10 @@
                 <div>
                   <h2 class="card-title">الباركودات والأسعار</h2>
                   <p class="card-desc">أضف باركودات متعددة مع أسعار البيع والشراء والمخزون</p>
+                  <span class="unified-price-chip" *ngIf="isPriceUnified() && productGroupName()">
+                    <span class="material-icons-outlined">sell</span>
+                    سعر بيع موحّد مع مجموعة "{{ productGroupName() }}"
+                  </span>
                 </div>
               </div>
               <div class="card-header-actions">
@@ -534,6 +538,92 @@
           (click)="addNewItem(showOverlay!, newItemName.value)">اضافة</button>
         <button type="button" class="btn-modern btn-secondary" (click)="closeOverlay()">الغاء</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROMPT 1: Unified selling price — update the whole group or only this product? -->
+<div class="overlay" *ngIf="unifiedPricePrompt() as prompt" (click)="onUnifiedPriceChoice('cancel')" dir="rtl">
+  <div class="overlay-panel modern-panel price-prompt-panel" (click)="$event.stopPropagation()">
+    <div class="panel-header">
+      <h3>توحيد سعر البيع لمجموعة المنتجات</h3>
+      <button type="button" class="panel-close" [disabled]="isPricePromptBusy()"
+        (click)="onUnifiedPriceChoice('cancel')" aria-label="إغلاق">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+    <div class="panel-content">
+      <div class="price-prompt-icon">
+        <span class="material-icons-outlined">price_change</span>
+      </div>
+      <p class="price-prompt-text">
+        هذا المنتج ينتمي لمجموعة "<strong>{{ prompt.groupName }}</strong>" المفعل بها خيار السعر الموحد.
+      </p>
+      <p class="price-prompt-question">
+        هل ترغب في تطبيق السعر الجديد (<strong>{{ prompt.newPrice | number:'1.2-2' }} ج.م</strong>)
+        على جميع منتجات المجموعة؟
+      </p>
+      <div class="price-prompt-note">
+        <span class="material-icons-outlined">info</span>
+        <span>سيتم تعديل سعر البيع فقط، بينما تبقى أسعار الشراء والمخزون وبيانات المنتجات دون تغيير.</span>
+      </div>
+    </div>
+    <div class="panel-actions price-prompt-actions">
+      <button type="button" class="btn-modern btn-primary" [disabled]="isPricePromptBusy()"
+        (click)="onUnifiedPriceChoice('all')">
+        <span class="material-icons-outlined" *ngIf="isPricePromptBusy()">hourglass_top</span>
+        نعم، تحديث جميع منتجات المجموعة
+      </button>
+      <button type="button" class="btn-modern btn-secondary" [disabled]="isPricePromptBusy()"
+        (click)="onUnifiedPriceChoice('single')">
+        لا، تحديث هذا المنتج فقط
+      </button>
+      <button type="button" class="btn-modern btn-ghost" [disabled]="isPricePromptBusy()"
+        (click)="onUnifiedPriceChoice('cancel')">
+        إلغاء
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PROMPT 2: Warning — the group currently holds different selling prices -->
+<div class="overlay" *ngIf="priceDiscrepancyPrompt() as prompt" (click)="onPriceDiscrepancyDecision(false)" dir="rtl">
+  <div class="overlay-panel modern-panel price-prompt-panel discrepancy-panel" (click)="$event.stopPropagation()">
+    <div class="panel-header warning-header">
+      <h3>تنبيه: توحيد أسعار مختلفة</h3>
+      <button type="button" class="panel-close" (click)="onPriceDiscrepancyDecision(false)" aria-label="إغلاق">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+    <div class="panel-content">
+      <div class="price-prompt-icon warning">
+        <span class="material-icons-outlined">warning_amber</span>
+      </div>
+      <p class="price-prompt-text">
+        تحتوي منتجات مجموعة "<strong>{{ prompt.groupName }}</strong>" حالياً على أسعار بيع مختلفة.
+      </p>
+      <div class="price-chips-row" *ngIf="prompt.existingPrices.length">
+        <span class="existing-price-chip" *ngFor="let price of prompt.existingPrices">
+          {{ price | number:'1.2-2' }} ج.م
+        </span>
+      </div>
+      <p class="price-prompt-question">
+        المتابعة ستؤدي إلى توحيد سعر البيع لجميع المنتجات إلى
+        <strong>{{ prompt.newPrice | number:'1.2-2' }} ج.م</strong>.
+        هل أنت متأكد من رغبتك في المتابعة؟
+      </p>
+      <div class="price-prompt-note warning">
+        <span class="material-icons-outlined">info</span>
+        <span>سيتم تعديل سعر البيع فقط، بينما تبقى أسعار الشراء والمخزون وبيانات المنتجات دون تغيير.</span>
+      </div>
+    </div>
+    <div class="panel-actions price-prompt-actions">
+      <button type="button" class="btn-modern btn-danger" (click)="onPriceDiscrepancyDecision(true)">
+        تأكيد وتوحيد الأسعار
+      </button>
+      <button type="button" class="btn-modern btn-secondary" (click)="onPriceDiscrepancyDecision(false)">
+        تراجع
+      </button>
     </div>
   </div>
 </div>

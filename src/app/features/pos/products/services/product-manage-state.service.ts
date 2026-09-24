@@ -34,6 +34,11 @@ export class ProductManageStateService {
       readonly saveError = signal<string | null>(null);
       readonly generatedName = signal('');
 
+      readonly productGroupId = signal<number | string | null>(null);
+      readonly productGroupName = signal<string | null>(null);
+      readonly isPriceUnified = signal(false);
+      readonly initialSellingPrice = signal<number | null>(null);
+
       private readonly attributesSignal = signal<ProductAttributeOption[]>([]);
       private readonly categoriesSignal = signal<NamedEntity[]>([]);
       private readonly manufacturersSignal = signal<NamedEntity[]>([]);
@@ -56,6 +61,10 @@ export class ProductManageStateService {
             this.saveSuccess.set(false);
             this.saveError.set(null);
             this.generatedName.set('');
+            this.productGroupId.set(null);
+            this.productGroupName.set(null);
+            this.isPriceUnified.set(false);
+            this.initialSellingPrice.set(null);
             this.clearAttributeEditor();
             this.initForm();
             this.addBarcode();
@@ -149,7 +158,7 @@ export class ProductManageStateService {
             ).subscribe();
       }
 
-      saveProduct(): Observable<ProductManagePayload> | null {
+      saveProduct(propagateGroupSellingPrice?: boolean): Observable<ProductManagePayload> | null {
             this.productForm.markAllAsTouched();
             this.compositionFormArray.controls.forEach(ctrl => ctrl.markAllAsTouched());
             this.conversionsFormArray.controls.forEach(ctrl => ctrl.markAllAsTouched());
@@ -165,7 +174,7 @@ export class ProductManageStateService {
             this.saveSuccess.set(false);
 
             const save$ = this.isEditMode() && this.productId()
-                  ? this.api.updateProduct(this.productId()!, payload)
+                  ? this.api.updateProduct(this.productId()!, payload, propagateGroupSellingPrice)
                   : this.api.createProduct(payload);
 
             return save$.pipe(
@@ -179,6 +188,13 @@ export class ProductManageStateService {
                         return throwError(() => err);
                   })
             );
+      }
+
+      getCurrentSellingPrice(): number | null {
+            const barcodes = this.barcodesFormArray.value;
+            if (!barcodes || barcodes.length === 0) return null;
+            const defaultBc = barcodes.find((b: any) => b.isDefault) || barcodes[0];
+            return defaultBc?.sellingPrice != null ? Number(defaultBc.sellingPrice) : null;
       }
 
       buildProductPayload(): ProductManagePayload {
@@ -520,6 +536,10 @@ export class ProductManageStateService {
       }
 
       private applyProductDetail(detail: ProductManagePayload): void {
+            this.productGroupId.set(detail.productGroupId || null);
+            this.productGroupName.set(detail.productGroupName || null);
+            this.isPriceUnified.set(!!detail.isPriceUnified);
+
             this.productForm.patchValue({
                   baseName: detail.baseName,
                   status: detail.status || 'active',
@@ -541,6 +561,8 @@ export class ProductManageStateService {
 
             this.barcodesFormArray.clear();
             if (detail.barcodes && detail.barcodes.length) {
+                  const defaultBc = detail.barcodes.find(b => b.isDefault) || detail.barcodes[0];
+                  this.initialSellingPrice.set(defaultBc ? Number(defaultBc.sellingPrice) : null);
                   detail.barcodes.forEach(barcode => {
                         this.barcodesFormArray.push(this.fb.group({
                               id: [barcode.id],
@@ -552,6 +574,7 @@ export class ProductManageStateService {
                         }));
                   });
             } else {
+                  this.initialSellingPrice.set(null);
                   this.addBarcode();
             }
 

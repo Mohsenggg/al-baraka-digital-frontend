@@ -9,7 +9,8 @@ import type {
       ProductManagePayload,
       NamedEntity,
       ProductAttributeOption,
-      BulkMoveProductsResponse
+      BulkMoveProductsResponse,
+      GroupPriceSummary
 } from '../models/product.models';
 
 @Injectable({
@@ -36,8 +37,16 @@ export class ProductApiService {
             return this.http.post<ProductManagePayload>(this.apiUrl, payload);
       }
 
-      public updateProduct(id: number | string, payload: ProductManagePayload): Observable<ProductManagePayload> {
-            return this.http.put<ProductManagePayload>(`${this.apiUrl}/${id}`, payload);
+      public updateProduct(
+            id: number | string, 
+            payload: ProductManagePayload, 
+            propagateGroupSellingPrice?: boolean
+      ): Observable<ProductManagePayload> {
+            let params = new HttpParams();
+            if (propagateGroupSellingPrice !== undefined) {
+                  params = params.set('propagateGroupSellingPrice', String(propagateGroupSellingPrice));
+            }
+            return this.http.put<ProductManagePayload>(`${this.apiUrl}/${id}`, payload, { params });
       }
 
       public deleteProduct(id: number | string): Observable<void> {
@@ -137,6 +146,32 @@ export class ProductApiService {
                   productIds,
                   targetGroupId
             });
+      }
+
+      // ─── Group Price Unification ──────────────────────────────────────────
+
+      public setGroupPriceUnification(
+            id: number | string, 
+            isPriceUnified: boolean
+      ): Observable<{ groupId: number | string; isPriceUnified: boolean; message: string }> {
+            return this.http.patch<{ groupId: number | string; isPriceUnified: boolean; message: string }>(
+                  `${this.apiUrl}/tree/groups/${id}/price-unification`,
+                  { isPriceUnified }
+            );
+      }
+
+      public getGroupPriceSummary(id: number | string): Observable<GroupPriceSummary> {
+            return this.http.get<GroupPriceSummary>(`${this.apiUrl}/tree/groups/${id}/price-summary`);
+      }
+
+      public updateGroupSellingPrice(
+            id: number | string, 
+            sellingPrice: number
+      ): Observable<{ message: string }> {
+            return this.http.patch<{ message: string }>(
+                  `${this.apiUrl}/tree/groups/${id}/selling-price`,
+                  { sellingPrice }
+            );
       }
 
       private buildHttpParams(params: any): HttpParams {

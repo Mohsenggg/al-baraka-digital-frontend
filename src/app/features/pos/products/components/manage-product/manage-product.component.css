@@ -1442,6 +1442,162 @@
 }
 
 /* ============================= */
+/* UNIFIED SELLING PRICE         */
+/* ============================= */
+
+.unified-price-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      padding: 3px 10px;
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      width: fit-content;
+}
+
+.unified-price-chip .material-icons-outlined {
+      font-size: 0.95rem;
+}
+
+/* Prompt 1 / Prompt 2 dialogs */
+.price-prompt-panel {
+      width: 520px;
+      max-width: 92vw;
+}
+
+.price-prompt-panel .panel-header {
+      padding: 16px 20px;
+}
+
+.price-prompt-panel .panel-header h3 {
+      font-size: 1.05rem;
+      color: var(--pos-text-primary);
+}
+
+.price-prompt-panel .panel-header.warning-header h3 {
+      color: #b45309;
+}
+
+.price-prompt-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: #eff6ff;
+      color: var(--pos-primary);
+      align-self: center;
+}
+
+.price-prompt-icon.warning {
+      background: #fff7ed;
+      color: #b45309;
+}
+
+.price-prompt-icon .material-icons-outlined {
+      font-size: 1.5rem;
+}
+
+.price-prompt-text,
+.price-prompt-question {
+      margin: 0;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--pos-text-primary);
+      text-align: center;
+}
+
+.price-prompt-question strong {
+      color: var(--pos-primary);
+      white-space: nowrap;
+}
+
+.price-chips-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+}
+
+.existing-price-chip {
+      padding: 3px 10px;
+      background: #f1f5f9;
+      border: 1px dashed #cbd5e1;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #475569;
+      direction: ltr;
+}
+
+.price-prompt-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 9px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      line-height: 1.6;
+      color: var(--pos-text-secondary);
+}
+
+.price-prompt-note.warning {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+}
+
+.price-prompt-note .material-icons-outlined {
+      font-size: 0.95rem;
+      margin-top: 1px;
+}
+
+.price-prompt-actions {
+      flex-direction: column;
+}
+
+.price-prompt-actions .btn-modern {
+      flex: 0 0 auto;
+      width: 100%;
+      gap: 6px;
+      font-size: 0.85rem;
+}
+
+.btn-modern.btn-danger {
+      background: #dc2626;
+      color: #ffffff;
+}
+
+.btn-modern.btn-danger:hover:not(:disabled) {
+      background: #b91c1c;
+      transform: translateY(-1px);
+}
+
+.btn-modern.btn-ghost {
+      background: transparent;
+      color: var(--pos-text-secondary);
+      border: 1px solid #e2e8f0;
+}
+
+.btn-modern.btn-ghost:hover:not(:disabled) {
+      background: #f8fafc;
+}
+
+.btn-modern:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+}
+
+/* ============================= */
 /* RESPONSIVE */
 /* ============================= */
 

@@ -547,4 +547,83 @@ describe('ProductTreeViewComponent', () => {
                   expect(component.treeData()[0].directGroups.length).toBe(1);
             });
       });
+
+      describe('Group price unification (Phase 3)', () => {
+            /** Replaces the tree with a category holding one price-unification test group. */
+            function setTreeWithPriceGroup(isPriceUnified: boolean): ProductGroupNode {
+                  const group = createTwoProductGroup(7);
+                  const unifiedGroup: ProductGroupNode = { ...group, isPriceUnified };
+
+                  component.treeData.set([
+                        {
+                              id: 9300,
+                              code: '93',
+                              name: 'قسم الأسعار',
+                              brands: [],
+                              directGroups: [unifiedGroup],
+                              expanded: true
+                        }
+                  ]);
+
+                  return unifiedGroup;
+            }
+
+            it('should render the unified price badge only for flagged groups', () => {
+                  component.expandAll();
+                  fixture.detectChanges();
+                  expect(fixture.debugElement.queryAll(By.css('.unified-price-tag')).length).toBe(0);
+
+                  setTreeWithPriceGroup(true);
+                  fixture.detectChanges();
+
+                  const tags = fixture.debugElement.queryAll(By.css('.unified-price-tag'));
+                  expect(tags.length).toBe(1);
+                  expect(tags[0].nativeElement.textContent).toContain('سعر موحد');
+            });
+
+            it('should PATCH the price unification endpoint and update the group locally', () => {
+                  const group = setTreeWithPriceGroup(false);
+                  const successSpy = spyOn(TestBed.inject(NotificationService), 'success');
+
+                  component.toggleGroupPriceUnification(group);
+
+                  const request = httpMock.expectOne(`/api/products/tree/groups/${group.id}/price-unification`);
+                  expect(request.request.method).toBe('PATCH');
+                  expect(request.request.body).toEqual({ isPriceUnified: true });
+                  request.flush({ groupId: group.id, isPriceUnified: true, message: 'ok' });
+
+                  expect(component.treeData()[0].directGroups[0].isPriceUnified).toBeTrue();
+                  expect(component.nodeActionKey()).toBeNull();
+                  expect(successSpy).toHaveBeenCalled();
+                  expect(successSpy.calls.mostRecent().args[0]).toContain('لم يتم تعديل الأسعار الحالية');
+            });
+
+            it('should toggle the flag off for an already unified group', () => {
+                  const group = setTreeWithPriceGroup(true);
+
+                  component.toggleGroupPriceUnification(group);
+
+                  const request = httpMock.expectOne(`/api/products/tree/groups/${group.id}/price-unification`);
+                  expect(request.request.body).toEqual({ isPriceUnified: false });
+                  request.flush({ groupId: group.id, isPriceUnified: false, message: 'ok' });
+
+                  expect(component.treeData()[0].directGroups[0].isPriceUnified).toBeFalse();
+            });
+
+            it('should keep the flag untouched and surface the backend error when the toggle fails', () => {
+                  const group = setTreeWithPriceGroup(false);
+                  const errorSpy = spyOn(TestBed.inject(NotificationService), 'error');
+
+                  component.toggleGroupPriceUnification(group);
+
+                  httpMock
+                        .expectOne(`/api/products/tree/groups/${group.id}/price-unification`)
+                        .flush({ message: 'Cannot change price unification' },
+                              { status: 409, statusText: 'Conflict' });
+
+                  expect(errorSpy).toHaveBeenCalledWith('Cannot change price unification');
+                  expect(component.treeData()[0].directGroups[0].isPriceUnified).toBeFalsy();
+                  expect(component.nodeActionKey()).toBeNull();
+            });
+      });
 });
