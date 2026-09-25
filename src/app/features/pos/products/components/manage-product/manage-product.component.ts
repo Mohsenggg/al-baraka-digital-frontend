@@ -56,7 +56,7 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       private readonly notifications = inject(NotificationService);
       private readonly destroy$ = new Subject<void>();
 
-      activeTab: 'basic' | 'conversions' | 'composition' = 'basic';
+      activeTab: 'basic' | 'composition' = 'basic';
       sidebarVisible = signal(false);
       activeDropdown: 'attribute' | 'category' | 'manufacturer' | 'supplier' | 'brand' | 'productGroup' | null = null;
       showOverlay: 'category' | 'manufacturer' | 'supplier' | 'attribute' | null = null;
@@ -494,13 +494,11 @@ export class ManageProductComponent implements OnInit, OnDestroy {
             const result = this.state.saveProduct(propagateGroupSellingPrice);
             if (!result) {
                   if (this.state.saveError()) {
-                        if (this.productForm.get('composition')?.invalid && this.productForm.get('hasComposition')?.value) {
-                              this.activeTab = 'composition';
-                        } else if (this.productForm.get('conversions')?.invalid && this.productForm.get('hasConversion')?.value) {
-                              this.activeTab = 'conversions';
-                        } else {
-                              this.activeTab = 'basic';
-                        }
+                        // Composition has its own tab; conversions and every other invalid field are
+                        // rendered inside the primary tab, so the user stays there.
+                        const compositionInvalid = this.productForm.get('composition')?.invalid
+                              && this.productForm.get('hasComposition')?.value;
+                        this.activeTab = compositionInvalid ? 'composition' : 'basic';
                   }
                   return;
             }

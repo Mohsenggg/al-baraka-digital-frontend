@@ -64,11 +64,23 @@ describe('ManageProductComponent', () => {
             httpMock.expectOne(`${API}/lookups/attributes`).flush([]);
       }
 
+      /** Answers the category hierarchy call triggered when the edited product has a category. */
+      function flushCategoryNodes(categoryId: number): void {
+            httpMock.expectOne(`${API}/products/tree/categories/${categoryId}/nodes`).flush({
+                  categoryId,
+                  brands: [],
+                  directGroups: []
+            });
+      }
+
       /** Switches the component into edit mode and feeds the product detail. */
       function loadProductForEdit(detail: ProductManagePayload): void {
             state.resolveEditMode(PRODUCT_ID);
             flushLookups();
             httpMock.expectOne(`${API}/products/${PRODUCT_ID}`).flush(detail);
+            if (detail.categoryId) {
+                  flushCategoryNodes(Number(detail.categoryId));
+            }
       }
 
       /** Simulates the user typing a new selling price on the default barcode. */
@@ -280,5 +292,56 @@ describe('ManageProductComponent', () => {
             const request = expectUpdateRequest();
             expect(request.request.params.has('propagateGroupSellingPrice')).toBeFalse();
             request.flush(productDetail());
+      });
+
+      describe('primary tab layout', () => {
+            it('should expose only the primary and composition tabs', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  const tabLabels = fixture.debugElement
+                        .queryAll(By.css('.tab-btn'))
+                        .map(btn => (btn.nativeElement.textContent as string).trim());
+
+                  expect(tabLabels.length).toBe(2);
+                  expect(tabLabels.some(label => label.includes('البيانات الأساسية'))).toBeTrue();
+                  expect(tabLabels.some(label => label.includes('مكونات المنتج'))).toBeTrue();
+                  expect(tabLabels.some(label => label.includes('التحويلات'))).toBeFalse();
+            });
+
+            it('should render the compact conversions empty state when the product has none', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  expect(fixture.debugElement.queryAll(By.css('.conversions-empty-card')).length).toBe(1);
+                  expect(fixture.debugElement.queryAll(By.css('.conversions-card')).length).toBe(0);
+            });
+
+            it('should expand the conversions section when a conversion is added from the empty state', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  fixture.debugElement.query(By.css('.btn-add-conversion')).triggerEventHandler('click', null);
+                  fixture.detectChanges();
+
+                  expect(component.conversionsFormArray.length).toBe(1);
+                  expect(fixture.debugElement.queryAll(By.css('.conversions-card')).length).toBe(1);
+                  expect(fixture.debugElement.queryAll(By.css('.conversions-empty-card')).length).toBe(0);
+            });
+
+            it('should auto-expand the conversions section when the edited product already has conversions', () => {
+                  loadProductForEdit(productDetail({
+                        hasConversion: true,
+                        conversions: [
+                              { parentProductId: 11, parentProductName: 'كرتونة شاي', parentQuantity: 1, childQuantity: 12, isDefault: true },
+                              { parentProductId: 12, parentProductName: 'علبة شاي', parentQuantity: 1, childQuantity: 3, isDefault: false }
+                        ]
+                  }));
+                  fixture.detectChanges();
+
+                  expect(component.conversionsFormArray.length).toBe(2);
+                  expect(fixture.debugElement.queryAll(By.css('.conversions-card')).length).toBe(1);
+                  expect(fixture.debugElement.queryAll(By.css('.conversions-empty-card')).length).toBe(0);
+            });
       });
 });

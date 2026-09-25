@@ -177,18 +177,17 @@
 .form-sections {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
       max-width: 1280px;
       margin: 0 auto;
 }
 
-.form-row {
+/* Section 1: Category → Brand → Product Group (one row on desktop) */
+.classification-grid {
       display: grid;
-      gap: 14px;
-}
-
-.form-row-split {
-      grid-template-columns: 1.4fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      align-items: start;
 }
 
 /* ============================= */
@@ -252,23 +251,20 @@
 /* PRODUCT IDENTITY SECTION */
 /* ============================= */
 
-.identity-body {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      padding: 16px 18px;
-}
-
 .identity-group {
       display: flex;
       flex-direction: column;
       gap: 8px;
 }
 
-.identity-divider {
-      height: 1px;
-      background: var(--pos-border);
-      margin: 14px 0;
+.name-body {
+      padding: 16px 18px;
+}
+
+.form-input-name {
+      height: 42px;
+      font-size: 0.95rem;
+      font-weight: 600;
 }
 
 .field-group-full {
@@ -851,10 +847,25 @@
 /* CLASSIFICATION FIELDS */
 /* ============================= */
 
-.classify-fields {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+/* Read-only state when a category exposes groups directly (no brands) */
+.brand-direct-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      padding: 6px 10px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--pos-text-secondary);
+      font-family: var(--font-family);
+}
+
+.brand-direct-badge .material-icons-outlined {
+      font-size: 1rem;
+      color: #94a3b8;
 }
 
 .form-select-trigger {
@@ -1237,6 +1248,92 @@
 }
 
 /* ============================= */
+/* CONVERSIONS (SECTION 4)       */
+/* ============================= */
+
+.conversions-count {
+      background: #e0e7ff;
+}
+
+.conversions-empty-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+}
+
+.conversions-empty-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+}
+
+.conversions-empty-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #e0e7ff;
+      color: var(--pos-primary);
+      font-size: 1.25rem;
+      flex-shrink: 0;
+}
+
+.conversions-empty-text h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--pos-text-primary);
+      font-family: var(--font-family);
+}
+
+.conversions-empty-text p {
+      margin: 2px 0 0;
+      font-size: 0.78rem;
+      color: var(--pos-text-secondary);
+      font-family: var(--font-family);
+}
+
+.btn-add-conversion {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 14px;
+      background: #ffffff;
+      color: var(--pos-primary);
+      border: 1px solid var(--pos-primary);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: var(--font-family);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+}
+
+.btn-add-conversion:hover {
+      background: #eff6ff;
+      transform: translateY(-1px);
+}
+
+.btn-add-conversion .material-icons-outlined {
+      font-size: 1rem;
+}
+
+/* Compact rows to match the barcode table density */
+.conversions-card .barcodes-table td {
+      padding: 4px 10px;
+}
+
+/* ============================= */
 /* COMPOSITION PLACEHOLDER */
 /* ============================= */
 
@@ -1611,7 +1708,7 @@
 /* ============================= */
 
 @media (max-width: 1024px) {
-      .form-row-split {
+      .classification-grid {
             grid-template-columns: 1fr;
       }
 
@@ -1685,6 +1782,15 @@
 
       .name-preview-badge {
             max-width: 100%;
+      }
+
+      .conversions-empty-card {
+            flex-direction: column;
+            align-items: stretch;
+      }
+
+      .btn-add-conversion {
+            justify-content: center;
       }
 }
 
