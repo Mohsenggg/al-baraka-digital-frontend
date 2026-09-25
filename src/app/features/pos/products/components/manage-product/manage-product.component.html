@@ -17,11 +17,11 @@
         <nav class="tab-switcher" aria-label="أقسام النموذج">
           <button type="button" class="tab-btn" [class.active]="activeTab === 'basic'" (click)="activeTab = 'basic'; $event.stopPropagation()">
             <span class="material-icons-outlined">inventory_2</span>
-            البيانات الأساسية
+            <span>البيانات الأساسية</span>
           </button>
           <button type="button" class="tab-btn" [class.active]="activeTab === 'composition'" (click)="activeTab = 'composition'; $event.stopPropagation()">
             <span class="material-icons-outlined">science</span>
-            مكونات المنتج
+            <span>مكونات المنتج</span>
             <span class="tab-badge" *ngIf="compositionFormArray.length">{{ compositionFormArray.length }}</span>
           </button>
         </nav>
@@ -36,206 +36,204 @@
         <div *ngIf="activeTab === 'basic'" class="form-sections">
 
           <!-- SECTION 1: هيكل وتصنيف المنتج -->
-          <section class="form-card form-card-classification">
-            <div class="card-header">
-              <div class="card-header-text">
+          <section class="form-card">
+            <!-- <div class="card-header">
+              <div class="section-heading">
                 <span class="material-icons-outlined card-icon">account_tree</span>
-                <div>
-                  <h2 class="card-title">هيكل وتصنيف المنتج</h2>
-                  <p class="card-desc">القسم، الشركة / العلامة التجارية، ومجموعة المنتجات</p>
-                </div>
+                <h2 class="card-title">هيكل وتصنيف المنتج</h2>
               </div>
-            </div>
+              <span class="section-tag required-tag">إلزامي</span>
+            </div> -->
 
-            <div class="card-body classification-grid">
-              <!-- 1. القسم -->
-              <div class="field-group dropdown-container" (click)="$event.stopPropagation()">
-                <label>القسم <span class="required">*</span></label>
-                <button #catTrigger type="button" class="form-select-trigger" [class.has-value]="productForm.get('categoryId')?.value"
-                  (click)="toggleDropdown('category')">
-                  <span>{{ selectedCategoryName }}</span>
-                  <span class="material-icons-outlined">expand_more</span>
-                </button>
-                <app-floating-dropdown
-                  [isOpen]="activeDropdown === 'category'"
-                  [trigger]="catTrigger"
-                  [options]="categories()"
-                  displayKey="name"
-                  searchPlaceholder="البحث بالاسم"
-                  title="القسم"
-                  addActionText="اضافة قسم جديد"
-                  emptyMessage="لا توجد أقسام"
-                  (itemSelected)="selectCategory($event)"
-                  (addClicked)="openOverlay('category')"
-                  (closeDropdown)="closeDropdowns()">
-                </app-floating-dropdown>
-              </div>
-
-              <!-- 2. الشركة / العلامة التجارية -->
-              <div class="field-group dropdown-container" (click)="$event.stopPropagation()">
-                <label>الشركة / العلامة التجارية</label>
-                <span class="brand-direct-badge" *ngIf="hasNoBrandsForCategory(); else brandDropdown">
-                  <span class="material-icons-outlined">subdirectory_arrow_left</span>
-                  تصنيف مباشر (بدون شركة)
-                </span>
-                <ng-template #brandDropdown>
-                  <button #brandTrigger type="button" class="form-select-trigger"
-                    [class.has-value]="selectedBrandId()"
-                    [disabled]="!productForm.get('categoryId')?.value"
-                    (click)="toggleDropdown('brand')">
-                    <span>{{ selectedBrandName }}</span>
+            <div class="card-body">
+              <div class="classification-grid">
+                <!-- 1. القسم -->
+                <div class="field-group dropdown-container" (click)="$event.stopPropagation()">
+                  <label>القسم <span class="required">*</span></label>
+                  <button #catTrigger type="button" class="form-select-trigger" [class.has-value]="productForm.get('categoryId')?.value"
+                    (click)="toggleDropdown('category')">
+                    <span>{{ selectedCategoryName }}</span>
                     <span class="material-icons-outlined">expand_more</span>
                   </button>
                   <app-floating-dropdown
-                    [isOpen]="activeDropdown === 'brand'"
-                    [trigger]="brandTrigger"
-                    [options]="brands()"
+                    [isOpen]="activeDropdown === 'category'"
+                    [trigger]="catTrigger"
+                    [options]="categories()"
                     displayKey="name"
                     searchPlaceholder="البحث بالاسم"
-                    title="الشركة / العلامة التجارية"
-                    emptyMessage="لا توجد شركات لهذا القسم"
-                    (itemSelected)="selectBrand($event)"
+                    title="القسم"
+                    addActionText="اضافة قسم جديد"
+                    emptyMessage="لا توجد أقسام"
+                    (itemSelected)="selectCategory($event)"
+                    (addClicked)="openOverlay('category')"
                     (closeDropdown)="closeDropdowns()">
                   </app-floating-dropdown>
-                </ng-template>
-              </div>
+                </div>
 
-              <!-- 3. مجموعة المنتجات -->
-              <div class="field-group dropdown-container" (click)="$event.stopPropagation()">
-                <label>مجموعة المنتجات <span class="required">*</span></label>
-                <button #groupTrigger type="button" class="form-select-trigger"
-                  [class.has-value]="productForm.get('productGroupId')?.value"
-                  [disabled]="!productForm.get('categoryId')?.value || (!hasNoBrandsForCategory() && !selectedBrandId())"
-                  (click)="toggleDropdown('productGroup')">
-                  <span>{{ selectedProductGroupName }}</span>
-                  <span class="material-icons-outlined">expand_more</span>
-                </button>
-                <app-floating-dropdown
-                  [isOpen]="activeDropdown === 'productGroup'"
-                  [trigger]="groupTrigger"
-                  [options]="productGroups()"
-                  displayKey="name"
-                  searchPlaceholder="البحث بالاسم"
-                  title="مجموعة المنتجات"
-                  emptyMessage="لا توجد مجموعات متاحة"
-                  (itemSelected)="selectProductGroup($event)"
-                  (closeDropdown)="closeDropdowns()">
-                </app-floating-dropdown>
-              </div>
+                <!-- 2. الشركة / العلامة التجارية -->
+                <div class="field-group dropdown-container" (click)="$event.stopPropagation()">
+                  <label>الشركة / العلامة التجارية</label>
+                  <span class="brand-direct-badge" *ngIf="hasNoBrandsForCategory(); else brandDropdown">
+                    <span class="material-icons-outlined">subdirectory_arrow_left</span>
+                    تصنيف مباشر (بدون شركة)
+                  </span>
+                  <ng-template #brandDropdown>
+                    <button #brandTrigger type="button" class="form-select-trigger"
+                      [class.has-value]="selectedBrandId()"
+                      [disabled]="!productForm.get('categoryId')?.value"
+                      (click)="toggleDropdown('brand')">
+                      <span>{{ selectedBrandName }}</span>
+                      <span class="material-icons-outlined">expand_more</span>
+                    </button>
+                    <app-floating-dropdown
+                      [isOpen]="activeDropdown === 'brand'"
+                      [trigger]="brandTrigger"
+                      [options]="brands()"
+                      displayKey="name"
+                      searchPlaceholder="البحث بالاسم"
+                      title="الشركة / العلامة التجارية"
+                      emptyMessage="لا توجد شركات لهذا القسم"
+                      (itemSelected)="selectBrand($event)"
+                      (closeDropdown)="closeDropdowns()">
+                    </app-floating-dropdown>
+                  </ng-template>
+                </div>
 
-              <!-- Hidden controls: keep the reactive form model intact -->
-              <div [hidden]="true" style="display: none;">
-                <input type="hidden" formControlName="manufacturerId">
-                <input type="hidden" formControlName="productGroupId">
+                <!-- 3. مجموعة المنتجات -->
+                <div class="field-group dropdown-container" (click)="$event.stopPropagation()">
+                  <label>مجموعة المنتجات <span class="required">*</span></label>
+                  <button #groupTrigger type="button" class="form-select-trigger"
+                    [class.has-value]="productForm.get('productGroupId')?.value"
+                    [disabled]="!productForm.get('categoryId')?.value || (!hasNoBrandsForCategory() && !selectedBrandId())"
+                    (click)="toggleDropdown('productGroup')">
+                    <span>{{ selectedProductGroupName }}</span>
+                    <span class="material-icons-outlined">expand_more</span>
+                  </button>
+                  <app-floating-dropdown
+                    [isOpen]="activeDropdown === 'productGroup'"
+                    [trigger]="groupTrigger"
+                    [options]="productGroups()"
+                    displayKey="name"
+                    searchPlaceholder="البحث بالاسم"
+                    title="مجموعة المنتجات"
+                    emptyMessage="لا توجد مجموعات متاحة"
+                    (itemSelected)="selectProductGroup($event)"
+                    (closeDropdown)="closeDropdowns()">
+                  </app-floating-dropdown>
+                </div>
+
+                <!-- Hidden controls: keep the reactive form model intact -->
+                <div [hidden]="true" style="display: none;">
+                  <input type="hidden" formControlName="manufacturerId">
+                  <input type="hidden" formControlName="productGroupId">
+                </div>
               </div>
             </div>
           </section>
 
           <!-- SECTION 2: اسم المنتج -->
-          <section class="form-card form-card-name">
-            <div class="card-header">
-              <div class="card-header-text">
+          <section class="form-card">
+            <!-- <div class="card-header">
+              <div class="section-heading">
                 <span class="material-icons-outlined card-icon">label</span>
-                <div>
-                  <h2 class="card-title">اسم المنتج</h2>
-                  <p class="card-desc">الاسم الأساسي الذي يظهر في الفواتير والمخزون</p>
-                </div>
+                <h2 class="card-title">اسم المنتج والتعريف</h2>
               </div>
-                <div class="name-preview" [class.is-ready]="generatedName()">
-                  <span class="material-icons-outlined name-preview-icon">
-                    {{ generatedName() ? 'auto_awesome' : 'edit_note' }}
-                  </span>
-                  <span class="name-preview-text" *ngIf="generatedName()">{{ generatedName() }}</span>
-                  <span class="name-preview-hint" *ngIf="!generatedName()">سيظهر الاسم الكامل هنا بعد الكتابة</span>
-                </div>
-              </div>
+              <span class="section-tag required-tag">إلزامي</span>
+            </div> -->
 
-              <div class="card-body name-body">
-                <!-- Base Name -->
-                <div class="identity-group">
-                  <div class="field-group field-group-full" [class.has-error]="isBaseNameInvalid">
-                    <label for="baseName">اسم المنتج <span class="required">*</span></label>
-                    <input id="baseName" type="text" formControlName="baseName" class="form-input form-input-name"
-                      placeholder="مثال: صابون سائل" autocomplete="off">
-                    <span class="field-error" *ngIf="isBaseNameInvalid">اسم المنتج مطلوب</span>
+            <div class="card-body">
+              <div class="name-grid">
+                <div class="field-group field-group-name" [class.has-error]="isBaseNameInvalid">
+                  <label for="baseName">اسم المنتج <span class="required">*</span></label>
+                  <input id="baseName" type="text" formControlName="baseName" class="form-input form-input-name"
+                    placeholder="مثال: صابون سائل" autocomplete="off">
+                  <span class="field-error" *ngIf="isBaseNameInvalid">اسم المنتج مطلوب</span>
+                </div>
+
+                <div class="field-group field-group-preview">
+                  <label>معاينة الاسم الكامل للمنتج</label>
+                  <div class="name-preview" [class.is-ready]="generatedName()">
+                    <span class="material-icons-outlined name-preview-icon">
+                      {{ generatedName() ? 'auto_awesome' : 'edit_note' }}
+                    </span>
+                    <span class="name-preview-text" *ngIf="generatedName()">{{ generatedName() }}</span>
+                    <span class="name-preview-hint" *ngIf="!generatedName()">سيظهر الاسم الكامل تلقائياً</span>
                   </div>
                 </div>
+              </div>
 
-                <!-- Attributes (Hidden in UI per new Product Hierarchy; preserved for code compatibility) -->
-                <div class="identity-group identity-attrs-group" formArrayName="attributes" *ngIf="false">
-                  <div class="attrs-group-header">
-                    <div class="attrs-group-title">
-                      <span class="section-label">سمات المنتج</span>
-                      <span class="attrs-count" *ngIf="attributesFormArray.length">{{ attributesFormArray.length }}</span>
+              <!-- Attributes (Hidden in UI per new Product Hierarchy; preserved for code compatibility) -->
+              <div class="identity-group identity-attrs-group" formArrayName="attributes" *ngIf="false">
+                <div class="attrs-group-header">
+                  <div class="attrs-group-title">
+                    <span class="section-label">سمات المنتج</span>
+                    <span class="attrs-count" *ngIf="attributesFormArray.length">{{ attributesFormArray.length }}</span>
+                  </div>
+                  <p class="attrs-hint">أضف سمات مثل اللون أو الحجم لتكوين اسم المنتج</p>
+                </div>
+
+                <div class="attr-chips-row" *ngIf="attributesFormArray.length">
+                  <button type="button" class="attr-chip"
+                    *ngFor="let attrCtrl of attributesFormArray.controls; let i = index"
+                    [class.active]="editingAttributeIndex() === i"
+                    (click)="loadAttributeForEdit(i)">
+                    <span class="attr-chip-name">{{ attrCtrl.get('name')?.value }}</span>
+                    <span class="attr-chip-value">{{ attrCtrl.get('value')?.value }}</span>
+                    <span class="chip-remove" (click)="removeAttribute(i); $event.stopPropagation()">
+                      <span class="material-icons-outlined">close</span>
+                    </span>
+                  </button>
+                </div>
+
+                <div class="attribute-editor">
+                  <div class="attribute-editor-row">
+                    <div class="field-group attr-editor-field" (click)="$event.stopPropagation()">
+                      <label>السمة</label>
+                      <button #attributeTrigger type="button" class="form-select-trigger attr-select-trigger"
+                        [class.has-value]="!!pendingAttribute()"
+                        [class.is-open]="activeDropdown === 'attribute'"
+                        (click)="toggleDropdown('attribute')">
+                        <span>{{ pendingAttributeLabel }}</span>
+                        <span class="material-icons-outlined">{{ activeDropdown === 'attribute' ? 'expand_less' : 'expand_more' }}</span>
+                      </button>
                     </div>
-                    <p class="attrs-hint">أضف سمات مثل اللون أو الحجم لتكوين اسم المنتج</p>
-                  </div>
 
-                  <div class="attr-chips-row" *ngIf="attributesFormArray.length">
-                    <button type="button" class="attr-chip"
-                      *ngFor="let attrCtrl of attributesFormArray.controls; let i = index"
-                      [class.active]="editingAttributeIndex() === i"
-                      (click)="loadAttributeForEdit(i)">
-                      <span class="attr-chip-name">{{ attrCtrl.get('name')?.value }}</span>
-                      <span class="attr-chip-value">{{ attrCtrl.get('value')?.value }}</span>
-                      <span class="chip-remove" (click)="removeAttribute(i); $event.stopPropagation()">
-                        <span class="material-icons-outlined">close</span>
-                      </span>
-                    </button>
-                  </div>
+                    <div class="field-group attr-editor-field">
+                      <label>قيمة السمة</label>
+                      <input type="text" class="form-input"
+                        [(ngModel)]="pendingAttributeValue" [ngModelOptions]="{standalone: true}"
+                        [disabled]="!pendingAttribute()"
+                        [placeholder]="pendingAttribute() ? 'أدخل ' + pendingAttribute()!.name : 'اختر سمة أولاً'"
+                        (keyup.enter)="confirmAttributeValue()">
+                    </div>
 
-                  <div class="attribute-editor">
-                    <div class="attribute-editor-row">
-                      <div class="field-group attr-editor-field" (click)="$event.stopPropagation()">
-                        <label>السمة</label>
-                        <button #attributeTrigger type="button" class="form-select-trigger attr-select-trigger"
-                          [class.has-value]="!!pendingAttribute()"
-                          [class.is-open]="activeDropdown === 'attribute'"
-                          (click)="toggleDropdown('attribute')">
-                          <span>{{ pendingAttributeLabel }}</span>
-                          <span class="material-icons-outlined">{{ activeDropdown === 'attribute' ? 'expand_less' : 'expand_more' }}</span>
-                        </button>
-                      </div>
-
-                      <div class="field-group attr-editor-field">
-                        <label>قيمة السمة</label>
-                        <input type="text" class="form-input"
-                          [(ngModel)]="pendingAttributeValue" [ngModelOptions]="{standalone: true}"
-                          [disabled]="!pendingAttribute()"
-                          [placeholder]="pendingAttribute() ? 'أدخل ' + pendingAttribute()!.name : 'اختر سمة أولاً'"
-                          (keyup.enter)="confirmAttributeValue()">
-                      </div>
-
-                      <div class="attr-confirm-field">
-                        <label class="sr-only">تأكيد</label>
-                        <button type="button" class="btn-confirm-attr"
-                          [disabled]="!canConfirmAttribute"
-                          (click)="confirmAttributeValue()">
-                          <span class="material-icons-outlined">check</span>
-                          تأكيد
-                        </button>
-                      </div>
+                    <div class="attr-confirm-field">
+                      <label class="sr-only">تأكيد</label>
+                      <button type="button" class="btn-confirm-attr"
+                        [disabled]="!canConfirmAttribute"
+                        (click)="confirmAttributeValue()">
+                        <span class="material-icons-outlined">check</span>
+                        تأكيد
+                      </button>
                     </div>
                   </div>
-
-                  <p class="attr-editor-error" *ngIf="attributeEditorError()">{{ attributeEditorError() }}</p>
                 </div>
+
+                <p class="attr-editor-error" *ngIf="attributeEditorError()">{{ attributeEditorError() }}</p>
               </div>
-            </section>
+            </div>
+          </section>
 
           <!-- SECTION 3: الباركودات والأسعار -->
           <section class="form-card form-card-barcodes">
-            <div class="card-header">
-              <div class="card-header-text">
+            <div class="card-header card-header-between">
+              <div class="section-heading">
                 <span class="material-icons-outlined card-icon">qr_code_scanner</span>
-                <div>
-                  <h2 class="card-title">الباركودات والأسعار</h2>
-                  <p class="card-desc">أضف باركودات متعددة مع أسعار البيع والشراء والمخزون</p>
-                  <span class="unified-price-chip" *ngIf="isPriceUnified() && productGroupName()">
-                    <span class="material-icons-outlined">sell</span>
-                    سعر بيع موحّد مع مجموعة "{{ productGroupName() }}"
-                  </span>
-                </div>
+                <h2 class="card-title">الباركودات والأسعار</h2>
+                <span class="unified-price-chip" *ngIf="isPriceUnified() && productGroupName()">
+                  <span class="material-icons-outlined">sell</span>
+                  <span class="unified-price-text">سعر بيع موحّد مع مجموعة "{{ productGroupName() }}"</span>
+                </span>
               </div>
               <div class="card-header-actions">
                 <div class="stock-indicator" [ngClass]="getStockClass()">
@@ -244,7 +242,7 @@
                 </div>
                 <button type="button" class="btn-add-barcode" (click)="addBarcode()">
                   <span class="material-icons-outlined">add</span>
-                  باركود جديد
+                  <span>باركود جديد</span>
                 </button>
               </div>
             </div>
@@ -254,8 +252,8 @@
                 <thead>
                   <tr>
                     <th>الباركود</th>
-                    <th>سعر البيع</th>
                     <th>سعر الشراء</th>
+                    <th>سعر البيع</th>
                     <th>هامش الربح</th>
                     <th>الكمية</th>
                     <th class="col-default">افتراضي</th>
@@ -268,12 +266,13 @@
                       <input type="text" formControlName="barcode" class="form-input form-input-compact"
                         placeholder="رقم الباركود" dir="ltr">
                     </td>
+                         <td>
+                      <input type="number" formControlName="buyingPrice" class="form-input form-input-compact" min="0" step="0.01">
+                    </td>
                     <td>
                       <input type="number" formControlName="sellingPrice" class="form-input form-input-compact" min="0" step="0.01">
                     </td>
-                    <td>
-                      <input type="number" formControlName="buyingPrice" class="form-input form-input-compact" min="0" step="0.01">
-                    </td>
+               
                     <td>
                       <div class="profit-cell" dir="ltr">
                         <span class="profit-pct">{{ calculateProfitMargin(row.get('buyingPrice')?.value, row.get('sellingPrice')?.value).percentage | number:'1.0-1' }}%</span>
@@ -302,21 +301,18 @@
             </div>
           </section>
 
-          <!-- SECTION 4: التحويلات والتجزئة (progressive disclosure) -->
-          <section class="form-card conversions-card" *ngIf="conversionsFormArray.length > 0; else conversionsEmpty">
-            <div class="card-header">
-              <div class="card-header-text">
+          <!-- SECTION 4: التحويلات والتجزئة -->
+          <section class="form-card" *ngIf="conversionsFormArray.length > 0; else conversionsEmpty">
+            <div class="card-header card-header-between">
+              <div class="section-heading">
                 <span class="material-icons-outlined card-icon">transform</span>
-                <div>
-                  <h2 class="card-title">التحويلات والتجزئة</h2>
-                  <p class="card-desc">حدد منتج الجملة وكمية التحويل إلى وحدات التجزئة</p>
-                </div>
+                <h2 class="card-title">التحويلات والتجزئة</h2>
                 <span class="tab-badge conversions-count">{{ conversionsFormArray.length }}</span>
               </div>
               <div class="card-header-actions">
                 <button type="button" class="btn-add-barcode" (click)="addConversion()">
                   <span class="material-icons-outlined">add</span>
-                  إضافة تحويل
+                  <span>إضافة تحويل</span>
                 </button>
               </div>
             </div>
@@ -369,20 +365,22 @@
             </div>
           </section>
 
-          <!-- Empty state: progressive disclosure — the compact card expands into the table above -->
+          <!-- Empty state: unified card with standard header and action button -->
           <ng-template #conversionsEmpty>
-            <section class="conversions-empty-card">
-              <div class="conversions-empty-text">
-                <span class="material-icons-outlined conversions-empty-icon">transform</span>
-                <div>
-                  <h3>التحويلات والتجزئة (اختياري)</h3>
-                  <p>حدد إذا كان هذا المنتج يمكن تحويله أو بيعه بالتجزئة من منتج جملة</p>
+            <section class="form-card conversions-empty-card">
+              <div class="card-header card-header-between">
+                <div class="section-heading">
+                  <span class="material-icons-outlined card-icon">transform</span>
+                  <h2 class="card-title">التحويلات والتجزئة</h2>
+                  <span class="section-tag">اختياري</span>
+                </div>
+                <div class="card-header-actions">
+                  <button type="button" class="btn-add-conversion" (click)="addConversion()">
+                    <span class="material-icons-outlined">add</span>
+                    <span>إضافة تحويل</span>
+                  </button>
                 </div>
               </div>
-              <button type="button" class="btn-add-conversion" (click)="addConversion()">
-                <span class="material-icons-outlined">add</span>
-                إضافة تحويل
-              </button>
             </section>
           </ng-template>
         </div>
@@ -390,28 +388,26 @@
         <!-- COMPOSITION TAB -->
         <div *ngIf="activeTab === 'composition'" class="form-sections">
           <section class="form-card">
-            <div class="card-header" style="flex-direction: column; align-items: flex-start; gap: 1rem;">
-              <div class="card-header-text">
+            <div class="card-header card-header-between">
+              <div class="section-heading">
                 <span class="material-icons-outlined card-icon">science</span>
-                <div>
-                  <h2 class="card-title">مكونات المنتج</h2>
-                  <p class="card-desc">حدد إذا كان هذا المنتج يتكون من مواد أو منتجات أخرى</p>
-                </div>
+                <h2 class="card-title">مكونات المنتج</h2>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" formControlName="hasComposition">
-                <span class="toggle-slider"></span>
-                <span class="toggle-label">تفعيل مكونات المنتج</span>
-              </label>
+              <div class="card-header-actions">
+                <label class="toggle-switch">
+                  <input type="checkbox" formControlName="hasComposition">
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-label">تفعيل مكونات المنتج</span>
+                </label>
+                <button type="button" class="btn-add-barcode" *ngIf="productForm.get('hasComposition')?.value"
+                  (click)="addCompositionRow()">
+                  <span class="material-icons-outlined">add</span>
+                  <span>إضافة مادة</span>
+                </button>
+              </div>
             </div>
 
             <div class="card-body table-scroll" *ngIf="productForm.get('hasComposition')?.value">
-              <div class="card-header-actions" style="margin-bottom: 1rem; justify-content: flex-end;">
-                <button type="button" class="btn-add-barcode" (click)="addCompositionRow()">
-                  <span class="material-icons-outlined">add</span>
-                  إضافة مادة
-                </button>
-              </div>
               <table class="barcodes-table">
                 <thead>
                   <tr>
@@ -439,7 +435,6 @@
                       <input type="number" formControlName="quantity" class="form-input form-input-compact" min="0" step="0.01">
                     </td>
                     <td>
-                      <!-- Simple numeric input for unitId for now, standardizes with API -->
                       <input type="number" formControlName="unitId" class="form-input form-input-compact" placeholder="Unit ID">
                     </td>
                     <td>
@@ -457,8 +452,9 @@
                   </tr>
                 </tbody>
               </table>
-              <div *ngIf="compositionFormArray.length === 0" style="text-align: center; padding: 2rem; color: #666;">
-                لا توجد مكونات مضافة
+              <div *ngIf="compositionFormArray.length === 0" class="empty-composition-msg">
+                <span class="material-icons-outlined">info</span>
+                <span>لا توجد مكونات مضافة حتى الآن. انقر على "إضافة مادة" لإضافة أول مكوّن.</span>
               </div>
             </div>
           </section>
@@ -484,11 +480,11 @@
           [disabled]="isSaving() || productForm.invalid">
           <span class="material-icons-outlined" *ngIf="!isSaving()">save</span>
           <span class="spinner" *ngIf="isSaving()"></span>
-          {{ isSaving() ? 'جاري الحفظ...' : 'حفظ المنتج' }}
+          <span>{{ isSaving() ? 'جاري الحفظ...' : 'حفظ المنتج' }}</span>
         </button>
         <button type="button" class="btn-cancel" (click)="onCancel()" [disabled]="isSaving()">
           <span class="material-icons-outlined">close</span>
-          إلغاء
+          <span>إلغاء</span>
         </button>
       </div>
     </footer>
@@ -632,3 +628,4 @@
   (productSelected)="selectProductFromSearch($event)"
   (closed)="onPopupClosed()">
 </app-product-search-popup>
+

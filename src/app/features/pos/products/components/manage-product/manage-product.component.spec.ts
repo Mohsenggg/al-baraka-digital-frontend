@@ -309,6 +309,29 @@ describe('ManageProductComponent', () => {
                   expect(tabLabels.some(label => label.includes('التحويلات'))).toBeFalse();
             });
 
+            it('should render each section heading inline with its content and without descriptions', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  // Descriptions and the old stacked card headers were removed
+                  expect(fixture.debugElement.queryAll(By.css('.card-desc')).length).toBe(0);
+                  expect(fixture.debugElement.queryAll(By.css('.card-header')).length).toBe(0);
+
+                  const classification = fixture.debugElement.query(By.css('.form-card-classification'));
+                  expect(classification.classes['section-row']).toBeTrue();
+                  expect(classification.query(By.css('.section-heading .card-title'))).toBeTruthy();
+                  expect(classification.query(By.css('.classification-grid'))).toBeTruthy();
+
+                  const nameCard = fixture.debugElement.query(By.css('.form-card-name'));
+                  expect(nameCard.classes['section-row']).toBeTrue();
+                  expect(nameCard.query(By.css('.section-heading .card-title'))).toBeTruthy();
+                  expect(nameCard.query(By.css('input#baseName.form-input-name'))).toBeTruthy();
+
+                  const barcodes = fixture.debugElement.query(By.css('.form-card-barcodes'));
+                  expect(barcodes.query(By.css('.section-row-between .section-heading .card-title'))).toBeTruthy();
+                  expect(barcodes.query(By.css('.section-row-between .card-header-actions .btn-add-barcode'))).toBeTruthy();
+            });
+
             it('should render the compact conversions empty state when the product has none', () => {
                   loadProductForEdit(productDetail());
                   fixture.detectChanges();
