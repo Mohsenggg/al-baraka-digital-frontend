@@ -880,9 +880,18 @@
       color: var(--pos-text-primary);
 }
 
-.form-select-trigger:hover {
+.form-select-trigger:hover:not(:disabled) {
       border-color: #cbd5e1;
       background: #f9fafb;
+}
+
+.form-select-trigger:disabled,
+.form-select-trigger[disabled] {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+      opacity: 0.75;
 }
 
 .form-select-trigger .material-icons-outlined {

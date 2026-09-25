@@ -75,8 +75,8 @@
 
                 <div class="identity-divider" aria-hidden="true"></div>
 
-                <!-- Attributes -->
-                <div class="identity-group identity-attrs-group" formArrayName="attributes">
+                <!-- Attributes (Hidden in UI per new Product Hierarchy; preserved for code compatibility) -->
+                <div class="identity-group identity-attrs-group" formArrayName="attributes" *ngIf="false">
                   <div class="attrs-group-header">
                     <div class="attrs-group-title">
                       <span class="section-label">سمات المنتج</span>
@@ -141,18 +141,18 @@
             <section class="form-card form-card-classify">
               <div class="card-header">
                 <div class="card-header-text">
-                  <span class="material-icons-outlined card-icon">folder_open</span>
+                  <span class="material-icons-outlined card-icon">account_tree</span>
                   <div>
-                    <h2 class="card-title">التصنيف</h2>
-                    <p class="card-desc">القسم والشركة المصنعة والموردين</p>
+                    <h2 class="card-title">هيكل وتصنيف المنتج</h2>
+                    <p class="card-desc">القسم، الشركة / العلامة التجارية، ومجموعة المنتجات</p>
                   </div>
                 </div>
               </div>
 
               <div class="card-body classify-fields">
-                <!-- Category -->
+                <!-- 1. Category -->
                 <div class="field-group dropdown-container" (click)="$event.stopPropagation()">
-                  <label>القسم</label>
+                  <label>القسم <span class="required">*</span></label>
                   <button #catTrigger type="button" class="form-select-trigger" [class.has-value]="productForm.get('categoryId')?.value"
                     (click)="toggleDropdown('category')">
                     <span>{{ selectedCategoryName }}</span>
@@ -173,67 +173,56 @@
                   </app-floating-dropdown>
                 </div>
 
-                <!-- Manufacturer -->
+                <!-- 2. Brand / Company -->
                 <div class="field-group dropdown-container" (click)="$event.stopPropagation()">
-                  <label>الشركة المصنعة</label>
-                  <button #manTrigger type="button" class="form-select-trigger" [class.has-value]="productForm.get('manufacturerId')?.value"
-                    (click)="toggleDropdown('manufacturer')">
-                    <span>{{ selectedManufacturerName }}</span>
+                  <label>الشركة / العلامة التجارية</label>
+                  <button #brandTrigger type="button" class="form-select-trigger"
+                    [class.has-value]="selectedBrandId()"
+                    [disabled]="!productForm.get('categoryId')?.value || hasNoBrandsForCategory()"
+                    (click)="toggleDropdown('brand')">
+                    <span>{{ selectedBrandName }}</span>
                     <span class="material-icons-outlined">expand_more</span>
                   </button>
                   <app-floating-dropdown
-                    [isOpen]="activeDropdown === 'manufacturer'"
-                    [trigger]="manTrigger"
-                    [options]="manufacturers()"
+                    [isOpen]="activeDropdown === 'brand'"
+                    [trigger]="brandTrigger"
+                    [options]="brands()"
                     displayKey="name"
                     searchPlaceholder="البحث بالاسم"
-                    title="الشركة المصنعة"
-                    addActionText="اضافة شركة جديدة"
-                    emptyMessage="لا توجد شركات"
-                    (itemSelected)="selectManufacturer($event)"
-                    (addClicked)="openOverlay('manufacturer')"
+                    title="الشركة / العلامة التجارية"
+                    emptyMessage="لا توجد شركات لهذا القسم"
+                    (itemSelected)="selectBrand($event)"
                     (closeDropdown)="closeDropdowns()">
                   </app-floating-dropdown>
                 </div>
 
-                <!-- Suppliers -->
+                <!-- 3. Product Group -->
                 <div class="field-group dropdown-container" (click)="$event.stopPropagation()">
-                  <label>الموردين</label>
-                  <button #supTrigger type="button" class="form-select-trigger form-select-multi"
-                    [class.has-value]="selectedSuppliers.length > 0" (click)="toggleDropdown('supplier')">
-                    <span class="supplier-chips" *ngIf="selectedSuppliers.length > 0; else noSuppliers">
-                      <span class="supplier-chip" *ngFor="let sup of selectedSuppliers">
-                        {{ sup.name }}
-                        <span class="chip-remove" (click)="removeSupplier(sup.id); $event.stopPropagation()">
-                          <span class="material-icons-outlined">close</span>
-                        </span>
-                      </span>
-                    </span>
-                    <ng-template #noSuppliers>
-                      <span class="placeholder-text">اختر الموردين...</span>
-                    </ng-template>
-                    <span class="material-icons-outlined trigger-icon">expand_more</span>
+                  <label>مجموعة المنتجات <span class="required">*</span></label>
+                  <button #groupTrigger type="button" class="form-select-trigger"
+                    [class.has-value]="productForm.get('productGroupId')?.value"
+                    [disabled]="!productForm.get('categoryId')?.value || (!hasNoBrandsForCategory() && !selectedBrandId())"
+                    (click)="toggleDropdown('productGroup')">
+                    <span>{{ selectedProductGroupName }}</span>
+                    <span class="material-icons-outlined">expand_more</span>
                   </button>
-                  <ng-template #supplierTemplate let-sup>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <input type="checkbox" [checked]="isSupplierSelected(sup)" style="pointer-events: none;">
-                      <span>{{ sup.name }}</span>
-                    </div>
-                  </ng-template>
                   <app-floating-dropdown
-                    [isOpen]="activeDropdown === 'supplier'"
-                    [trigger]="supTrigger"
-                    [options]="suppliers()"
-                    [multiSelect]="true"
-                    [itemTemplate]="supplierTemplate"
+                    [isOpen]="activeDropdown === 'productGroup'"
+                    [trigger]="groupTrigger"
+                    [options]="productGroups()"
+                    displayKey="name"
                     searchPlaceholder="البحث بالاسم"
-                    title="الموردين"
-                    addActionText="اضافة مورد جديد"
-                    emptyMessage="لا يوجد موردين"
-                    (itemSelected)="toggleSupplier($event)"
-                    (addClicked)="openOverlay('supplier')"
+                    title="مجموعة المنتجات"
+                    emptyMessage="لا توجد مجموعات متاحة"
+                    (itemSelected)="selectProductGroup($event)"
                     (closeDropdown)="closeDropdowns()">
                   </app-floating-dropdown>
+                </div>
+
+                <!-- Hidden form controls to keep form model intact -->
+                <div [hidden]="true" style="display: none;">
+                  <input type="hidden" formControlName="manufacturerId">
+                  <input type="hidden" formControlName="productGroupId">
                 </div>
               </div>
             </section>
@@ -501,8 +490,9 @@
   <app-sidebar [expanded]="sidebarVisible()" (toggle)="onToggleSidebar()"></app-sidebar>
 </div>
 
-<!-- Attribute floating picker (shared component) -->
+<!-- Attribute floating picker (Hidden per new Product Hierarchy) -->
 <app-floating-dropdown
+  *ngIf="false"
   [isOpen]="activeDropdown === 'attribute'"
   [trigger]="attributeTrigger?.nativeElement"
   [options]="getAvailableAttributesForDropdown()"

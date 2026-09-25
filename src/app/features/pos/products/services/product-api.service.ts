@@ -10,7 +10,9 @@ import type {
       NamedEntity,
       ProductAttributeOption,
       BulkMoveProductsResponse,
-      GroupPriceSummary
+      GroupPriceSummary,
+      CategoryChildNodesDto,
+      ProductGroupTreeNodeDto
 } from '../models/product.models';
 
 @Injectable({
@@ -57,6 +59,14 @@ export class ProductApiService {
 
       public getCategories(): Observable<NamedEntity[]> {
             return this.http.get<NamedEntity[]>(`${this.lookupUrl}/categories`);
+      }
+
+      public getCategoryChildNodes(categoryId: number | string): Observable<CategoryChildNodesDto> {
+            return this.http.get<CategoryChildNodesDto>(`${this.apiUrl}/tree/categories/${categoryId}/nodes`);
+      }
+
+      public getBrandGroups(brandId: number | string): Observable<ProductGroupTreeNodeDto[]> {
+            return this.http.get<ProductGroupTreeNodeDto[]>(`${this.apiUrl}/tree/brands/${brandId}/groups`);
       }
 
       public createCategory(name: string): Observable<NamedEntity> {

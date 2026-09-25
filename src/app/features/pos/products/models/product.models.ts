@@ -108,6 +108,32 @@ export interface NamedEntity {
       name: string;
 }
 
+export interface CategoryChildNodesDto {
+      categoryId: number;
+      brands: BrandTreeNodeDto[];
+      directGroups: ProductGroupTreeNodeDto[];
+}
+
+export interface BrandTreeNodeDto {
+      id: number;
+      code?: string;
+      name: string;
+      categoryId?: number;
+      groupCount?: number;
+      productCount?: number;
+      groups?: ProductGroupTreeNodeDto[];
+}
+
+export interface ProductGroupTreeNodeDto {
+      id: number;
+      code?: string;
+      name: string;
+      categoryId?: number;
+      brandId?: number | null;
+      productCount?: number;
+      isPriceUnified?: boolean;
+}
+
 /** Response of `POST /api/products/tree/products/bulk-move`. */
 export interface BulkMoveProductsResponse {
       movedCount: number;

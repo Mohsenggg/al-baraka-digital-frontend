@@ -16,7 +16,7 @@ import { SidebarComponent } from '../../../../../shared/components/sidebar/sideb
 import { ProductManageStateService } from '../../services/product-manage-state.service';
 import { FloatingDropdownComponent } from '../../../../../shared/components/floating-dropdown/floating-dropdown.component';
 import { ProductSearchPopupComponent } from '../../../../../shared/components/product-search-popup/product-search-popup.component';
-import type { NamedEntity, ProductAttributeOption, ProductListItemDto } from '../../models/product.models';
+import type { NamedEntity, ProductAttributeOption, ProductListItemDto, BrandTreeNodeDto, ProductGroupTreeNodeDto } from '../../models/product.models';
 import { calculateProfitMargin } from '../../models/product.models';
 import { ProductApiService } from '../../services/product-api.service';
 import { NotificationService } from '../../../../../shared/services/notification.service';
@@ -58,7 +58,7 @@ export class ManageProductComponent implements OnInit, OnDestroy {
 
       activeTab: 'basic' | 'conversions' | 'composition' = 'basic';
       sidebarVisible = signal(false);
-      activeDropdown: 'attribute' | 'category' | 'manufacturer' | 'supplier' | null = null;
+      activeDropdown: 'attribute' | 'category' | 'manufacturer' | 'supplier' | 'brand' | 'productGroup' | null = null;
       showOverlay: 'category' | 'manufacturer' | 'supplier' | 'attribute' | null = null;
 
       @ViewChild('attributeTrigger') attributeTrigger?: ElementRef<HTMLButtonElement>;
@@ -75,6 +75,11 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       readonly categories = this.state.categories;
       readonly manufacturers = this.state.manufacturers;
       readonly suppliers = this.state.suppliers;
+      readonly brands = this.state.brands;
+      readonly productGroups = this.state.productGroups;
+      readonly selectedBrandId = this.state.selectedBrandId;
+      readonly hasNoBrandsForCategory = this.state.hasNoBrandsForCategory;
+      readonly isHierarchyLoading = this.state.isHierarchyLoading;
 
       readonly pendingAttribute = this.state.pendingAttribute;
       readonly editingAttributeIndex = this.state.editingAttributeIndex;
@@ -138,6 +143,14 @@ export class ManageProductComponent implements OnInit, OnDestroy {
 
       get selectedCategoryName(): string {
             return this.state.getSelectedCategoryName();
+      }
+
+      get selectedBrandName(): string {
+            return this.state.getSelectedBrandName();
+      }
+
+      get selectedProductGroupName(): string {
+            return this.state.getSelectedProductGroupName();
       }
 
       get selectedManufacturerName(): string {
@@ -253,7 +266,7 @@ export class ManageProductComponent implements OnInit, OnDestroy {
             return this.state.getStockLabel();
       }
 
-      toggleDropdown(type: 'attribute' | 'category' | 'manufacturer' | 'supplier'): void {
+      toggleDropdown(type: 'attribute' | 'category' | 'manufacturer' | 'supplier' | 'brand' | 'productGroup'): void {
             this.activeDropdown = this.activeDropdown === type ? null : type;
       }
 
@@ -269,6 +282,16 @@ export class ManageProductComponent implements OnInit, OnDestroy {
 
       selectCategory(cat: NamedEntity): void {
             this.state.selectCategory(cat);
+            this.activeDropdown = null;
+      }
+
+      selectBrand(brand: BrandTreeNodeDto): void {
+            this.state.selectBrand(brand);
+            this.activeDropdown = null;
+      }
+
+      selectProductGroup(group: ProductGroupTreeNodeDto): void {
+            this.state.selectProductGroup(group);
             this.activeDropdown = null;
       }
 

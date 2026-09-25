@@ -8,7 +8,10 @@ import type {
       ProductAttributeOption,
       ProductBarcodeFormValue,
       ProductManagePayload,
-      ProductConversionDto
+      ProductConversionDto,
+      BrandTreeNodeDto,
+      ProductGroupTreeNodeDto,
+      CategoryChildNodesDto
 } from '../models/product.models';
 import {
       calculateProfitMargin,
@@ -43,11 +46,20 @@ export class ProductManageStateService {
       private readonly categoriesSignal = signal<NamedEntity[]>([]);
       private readonly manufacturersSignal = signal<NamedEntity[]>([]);
       private readonly suppliersSignal = signal<NamedEntity[]>([]);
+      private readonly brandsSignal = signal<BrandTreeNodeDto[]>([]);
+      private readonly productGroupsSignal = signal<ProductGroupTreeNodeDto[]>([]);
 
       readonly attributes = this.attributesSignal.asReadonly();
       readonly categories = this.categoriesSignal.asReadonly();
       readonly manufacturers = this.manufacturersSignal.asReadonly();
       readonly suppliers = this.suppliersSignal.asReadonly();
+      readonly brands = this.brandsSignal.asReadonly();
+      readonly productGroups = this.productGroupsSignal.asReadonly();
+
+      readonly selectedBrandId = signal<number | null>(null);
+      readonly selectedBrandName = signal<string | null>(null);
+      readonly hasNoBrandsForCategory = signal<boolean>(false);
+      readonly isHierarchyLoading = signal<boolean>(false);
 
       readonly pendingAttribute = signal<ProductAttributeOption | null>(null);
       readonly pendingAttributeValue = signal('');
@@ -65,6 +77,11 @@ export class ProductManageStateService {
             this.productGroupName.set(null);
             this.isPriceUnified.set(false);
             this.initialSellingPrice.set(null);
+            this.selectedBrandId.set(null);
+            this.selectedBrandName.set(null);
+            this.hasNoBrandsForCategory.set(false);
+            this.brandsSignal.set([]);
+            this.productGroupsSignal.set([]);
             this.clearAttributeEditor();
             this.initForm();
             this.addBarcode();
@@ -208,6 +225,7 @@ export class ProductManageStateService {
                   attributes: formValue.attributes,
                   barcodes: formValue.barcodes,
                   categoryId: formValue.categoryId,
+                  productGroupId: formValue.productGroupId || this.productGroupId() || null,
                   manufacturerId: formValue.manufacturerId,
                   supplierIds: formValue.supplierIds,
                   hasConversion,
@@ -419,12 +437,116 @@ export class ProductManageStateService {
       }
 
       selectCategory(cat: NamedEntity): void {
+            if (this.productForm.get('categoryId')?.value === cat.id) return;
+
             this.productForm.get('categoryId')?.setValue(cat.id);
+
+            // Reset downstream selections
+            this.selectedBrandId.set(null);
+            this.selectedBrandName.set(null);
+            this.productForm.get('productGroupId')?.setValue(null);
+            this.productGroupId.set(null);
+            this.productGroupName.set(null);
+            this.isPriceUnified.set(false);
+            this.brandsSignal.set([]);
+            this.productGroupsSignal.set([]);
+            this.hasNoBrandsForCategory.set(false);
+
+            this.loadCategoryChildNodes(cat.id);
+      }
+
+      loadCategoryChildNodes(categoryId: number, targetGroupId?: number | string | null): void {
+            this.isHierarchyLoading.set(true);
+            this.api.getCategoryChildNodes(categoryId).pipe(
+                  catchError(() => of({ categoryId, brands: [], directGroups: [] } as CategoryChildNodesDto)),
+                  finalize(() => this.isHierarchyLoading.set(false))
+            ).subscribe(res => {
+                  const brands = res.brands || [];
+                  const directGroups = res.directGroups || [];
+                  this.brandsSignal.set(brands);
+
+                  if (brands.length > 0) {
+                        this.hasNoBrandsForCategory.set(false);
+                        if (targetGroupId != null) {
+                              const targetIdStr = String(targetGroupId);
+                              const matchedBrand = brands.find(b =>
+                                    b.groups && b.groups.some(g => String(g.id) === targetIdStr)
+                              );
+                              if (matchedBrand) {
+                                    this.selectedBrandId.set(matchedBrand.id);
+                                    this.selectedBrandName.set(matchedBrand.name);
+                                    this.productGroupsSignal.set(matchedBrand.groups || []);
+                              }
+                        }
+                  } else if (directGroups.length > 0) {
+                        this.hasNoBrandsForCategory.set(true);
+                        this.productGroupsSignal.set(directGroups);
+                  } else {
+                        this.hasNoBrandsForCategory.set(false);
+                        this.productGroupsSignal.set([]);
+                  }
+            });
+      }
+
+      selectBrand(brand: BrandTreeNodeDto): void {
+            if (this.selectedBrandId() === brand.id) return;
+
+            this.selectedBrandId.set(brand.id);
+            this.selectedBrandName.set(brand.name);
+
+            // Reset downstream group
+            this.productForm.get('productGroupId')?.setValue(null);
+            this.productGroupId.set(null);
+            this.productGroupName.set(null);
+            this.isPriceUnified.set(false);
+
+            if (brand.groups && brand.groups.length > 0) {
+                  this.productGroupsSignal.set(brand.groups);
+            } else {
+                  this.isHierarchyLoading.set(true);
+                  this.api.getBrandGroups(brand.id).pipe(
+                        catchError(() => of([])),
+                        finalize(() => this.isHierarchyLoading.set(false))
+                  ).subscribe(groups => {
+                        this.productGroupsSignal.set(groups);
+                  });
+            }
+      }
+
+      selectProductGroup(group: ProductGroupTreeNodeDto): void {
+            this.productForm.get('productGroupId')?.setValue(group.id);
+            this.productGroupId.set(group.id);
+            this.productGroupName.set(group.name);
+            this.isPriceUnified.set(!!group.isPriceUnified);
+
+            if (group.categoryId && !this.productForm.get('categoryId')?.value) {
+                  this.productForm.get('categoryId')?.setValue(group.categoryId);
+            }
       }
 
       getSelectedCategoryName(): string {
             const id = this.productForm.get('categoryId')?.value;
             return this.categories().find(c => c.id === id)?.name || 'اختر القسم...';
+      }
+
+      getSelectedBrandName(): string {
+            if (this.hasNoBrandsForCategory()) {
+                  return 'تصنيف مباشر (بدون شركة)';
+            }
+            if (!this.productForm.get('categoryId')?.value) {
+                  return 'اختر القسم أولاً';
+            }
+            return this.selectedBrandName() || 'اختر الشركة / العلامة التجارية...';
+      }
+
+      getSelectedProductGroupName(): string {
+            if (!this.productForm.get('categoryId')?.value) {
+                  return 'اختر القسم أولاً';
+            }
+            if (!this.hasNoBrandsForCategory() && !this.selectedBrandId()) {
+                  return 'اختر الشركة أولاً';
+            }
+            return this.productGroupName() || 'اختر مجموعة المنتجات...';
       }
 
       selectManufacturer(man: NamedEntity): void {
@@ -526,6 +648,7 @@ export class ProductManageStateService {
                   attributes: this.fb.array([]),
                   barcodes: this.fb.array([]),
                   categoryId: [null],
+                  productGroupId: [null],
                   manufacturerId: [null],
                   supplierIds: [[]],
                   hasConversion: [false],
@@ -544,11 +667,16 @@ export class ProductManageStateService {
                   baseName: detail.baseName,
                   status: detail.status || 'active',
                   categoryId: detail.categoryId,
+                  productGroupId: detail.productGroupId || null,
                   manufacturerId: detail.manufacturerId,
                   supplierIds: detail.supplierIds,
                   hasConversion: detail.hasConversion || !!detail.conversions?.length,
                   hasComposition: detail.hasComposition
             });
+
+            if (detail.categoryId) {
+                  this.loadCategoryChildNodes(Number(detail.categoryId), detail.productGroupId);
+            }
 
             this.attributesFormArray.clear();
             (detail.attributes || []).forEach(attr => {
