@@ -376,10 +376,17 @@ describe('ManageProductComponent', () => {
                   return fixture.debugElement.query(By.css('.profit-input-pct')).nativeElement as HTMLInputElement;
             }
 
-            /** Simulates the user committing a value in one of the profit inputs (blur or Enter). */
-            function commitProfitInput(input: HTMLInputElement, value: string): void {
+            /** Simulates the user typing in one of the profit inputs (live, without leaving the field). */
+            function typeProfitInput(input: HTMLInputElement, value: string): void {
+                  input.dispatchEvent(new Event('focus'));
                   input.value = value;
-                  input.dispatchEvent(new Event('change'));
+                  input.dispatchEvent(new Event('input'));
+                  fixture.detectChanges();
+            }
+
+            /** Simulates the user leaving a profit input (blur or Enter then leaving). */
+            function blurProfitInput(input: HTMLInputElement): void {
+                  input.dispatchEvent(new Event('blur'));
                   fixture.detectChanges();
             }
 
@@ -407,24 +414,42 @@ describe('ManageProductComponent', () => {
                   expect(profitPercentInput().value).toBe('42.86');
             });
 
-            it('should update the selling price from a typed profit amount', () => {
+            it('should update the selling price live from a typed profit amount', () => {
                   loadProductForEdit(productDetail());
                   fixture.detectChanges();
 
-                  commitProfitInput(profitValueInput(), '5');
+                  typeProfitInput(profitValueInput(), '5');
 
                   expect(state.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(12);
                   expect(profitPercentInput().value).toBe('71.43');
             });
 
-            it('should update the selling price from a typed profit percentage', () => {
+            it('should update the selling price live from a typed profit percentage', () => {
                   loadProductForEdit(productDetail());
                   fixture.detectChanges();
 
-                  commitProfitInput(profitPercentInput(), '20');
+                  typeProfitInput(profitPercentInput(), '20');
 
                   expect(state.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(8.4);
                   expect(profitValueInput().value).toBe('1.4');
+            });
+
+            it('should keep the typed percentage while the selling price updates live', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  const percent = profitPercentInput();
+                  typeProfitInput(percent, '33.33');
+
+                  // The selling price and the profit amount update live, the typed percentage is preserved
+                  expect(state.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(9.33);
+                  expect(percent.value).toBe('33.33');
+                  expect(profitValueInput().value).toBe('2.33');
+
+                  blurProfitInput(percent);
+
+                  // Leaving the field snaps it to the percentage derived from the rounded selling price
+                  expect(percent.value).toBe('33.29');
             });
 
             it('should refresh the profit inputs when the selling price changes', () => {
@@ -446,10 +471,13 @@ describe('ManageProductComponent', () => {
                   }));
                   fixture.detectChanges();
 
-                  commitProfitInput(profitPercentInput(), '20');
+                  const percent = profitPercentInput();
+                  typeProfitInput(percent, '20');
 
                   expect(state.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(10);
-                  expect(profitPercentInput().value).toBe('0');
+
+                  blurProfitInput(percent);
+                  expect(percent.value).toBe('0');
             });
       });
 });

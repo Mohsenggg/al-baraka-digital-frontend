@@ -110,6 +110,17 @@ export class ProductApiService {
             });
       }
 
+      /**
+       * Loads the lightweight hierarchy skeleton: Categories -> Brands -> Groups.
+       * Does NOT include product objects.
+       * Payload: ~30 KB (vs ~2.2 MB with includeProducts=true).
+       */
+      public getHierarchySkeleton(): Observable<{ tree: any[]; statistics: any }> {
+            return this.http.get<{ tree: any[]; statistics: any }>(`${this.apiUrl}/tree`, {
+                  params: new HttpParams().set('includeProducts', 'false')
+            });
+      }
+
       // ─── Tree hierarchy mutations (Product Tree Edit Mode) ────────────────
 
       public renameCategory(id: number | string, name: string): Observable<void> {

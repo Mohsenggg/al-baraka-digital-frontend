@@ -277,12 +277,18 @@
                       <div class="profit-cell" dir="ltr">
                         <div class="profit-input-wrap">
                           <input type="number" class="form-input form-input-compact profit-input profit-input-pct"
-                            [value]="getBarcodeProfitPercent(i)" (change)="onBarcodeProfitPercentChange(i, $event)"
+                            [value]="getBarcodeProfitInput(i, 'percent')"
+                            (focus)="onBarcodeProfitFocus(i, 'percent')"
+                            (input)="onBarcodeProfitInput(i, 'percent', $event)"
+                            (blur)="onBarcodeProfitBlur(i, 'percent', $event)"
                             step="0.01" title="نسبة الربح %" aria-label="نسبة الربح %">
                           <span class="profit-input-suffix">%</span>
                         </div>
                         <input type="number" class="form-input form-input-compact profit-input profit-input-val"
-                          [value]="getBarcodeProfitValue(i)" (change)="onBarcodeProfitValueChange(i, $event)"
+                          [value]="getBarcodeProfitInput(i, 'value')"
+                          (focus)="onBarcodeProfitFocus(i, 'value')"
+                          (input)="onBarcodeProfitInput(i, 'value', $event)"
+                          (blur)="onBarcodeProfitBlur(i, 'value', $event)"
                           step="0.01" title="قيمة الربح" aria-label="قيمة الربح">
                       </div>
                     </td>

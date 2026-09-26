@@ -2,6 +2,7 @@ import {
       Component,
       signal,
       OnInit,
+      OnDestroy,
       HostListener,
       inject,
       ChangeDetectionStrategy,
@@ -11,6 +12,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { SidebarComponent } from '../../../../../shared/components/sidebar/sidebar.component';
 import { ProductStateService } from '../../services/product-state.service';
 import {
@@ -29,9 +31,10 @@ import {
       styleUrl: './products-main-page.component.css',
       changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductsMainPageComponent implements OnInit {
+export class ProductsMainPageComponent implements OnInit, OnDestroy {
       private state = inject(ProductStateService);
       private router = inject(Router);
+      private searchSubject = new Subject<string>();
 
       @ViewChild('tableWrapper') tableWrapper?: ElementRef<HTMLElement>;
 
@@ -87,6 +90,17 @@ export class ProductsMainPageComponent implements OnInit {
 
       ngOnInit(): void {
             this.state.loadProducts();
+
+            this.searchSubject.pipe(
+                  debounceTime(300),
+                  distinctUntilChanged()
+            ).subscribe(query => {
+                  this.state.setSearchQuery(query);
+            });
+      }
+
+      ngOnDestroy(): void {
+            this.searchSubject.complete();
       }
 
       resetScroll(): void {
@@ -103,7 +117,7 @@ export class ProductsMainPageComponent implements OnInit {
             const input = event.target as HTMLInputElement;
             this.localSearchTerm.set(input.value);
             this.resetScroll();
-            this.state.setSearchQuery(input.value);
+            this.searchSubject.next(input.value);
       }
 
       onSearchKeyDown(event: KeyboardEvent): void {

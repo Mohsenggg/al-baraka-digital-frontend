@@ -28,9 +28,10 @@ export interface ProductListItem {
 
 export interface ProductFilterParams {
       query?: string;
-      categoryId?: number;
-      manufacturerId?: number;
-      supplierId?: number;
+      categoryId?: number | string;
+      manufacturerId?: number | string;
+      productGroupId?: number | string;
+      supplierId?: number | string;
       status?: string;
       page?: number;
       size?: number;
@@ -47,14 +48,15 @@ export interface ProductPagination {
 export interface ProductListItemDto {
       id: number;
       name: string;
-      code: string;
+      barcode?: string;
+      code?: string;
       category?: string;
       manufacturer?: string;
       sellingPrice: number;
       buyingPrice?: number;
       stock: number;
       status: ProductStatus;
-      type: ProductType;
+      type?: ProductType;
 }
 
 export function resolveStockStatus(stock: number): StockStatus {
@@ -64,12 +66,12 @@ export function resolveStockStatus(stock: number): StockStatus {
       return 'healthy';
 }
 
-export function getStockClass(product: ProductListItem): StockStatus {
-      return resolveStockStatus(product.stock);
+export function getStockClass(product: { stock?: number } | ProductListItem | ProductListItemDto): StockStatus {
+      return resolveStockStatus(product?.stock ?? 0);
 }
 
-export function getStockLabel(product: ProductListItem): string {
-      const stock = product.stock;
+export function getStockLabel(product: { stock?: number } | ProductListItem | ProductListItemDto): string {
+      const stock = product?.stock ?? 0;
       if (stock === 0) return '0';
       return `${stock}`;
 }

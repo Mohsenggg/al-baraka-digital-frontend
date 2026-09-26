@@ -23,6 +23,9 @@ import { NotificationService } from '../../../../../shared/services/notification
 /** Prompt 1 choice: update the whole unified group, only this product, or abort the save. */
 export type UnifiedPriceChoice = 'all' | 'single' | 'cancel';
 
+/** The two editable profit metrics rendered in the barcode profit cell. */
+type ProfitField = 'value' | 'percent';
+
 /** View state of Prompt 1 (bulk selling price update choice). */
 export interface UnifiedPricePromptState {
       groupName: string;
@@ -235,37 +238,57 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       /* EDITABLE PROFIT CELL          */
       /* ============================= */
 
-      /** Profit amount currently derived from a row's buying/selling prices. */
-      getBarcodeProfitValue(index: number): number {
-            return this.state.getBarcodeProfitValue(index);
+      /**
+       * Profit input currently being typed in. While an input is focused its displayed value is
+       * frozen, so the live recalculation never rewrites the text the user is typing.
+       */
+      private readonly editingProfitInput = signal<{ index: number; field: ProfitField; frozen: number } | null>(null);
+
+      /** Value shown in an editable profit input: the frozen one while typing, otherwise the derived one. */
+      getBarcodeProfitInput(index: number, field: ProfitField): number {
+            const editing = this.editingProfitInput();
+            if (editing && editing.index === index && editing.field === field) {
+                  return editing.frozen;
+            }
+            return this.derivedProfitValue(index, field);
       }
 
-      /** Profit percentage currently derived from a row's buying/selling prices. */
-      getBarcodeProfitPercent(index: number): number {
-            return this.state.getBarcodeProfitPercent(index);
+      /** Freezes the profit input display while it is focused so the typed text is preserved. */
+      onBarcodeProfitFocus(index: number, field: ProfitField): void {
+            this.editingProfitInput.set({ index, field, frozen: this.derivedProfitValue(index, field) });
       }
 
-      /** Recalculates the row's selling price from the profit amount typed by the user. */
-      onBarcodeProfitValueChange(index: number, event: Event): void {
+      /** Recalculates the row's selling price live while the user types a profit amount or percentage. */
+      onBarcodeProfitInput(index: number, field: ProfitField, event: Event): void {
             const input = event.target as HTMLInputElement;
             const rawValue = input.value.trim();
-            const profitValue = Number(rawValue);
-            if (rawValue !== '' && !Number.isNaN(profitValue)) {
-                  this.state.applyBarcodeProfitValue(index, profitValue);
+            const profit = Number(rawValue);
+            if (rawValue === '' || Number.isNaN(profit)) return;
+
+            if (field === 'percent') {
+                  this.state.applyBarcodeProfitPercent(index, profit);
+            } else {
+                  this.state.applyBarcodeProfitValue(index, profit);
             }
-            // Re-render the derived profit (also restores the cell when the typed value was invalid).
-            input.value = String(this.state.getBarcodeProfitValue(index));
       }
 
-      /** Recalculates the row's selling price from the profit percentage typed by the user. */
-      onBarcodeProfitPercentChange(index: number, event: Event): void {
-            const input = event.target as HTMLInputElement;
-            const rawValue = input.value.trim();
-            const profitPercent = Number(rawValue);
-            if (rawValue !== '' && !Number.isNaN(profitPercent)) {
-                  this.state.applyBarcodeProfitPercent(index, profitPercent);
+      /** Unfreezes the profit input and snaps it to the value derived from the selling price. */
+      onBarcodeProfitBlur(index: number, field: ProfitField, event: FocusEvent): void {
+            const editing = this.editingProfitInput();
+            if (editing && editing.index === index && editing.field === field) {
+                  this.editingProfitInput.set(null);
             }
-            input.value = String(this.state.getBarcodeProfitPercent(index));
+
+            // The binding only rewrites the DOM when its value changes, so restore the derived value
+            // explicitly (e.g. after the user emptied the input or typed an incomplete number).
+            (event.target as HTMLInputElement).value = String(this.derivedProfitValue(index, field));
+      }
+
+      /** Profit amount or percentage of a row as derived from its current buying and selling prices. */
+      private derivedProfitValue(index: number, field: ProfitField): number {
+            return field === 'percent'
+                  ? this.state.getBarcodeProfitPercent(index)
+                  : this.state.getBarcodeProfitValue(index);
       }
 
       addConversion(): void {
