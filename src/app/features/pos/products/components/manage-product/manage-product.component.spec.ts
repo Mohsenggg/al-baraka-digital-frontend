@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { FormControlName } from '@angular/forms';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -309,27 +310,25 @@ describe('ManageProductComponent', () => {
                   expect(tabLabels.some(label => label.includes('التحويلات'))).toBeFalse();
             });
 
-            it('should render each section heading inline with its content and without descriptions', () => {
+            it('should render the sections with their content and without descriptions', () => {
                   loadProductForEdit(productDetail());
                   fixture.detectChanges();
 
-                  // Descriptions and the old stacked card headers were removed
+                  // Descriptions were removed from all cards
                   expect(fixture.debugElement.queryAll(By.css('.card-desc')).length).toBe(0);
-                  expect(fixture.debugElement.queryAll(By.css('.card-header')).length).toBe(0);
 
-                  const classification = fixture.debugElement.query(By.css('.form-card-classification'));
-                  expect(classification.classes['section-row']).toBeTrue();
-                  expect(classification.query(By.css('.section-heading .card-title'))).toBeTruthy();
-                  expect(classification.query(By.css('.classification-grid'))).toBeTruthy();
+                  const cards = fixture.debugElement.queryAll(By.css('.form-sections > .form-card'));
 
-                  const nameCard = fixture.debugElement.query(By.css('.form-card-name'));
-                  expect(nameCard.classes['section-row']).toBeTrue();
-                  expect(nameCard.query(By.css('.section-heading .card-title'))).toBeTruthy();
-                  expect(nameCard.query(By.css('input#baseName.form-input-name'))).toBeTruthy();
+                  // Classification and name cards are header-less bodies holding their content inline
+                  expect(cards[0].query(By.css('.classification-grid'))).toBeTruthy();
+                  expect(cards[0].queryAll(By.css('.card-header')).length).toBe(0);
+                  expect(cards[1].query(By.css('input#baseName.form-input-name'))).toBeTruthy();
+                  expect(cards[1].queryAll(By.css('.card-header')).length).toBe(0);
 
+                  // The barcodes card keeps its inline heading and its add-barcode action
                   const barcodes = fixture.debugElement.query(By.css('.form-card-barcodes'));
-                  expect(barcodes.query(By.css('.section-row-between .section-heading .card-title'))).toBeTruthy();
-                  expect(barcodes.query(By.css('.section-row-between .card-header-actions .btn-add-barcode'))).toBeTruthy();
+                  expect(barcodes.query(By.css('.card-header .section-heading .card-title'))).toBeTruthy();
+                  expect(barcodes.query(By.css('.card-header-actions .btn-add-barcode'))).toBeTruthy();
             });
 
             it('should render the compact conversions empty state when the product has none', () => {
@@ -365,6 +364,92 @@ describe('ManageProductComponent', () => {
                   expect(component.conversionsFormArray.length).toBe(2);
                   expect(fixture.debugElement.queryAll(By.css('.conversions-card')).length).toBe(1);
                   expect(fixture.debugElement.queryAll(By.css('.conversions-empty-card')).length).toBe(0);
+            });
+      });
+
+      describe('editable profit cell', () => {
+            function profitValueInput(): HTMLInputElement {
+                  return fixture.debugElement.query(By.css('.profit-input-val')).nativeElement as HTMLInputElement;
+            }
+
+            function profitPercentInput(): HTMLInputElement {
+                  return fixture.debugElement.query(By.css('.profit-input-pct')).nativeElement as HTMLInputElement;
+            }
+
+            /** Simulates the user committing a value in one of the profit inputs (blur or Enter). */
+            function commitProfitInput(input: HTMLInputElement, value: string): void {
+                  input.value = value;
+                  input.dispatchEvent(new Event('change'));
+                  fixture.detectChanges();
+            }
+
+            /** Simulates the user typing a value in one of the barcode row's reactive form inputs. */
+            function typeBarcodeControl(controlName: string, value: string): void {
+                  const control = fixture.debugElement
+                        .queryAll(By.directive(FormControlName))
+                        .find(element => element.injector.get(FormControlName).name === controlName);
+
+                  const input = control?.nativeElement as HTMLInputElement | undefined;
+                  if (!input) {
+                        throw new Error(`No barcode input found for form control "${controlName}"`);
+                  }
+
+                  input.value = value;
+                  input.dispatchEvent(new Event('input'));
+                  fixture.detectChanges();
+            }
+
+            it('should derive the profit inputs from the barcode buying and selling prices', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  expect(profitValueInput().value).toBe('3');
+                  expect(profitPercentInput().value).toBe('42.86');
+            });
+
+            it('should update the selling price from a typed profit amount', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  commitProfitInput(profitValueInput(), '5');
+
+                  expect(state.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(12);
+                  expect(profitPercentInput().value).toBe('71.43');
+            });
+
+            it('should update the selling price from a typed profit percentage', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  commitProfitInput(profitPercentInput(), '20');
+
+                  expect(state.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(8.4);
+                  expect(profitValueInput().value).toBe('1.4');
+            });
+
+            it('should refresh the profit inputs when the selling price changes', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  typeBarcodeControl('sellingPrice', '14');
+
+                  expect(state.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(14);
+                  expect(profitValueInput().value).toBe('7');
+                  expect(profitPercentInput().value).toBe('100');
+            });
+
+            it('should ignore a profit percentage typed while the buying price is zero', () => {
+                  loadProductForEdit(productDetail({
+                        barcodes: [
+                              { id: 1, barcode: '111', sellingPrice: 10, buyingPrice: 0, stock: 5, isDefault: true }
+                        ]
+                  }));
+                  fixture.detectChanges();
+
+                  commitProfitInput(profitPercentInput(), '20');
+
+                  expect(state.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(10);
+                  expect(profitPercentInput().value).toBe('0');
             });
       });
 });

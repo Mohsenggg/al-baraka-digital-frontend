@@ -580,33 +580,48 @@
       gap: 4px;
 }
 
-.profit-pct {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 44px;
-      height: 26px;
-      padding: 0 4px;
-      background: #f0fdf4;
-      color: #047857;
-      border-radius: 5px;
-      font-size: 0.7rem;
-      font-weight: 700;
+/* Editable profit inputs: typing an amount or a percentage recalculates the selling price */
+.profit-cell .profit-input {
+      width: 62px;
+      padding: 0 6px;
+      text-align: center;
+      direction: ltr;
+      font-size: 0.72rem;
+      font-weight: 600;
 }
 
-.profit-val {
+.profit-input-wrap {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      min-width: 50px;
-      height: 26px;
-      padding: 0 5px;
-      background: #f8fafc;
-      color: var(--pos-text-primary, #1f2937);
-      border: 1px solid var(--pos-border, #e5e7eb);
-      border-radius: 5px;
-      font-size: 0.7rem;
-      font-weight: 600;
+      flex: none;
+}
+
+.profit-input-wrap .profit-input {
+      width: 58px;
+      padding-inline-end: 16px;
+}
+
+.profit-input-pct {
+      background: #f0fdf4;
+      color: #047857;
+      border-color: #bbf7d0;
+}
+
+.profit-input-pct:focus {
+      border-color: #047857;
+      box-shadow: 0 0 0 2px rgba(4, 120, 87, 0.12);
+}
+
+.profit-input-suffix {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #047857;
+      pointer-events: none;
 }
 
 .default-radio {

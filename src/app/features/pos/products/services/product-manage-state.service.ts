@@ -11,7 +11,8 @@ import type {
       ProductConversionDto,
       BrandTreeNodeDto,
       ProductGroupTreeNodeDto,
-      CategoryChildNodesDto
+      CategoryChildNodesDto,
+      ProfitMargin
 } from '../models/product.models';
 import {
       calculateProfitMargin,
@@ -422,6 +423,50 @@ export class ProductManageStateService {
             return calculateProfitMargin(buying, selling);
       }
 
+      /** Profit amount of a barcode row, rounded for the editable profit cell. */
+      getBarcodeProfitValue(index: number): number {
+            return roundMoney(this.getBarcodeProfitMargin(index).value);
+      }
+
+      /** Profit percentage of a barcode row, rounded for the editable profit cell. */
+      getBarcodeProfitPercent(index: number): number {
+            return roundMoney(this.getBarcodeProfitMargin(index).percentage);
+      }
+
+      /**
+       * Applies a profit amount typed by the user in the editable profit cell:
+       * selling price = buying price + profit amount (never below zero).
+       */
+      applyBarcodeProfitValue(index: number, profitValue: number): void {
+            const row = this.barcodesFormArray.at(index);
+            if (!row) return;
+
+            const buyingPrice = Number(row.get('buyingPrice')?.value) || 0;
+            row.get('sellingPrice')?.setValue(roundMoney(Math.max(0, buyingPrice + profitValue)));
+      }
+
+      /**
+       * Applies a profit percentage typed by the user: selling price = buying price × (1 + percentage / 100).
+       * A percentage needs a buying price base, so it is ignored while the buying price is zero.
+       */
+      applyBarcodeProfitPercent(index: number, profitPercent: number): void {
+            const row = this.barcodesFormArray.at(index);
+            if (!row) return;
+
+            const buyingPrice = Number(row.get('buyingPrice')?.value) || 0;
+            if (buyingPrice <= 0) return;
+
+            row.get('sellingPrice')?.setValue(roundMoney(Math.max(0, buyingPrice * (1 + profitPercent / 100))));
+      }
+
+      /** Margin (amount + percentage) derived from a row's current buying and selling prices. */
+      private getBarcodeProfitMargin(index: number): ProfitMargin {
+            const row = this.barcodesFormArray.at(index);
+            const buyingPrice = Number(row?.get('buyingPrice')?.value) || 0;
+            const sellingPrice = Number(row?.get('sellingPrice')?.value) || 0;
+            return calculateProfitMargin(buyingPrice, sellingPrice);
+      }
+
       getTotalStock(): number {
             return this.barcodesFormArray.controls.reduce((sum, control) => {
                   return sum + (Number(control.get('stock')?.value) || 0);
@@ -758,4 +803,9 @@ export class ProductManageStateService {
                   || (err as { message?: string })?.message
                   || 'حدث خطأ غير متوقع';
       }
+}
+
+/** Rounds a money amount to the two decimals stored by the backend (BigDecimal scale = 2). */
+function roundMoney(value: number): number {
+      return Math.round((value + Number.EPSILON * Math.abs(value)) * 100) / 100;
 }

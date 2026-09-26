@@ -2,6 +2,7 @@ import { Injectable, computed, signal, inject } from '@angular/core';
 import { BehaviorSubject, Observable, tap, finalize, catchError, throwError, EMPTY, map, switchMap, firstValueFrom } from 'rxjs';
 import { CashierApiService } from './cashier-api.service';
 import { CashierSeedService } from './cashier-seed.service';
+import { ProductCatalogStore } from '../../../../core/products/services/product-catalog.store';
 import type {
       ReceiptResponse, CreateReceiptInput, UpdateReceiptInput,
       Product, CartItem, ReceiptFilterParams, ReceiptListItemDto, ReceiptMode,
@@ -31,6 +32,7 @@ export function validateCartItemStock(item: CartItem, mode: ReceiptMode): string
 export class CashierStateService {
       private api = inject(CashierApiService);
       private seed = inject(CashierSeedService);
+      private catalogStore = inject(ProductCatalogStore);
 
       // --------- State Management (RxJS BehaviorSubjects) ---------
       private _receiptsList = new BehaviorSubject<ReceiptResponse[]>([]);
@@ -75,9 +77,8 @@ export class CashierStateService {
             this.receiptModeSignal.set(mode);
       }
 
-      // Signal to hold all cached products locally
-      private productsSignal = signal<Product[]>([]);
-      public products = this.productsSignal.asReadonly();
+      // Signal to hold all cached products locally (delegated to ProductCatalogStore)
+      public products = this.catalogStore.products;
 
       // --------- Navigation Cache State ---------
       private navigationCache: ReceiptResponse[] = [];
@@ -89,25 +90,10 @@ export class CashierStateService {
 
       // --------- API Orchestration Methods ---------
 
-      public loadAllProducts(): Observable<Product[]> {
+      public loadAllProducts(forceRefresh: boolean = false): Observable<Product[]> {
             this.setLoading(true);
-            return this.api.getAllProducts().pipe(
-                  map(dtoList => dtoList.map(dto => {
-                        const product = this.seed.getPlaceholderProduct({
-                              id: dto.id,
-                              name: dto.name,
-                              barcode: dto.barcode,
-                              sellingPrice: dto.sellingPrice,
-                              buyingPrice: dto.buyingPrice,
-                              stockQuantity: dto.stock
-                        });
-                        if (dto.refillOptions) {
-                              product.refillOptions = dto.refillOptions;
-                        }
-                        return product;
-                  })),
-                  tap((mappedProducts) => {
-                        this.productsSignal.set(mappedProducts);
+            return this.catalogStore.loadCatalog(forceRefresh).pipe(
+                  tap(() => {
                         this.refreshNavigationCacheStock();
                         this.refreshCurrentReceiptDisplay();
                         this.clearError();
@@ -121,7 +107,7 @@ export class CashierStateService {
       }
 
       private getLiveStockForProductCode(productCode: string, fallback = 0): number {
-            const product = this.productsSignal().find(p => p.barcode === productCode);
+            const product = this.catalogStore.findByBarcode(productCode);
             return product ? product.stockQuantity : fallback;
       }
 
@@ -151,13 +137,7 @@ export class CashierStateService {
       }
 
       public searchProducts(query: string): Product[] {
-            const term = query.trim().toLowerCase();
-            if (!term) return [];
-            const all = this.productsSignal();
-            return all.filter(p =>
-                  p.barcode.toLowerCase().includes(term) ||
-                  p.name.toLowerCase().includes(term)
-            );
+            return this.catalogStore.search({ query, activeOnly: true });
       }
 
       public loadReceipts(page: number = 1, size: number = 10, search: string = ''): void {
@@ -201,11 +181,9 @@ export class CashierStateService {
             this.setReceiptMode('VIEW');
             this.currentSavedReceiptSignal.set(receipt);
 
-            const allProducts = this.productsSignal();
-
             this.draftItemsSignal.set(
                   receipt.items.map((i, index) => {
-                        const foundProduct = allProducts.find(p => p.barcode === i.productCode);
+                        const foundProduct = this.catalogStore.findByBarcode(i.productCode);
                         const uniqueId = foundProduct ? foundProduct.id : -(index + 1);
                         const currentLiveStock = foundProduct
                               ? foundProduct.stockQuantity
@@ -452,40 +430,25 @@ export class CashierStateService {
       }
 
       private updateProductsCacheFromReceipt(receipt: ReceiptResponse): void {
-            const currentProducts = [...this.productsSignal()];
-            let hasChanges = false;
-
-            receipt.items.forEach(item => {
-                  const pIdx = currentProducts.findIndex(p => p.barcode === item.productCode);
-                  if (pIdx > -1 && item.remainingStock !== undefined) {
-                        currentProducts[pIdx] = { ...currentProducts[pIdx], stockQuantity: item.remainingStock };
-                        hasChanges = true;
-                  }
-            });
-
-            if (hasChanges) {
-                  this.productsSignal.set(currentProducts);
-            }
+            if (!receipt.items || receipt.items.length === 0) return;
+            const itemsToUpdate = receipt.items
+                  .filter(item => item.productCode && item.remainingStock !== undefined)
+                  .map(item => ({
+                        barcode: item.productCode,
+                        remainingStock: item.remainingStock
+                  }));
+            this.catalogStore.updateStockBatchByBarcode(itemsToUpdate);
       }
 
       private restoreStockForDeletedReceipt(receipt: ReceiptResponse): void {
-            const currentProducts = [...this.productsSignal()];
-            let hasChanges = false;
-
-            receipt.items.forEach(item => {
-                  const pIdx = currentProducts.findIndex(p => p.barcode === item.productCode);
-                  if (pIdx > -1) {
-                        currentProducts[pIdx] = { 
-                              ...currentProducts[pIdx], 
-                              stockQuantity: currentProducts[pIdx].stockQuantity + item.quantity 
-                        };
-                        hasChanges = true;
-                  }
-            });
-
-            if (hasChanges) {
-                  this.productsSignal.set(currentProducts);
-            }
+            if (!receipt.items || receipt.items.length === 0) return;
+            const itemsToRestore = receipt.items
+                  .filter(item => item.productCode && item.quantity)
+                  .map(item => ({
+                        barcode: item.productCode,
+                        quantity: item.quantity
+                  }));
+            this.catalogStore.restoreStockBatchByBarcode(itemsToRestore);
       }
 
       private removeReceiptFromLocalState(deletedId: number): void {
@@ -739,46 +702,11 @@ export class CashierStateService {
                   map(response => {
                         const updatedProduct = this.normalizeRefillExecuteResponse(response, payload);
 
-                        const currentProducts = [...this.productsSignal()];
-                        const existingChildIdx = currentProducts.findIndex(p => p.barcode === updatedProduct.barcode);
-                        let finalProducts = [...currentProducts];
-
-                        if (existingChildIdx > -1) {
-                              finalProducts[existingChildIdx] = {
-                                    ...finalProducts[existingChildIdx],
-                                    stockQuantity: updatedProduct.stockQuantity,
-                                    buyingPrice: updatedProduct.buyingPrice,
-                                    sellingPrice: updatedProduct.sellingPrice,
-                                    name: updatedProduct.name
-                              };
-                        } else {
-                              finalProducts.push(updatedProduct);
-                        }
-
-                        const parentIdx = finalProducts.findIndex(p => p.id === payload.parentProductId);
-                        if (parentIdx > -1) {
-                              const oldParentStock = finalProducts[parentIdx].stockQuantity ?? 0;
-                              const newParentStock = Math.max(0, oldParentStock - payload.parentUnitsUsed);
-
-                              finalProducts = finalProducts.map((p, i) => {
-                                    if (i === parentIdx) {
-                                          return { ...p, stockQuantity: newParentStock };
-                                    }
-                                    if (p.refillOptions?.some(o => o.parentProductId === payload.parentProductId)) {
-                                          return {
-                                                ...p,
-                                                refillOptions: p.refillOptions!.map(o =>
-                                                      o.parentProductId === payload.parentProductId
-                                                            ? { ...o, parentStock: newParentStock }
-                                                            : o
-                                                )
-                                          };
-                                    }
-                                    return p;
-                              });
-                        }
-
-                        this.productsSignal.set(finalProducts);
+                        this.catalogStore.applyRefillUpdate(
+                              updatedProduct,
+                              payload.parentProductId,
+                              payload.parentUnitsUsed
+                        );
                         this.syncUpdatedProductAcrossState(updatedProduct);
 
                         return updatedProduct;
@@ -792,7 +720,7 @@ export class CashierStateService {
       ): Product {
             const childProduct = response.childProduct ?? response;
             const barcode = childProduct.barcode || response.childBarcode || payload.childBarcode;
-            const currentProduct = this.productsSignal().find(p => p.barcode === barcode);
+            const currentProduct = this.catalogStore.findByBarcode(barcode);
 
             const normalized: Product = {
                   id: childProduct.id ?? currentProduct?.id ?? 0,

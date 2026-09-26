@@ -275,8 +275,15 @@
                
                     <td>
                       <div class="profit-cell" dir="ltr">
-                        <span class="profit-pct">{{ calculateProfitMargin(row.get('buyingPrice')?.value, row.get('sellingPrice')?.value).percentage | number:'1.0-1' }}%</span>
-                        <span class="profit-val">{{ calculateProfitMargin(row.get('buyingPrice')?.value, row.get('sellingPrice')?.value).value | number:'1.2-2' }}</span>
+                        <div class="profit-input-wrap">
+                          <input type="number" class="form-input form-input-compact profit-input profit-input-pct"
+                            [value]="getBarcodeProfitPercent(i)" (change)="onBarcodeProfitPercentChange(i, $event)"
+                            step="0.01" title="نسبة الربح %" aria-label="نسبة الربح %">
+                          <span class="profit-input-suffix">%</span>
+                        </div>
+                        <input type="number" class="form-input form-input-compact profit-input profit-input-val"
+                          [value]="getBarcodeProfitValue(i)" (change)="onBarcodeProfitValueChange(i, $event)"
+                          step="0.01" title="قيمة الربح" aria-label="قيمة الربح">
                       </div>
                     </td>
                     <td>
@@ -302,7 +309,7 @@
           </section>
 
           <!-- SECTION 4: التحويلات والتجزئة -->
-          <section class="form-card" *ngIf="conversionsFormArray.length > 0; else conversionsEmpty">
+          <section class="form-card conversions-card" *ngIf="conversionsFormArray.length > 0; else conversionsEmpty">
             <div class="card-header card-header-between">
               <div class="section-heading">
                 <span class="material-icons-outlined card-icon">transform</span>

@@ -17,7 +17,6 @@ import { ProductManageStateService } from '../../services/product-manage-state.s
 import { FloatingDropdownComponent } from '../../../../../shared/components/floating-dropdown/floating-dropdown.component';
 import { ProductSearchPopupComponent } from '../../../../../shared/components/product-search-popup/product-search-popup.component';
 import type { NamedEntity, ProductAttributeOption, ProductListItemDto, BrandTreeNodeDto, ProductGroupTreeNodeDto } from '../../models/product.models';
-import { calculateProfitMargin } from '../../models/product.models';
 import { ProductApiService } from '../../services/product-api.service';
 import { NotificationService } from '../../../../../shared/services/notification.service';
 
@@ -84,8 +83,6 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       readonly pendingAttribute = this.state.pendingAttribute;
       readonly editingAttributeIndex = this.state.editingAttributeIndex;
       readonly attributeEditorError = this.state.attributeEditorError;
-
-      readonly calculateProfitMargin = calculateProfitMargin;
 
       // Product search state for composition/conversions
       allProducts = signal<any[]>([]);
@@ -232,6 +229,43 @@ export class ManageProductComponent implements OnInit, OnDestroy {
 
       setDefaultBarcode(index: number): void {
             this.state.setDefaultBarcode(index);
+      }
+
+      /* ============================= */
+      /* EDITABLE PROFIT CELL          */
+      /* ============================= */
+
+      /** Profit amount currently derived from a row's buying/selling prices. */
+      getBarcodeProfitValue(index: number): number {
+            return this.state.getBarcodeProfitValue(index);
+      }
+
+      /** Profit percentage currently derived from a row's buying/selling prices. */
+      getBarcodeProfitPercent(index: number): number {
+            return this.state.getBarcodeProfitPercent(index);
+      }
+
+      /** Recalculates the row's selling price from the profit amount typed by the user. */
+      onBarcodeProfitValueChange(index: number, event: Event): void {
+            const input = event.target as HTMLInputElement;
+            const rawValue = input.value.trim();
+            const profitValue = Number(rawValue);
+            if (rawValue !== '' && !Number.isNaN(profitValue)) {
+                  this.state.applyBarcodeProfitValue(index, profitValue);
+            }
+            // Re-render the derived profit (also restores the cell when the typed value was invalid).
+            input.value = String(this.state.getBarcodeProfitValue(index));
+      }
+
+      /** Recalculates the row's selling price from the profit percentage typed by the user. */
+      onBarcodeProfitPercentChange(index: number, event: Event): void {
+            const input = event.target as HTMLInputElement;
+            const rawValue = input.value.trim();
+            const profitPercent = Number(rawValue);
+            if (rawValue !== '' && !Number.isNaN(profitPercent)) {
+                  this.state.applyBarcodeProfitPercent(index, profitPercent);
+            }
+            input.value = String(this.state.getBarcodeProfitPercent(index));
       }
 
       addConversion(): void {

@@ -233,19 +233,21 @@ describe('ProductTreeViewComponent', () => {
                   expect(fixture.debugElement.queryAll(By.css('td.col-tree-select')).length).toBe(0);
             });
 
-            it('should show the edit mode banner and the selection counter while editing', () => {
+            it('should show the edit mode badge and the selection counter while editing', () => {
                   component.toggleEditMode();
                   fixture.detectChanges();
-                  expect(fixture.debugElement.queryAll(By.css('.edit-mode-banner')).length).toBe(1);
+                  expect(fixture.debugElement.queryAll(By.css('.edit-pill-badge')).length).toBe(1);
 
                   component.selectAllInGroup(createTwoProductGroup());
                   fixture.detectChanges();
-                  expect(fixture.debugElement.queryAll(By.css('.selection-chip')).length).toBe(1);
+                  expect(fixture.debugElement.queryAll(By.css('.floating-bulk-bar')).length).toBe(1);
+                  expect(fixture.debugElement.queryAll(By.css('.bulk-count')).length).toBe(1);
 
                   component.toggleEditMode();
                   fixture.detectChanges();
-                  expect(fixture.debugElement.queryAll(By.css('.edit-mode-banner')).length).toBe(0);
-                  expect(fixture.debugElement.queryAll(By.css('.selection-chip')).length).toBe(0);
+                  expect(fixture.debugElement.queryAll(By.css('.edit-pill-badge')).length).toBe(0);
+                  expect(fixture.debugElement.queryAll(By.css('.floating-bulk-bar')).length).toBe(0);
+                  expect(fixture.debugElement.queryAll(By.css('.bulk-count')).length).toBe(0);
             });
       });
 
