@@ -42,6 +42,7 @@ import {
       INITIAL_MOCK_TREE_DATA
 } from './models/product-tree.models';
 import { ProductApiService } from '../../../services/product-api.service';
+import { ProductCatalogStore } from '../../../../../../core/products/services/product-catalog.store';
 
 @Component({
       selector: 'app-product-tree-view',
@@ -54,6 +55,7 @@ import { ProductApiService } from '../../../services/product-api.service';
 export class ProductTreeViewComponent implements OnInit {
       private router = inject(Router);
       private productApiService = inject(ProductApiService);
+      private catalogStore = inject(ProductCatalogStore);
       private notificationService = inject(NotificationService);
       private confirmService = inject(ConfirmService);
 
@@ -678,6 +680,7 @@ export class ProductTreeViewComponent implements OnInit {
             this.renameNode(target, trimmedName).subscribe({
                   next: () => {
                         this.nodeActionKey.set(null);
+                        this.catalogStore.invalidate();
                         this.applyRenamedNode(target, trimmedName);
                         this.closeRenameDialog(true);
                         this.notificationService.success(
@@ -799,6 +802,7 @@ export class ProductTreeViewComponent implements OnInit {
             this.deleteNode(target).subscribe({
                   next: () => {
                         this.nodeActionKey.set(null);
+                        this.catalogStore.invalidate();
                         this.removeNodeFromTree(target);
                         this.notificationService.success(
                               `تم حذف ${this.nodeTypeLabels[target.type]} "${target.name}" بنجاح`
@@ -1094,6 +1098,7 @@ export class ProductTreeViewComponent implements OnInit {
             moveObs.subscribe({
                   next: () => {
                         this.nodeActionKey.set(null);
+                        this.catalogStore.invalidate();
                         if (target.mode === 'bulk-products') {
                               this.clearSelection();
                         }
@@ -1147,6 +1152,7 @@ export class ProductTreeViewComponent implements OnInit {
             this.productApiService.setGroupPriceUnification(group.id, nextValue).subscribe({
                   next: () => {
                         this.nodeActionKey.set(null);
+                        this.catalogStore.invalidate();
                         this.applyGroupPriceUnification(group.id, nextValue);
                         this.notificationService.success(
                               `${nextValue ? 'تم تفعيل' : 'تم إلغاء'} السعر الموحد لمجموعة "${group.name}". لم يتم تعديل الأسعار الحالية.`

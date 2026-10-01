@@ -19,6 +19,7 @@ import { ProductSearchPopupComponent } from '../../../../../shared/components/pr
 import type { NamedEntity, ProductAttributeOption, ProductListItemDto, BrandTreeNodeDto, ProductGroupTreeNodeDto } from '../../models/product.models';
 import { ProductApiService } from '../../services/product-api.service';
 import { NotificationService } from '../../../../../shared/services/notification.service';
+import { ProductCatalogStore } from '../../../../../core/products/services/product-catalog.store';
 
 /** Prompt 1 choice: update the whole unified group, only this product, or abort the save. */
 export type UnifiedPriceChoice = 'all' | 'single' | 'cancel';
@@ -53,6 +54,7 @@ const SELLING_PRICE_EPSILON = 0.004;
 export class ManageProductComponent implements OnInit, OnDestroy {
       private readonly state = inject(ProductManageStateService);
       private readonly api = inject(ProductApiService);
+      private readonly catalogStore = inject(ProductCatalogStore);
       private readonly router = inject(Router);
       private readonly route = inject(ActivatedRoute);
       private readonly notifications = inject(NotificationService);
@@ -402,13 +404,13 @@ export class ManageProductComponent implements OnInit, OnDestroy {
             this.popupOpen.set(true);
 
             if (this.allProducts().length === 0) {
-                  this.api.listProducts({ size: 1000 }).subscribe(res => {
-                        const mapped = res.content.map(p => ({
+                  this.catalogStore.loadCatalog().subscribe(products => {
+                        const mapped = products.map(p => ({
                               ...p,
-                              barcode: p.code,
-                              stockQuantity: p.stock
+                              barcode: p.barcode,
+                              stockQuantity: p.stockQuantity ?? p.stock
                         }));
-                        this.allProducts.set(mapped);
+                        this.allProducts.set(mapped as any);
                   });
             }
       }
@@ -562,6 +564,8 @@ export class ManageProductComponent implements OnInit, OnDestroy {
 
             result.subscribe({
                   next: () => {
+                        this.catalogStore.invalidate();
+
                         // Keep the baseline price in sync so later saves compare against the persisted value.
                         const savedPrice = this.state.getCurrentSellingPrice();
                         if (savedPrice !== null) {
