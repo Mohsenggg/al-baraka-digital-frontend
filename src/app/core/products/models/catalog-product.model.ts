@@ -1,7 +1,13 @@
 import { Product, RefillOption } from '../../../features/pos/core/models/pos.models';
+import type { ProductType } from '../../../features/pos/products/models/product.models';
 
 export interface CatalogProduct extends Product {
   status?: string;
+  categoryId?: number | null;
+  manufacturerId?: number | null;
+  productGroupId?: number | null;
+  type?: ProductType | string;
+  sku?: string;
 }
 
 export interface CatalogFilterCriteria {

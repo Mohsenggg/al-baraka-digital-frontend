@@ -426,6 +426,7 @@ export class ProductTreeViewComponent implements OnInit {
       }
 
       private removeProductFromTree(productId: number | string): void {
+            this.catalogStore.removeProduct(Number(productId));
             this.treeData.update(tree =>
                   tree.map(cat => ({
                         ...cat,

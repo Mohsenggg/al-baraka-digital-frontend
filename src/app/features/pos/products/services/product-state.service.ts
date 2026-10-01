@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { BehaviorSubject, Observable, catchError, tap, throwError } from 'rxjs';
 import { ProductApiService } from './product-api.service';
+import { ProductCatalogStore } from '../../../../core/products/services/product-catalog.store';
 import type { ProductFilterParams, ProductListItemDto } from '../models/product.models';
 
 @Injectable({
@@ -8,6 +9,7 @@ import type { ProductFilterParams, ProductListItemDto } from '../models/product.
 })
 export class ProductStateService {
       private api = inject(ProductApiService);
+      private catalogStore = inject(ProductCatalogStore);
 
       private _loading = new BehaviorSubject<boolean>(false);
       public loading$ = this._loading.asObservable();
@@ -410,6 +412,7 @@ export class ProductStateService {
       public deleteProduct(productId: number): Observable<void> {
             return this.api.deleteProduct(productId).pipe(
                   tap(() => {
+                        this.catalogStore.removeProduct(productId);
                         this.loadProductsPage();
                   }),
                   catchError(err => {

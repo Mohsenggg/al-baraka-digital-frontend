@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, tap, shareReplay, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { CatalogProduct, CatalogFilterCriteria, StockUpdateItem, StockRestoreItem } from '../models/catalog-product.model';
+import type { ProductManagePayload } from '../../../features/pos/products/models/product.models';
 
 @Injectable({
   providedIn: 'root'
@@ -119,6 +120,48 @@ export class ProductCatalogStore {
   }
 
   // =========================================================================
+  // Product Catalog CRUD & Incremental Mutations
+  // =========================================================================
+
+  /**
+   * Adds or upserts a product in the catalog incrementally.
+   * Can accept either a CatalogProduct or a ProductManagePayload (along with an optional ID).
+   */
+  public addProduct(productOrPayload: CatalogProduct | ProductManagePayload, id?: number): CatalogProduct {
+    const product: CatalogProduct = this.isManagePayload(productOrPayload)
+      ? this.mapPayloadToCatalogProduct(productOrPayload, id)
+      : productOrPayload;
+
+    this._products.update(current => {
+      const index = current.findIndex(p => p.id === product.id);
+      if (index > -1) {
+        const next = [...current];
+        next[index] = { ...next[index], ...product };
+        return next;
+      }
+      return [...current, product];
+    });
+
+    return product;
+  }
+
+  /**
+   * Removes a product by ID from the in-memory catalog.
+   */
+  public removeProduct(id: number): void {
+    this._products.update(current => current.filter(p => p.id !== id));
+  }
+
+  /**
+   * Patch a single product when edited in Product Management form.
+   */
+  public patchProduct(updated: Partial<CatalogProduct> & { id: number }): void {
+    this._products.update(current =>
+      current.map(p => p.id === updated.id ? { ...p, ...updated } : p)
+    );
+  }
+
+  // =========================================================================
   // Stock Mutations & Lifecycle Synchronization
   // =========================================================================
 
@@ -229,35 +272,84 @@ export class ProductCatalogStore {
   }
 
   /**
-   * Patch a single product when edited in Product Management form.
-   */
-  public patchProduct(updated: Partial<CatalogProduct> & { id: number }): void {
-    this._products.update(current =>
-      current.map(p => p.id === updated.id ? { ...p, ...updated } : p)
-    );
-  }
-
-  /**
    * Invalidate cache to force reload on next access.
    */
   public invalidate(): void {
     this._lastLoadedAt.set(null);
   }
 
-  // --- Private DTO Mapper ---
-  private mapDtoToCatalogProduct(dto: any): CatalogProduct {
+  // =========================================================================
+  // Mappers & Helpers
+  // =========================================================================
+
+  /**
+   * Converts a ProductManagePayload into a standard CatalogProduct.
+   */
+  public mapPayloadToCatalogProduct(payload: ProductManagePayload, id?: number): CatalogProduct {
+    const targetId = Number(id ?? payload.id);
+    const defaultBarcode = payload.barcodes?.find(b => b.isDefault) ?? payload.barcodes?.[0];
+    const totalStock = payload.barcodes?.reduce((sum, b) => sum + (Number(b.stock) || 0), 0) ?? 0;
+    const sellingPrice = Number(defaultBarcode?.sellingPrice) || 0;
+    const buyingPrice = Number(defaultBarcode?.buyingPrice) || 0;
+    const status = payload.status ? String(payload.status).toLowerCase() : 'active';
+    const isActive = status === 'active';
+
     return {
-      id: dto.id,
+      id: targetId,
+      name: payload.name || payload.baseName || '',
+      barcode: defaultBarcode?.barcode ? String(defaultBarcode.barcode).trim() : '',
+      sellingPrice,
+      buyingPrice,
+      costPrice: buyingPrice,
+      stockQuantity: totalStock,
+      stock: totalStock,
+      categoryId: payload.categoryId != null ? Number(payload.categoryId) : null,
+      manufacturerId: payload.manufacturerId != null ? Number(payload.manufacturerId) : null,
+      productGroupId: payload.productGroupId != null ? Number(payload.productGroupId) : null,
+      status,
+      isActive,
+      refillOptions: payload.conversions?.map(c => ({
+        parentProductId: Number(c.parentProductId),
+        parentProductName: c.parentProductName || '',
+        parentQuantity: Number(c.parentQuantity) || 1,
+        childQuantity: Number(c.childQuantity) || 1,
+        parentStock: 0,
+        isDefault: Boolean(c.isDefault)
+      })) || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  private isManagePayload(value: any): value is ProductManagePayload {
+    return value && (Array.isArray(value.barcodes) || 'baseName' in value);
+  }
+
+  /**
+   * Maps flat /all-products backend DTO to CatalogProduct.
+   */
+  private mapDtoToCatalogProduct(dto: any): CatalogProduct {
+    const rawStatus = dto.status != null ? String(dto.status).toLowerCase() : undefined;
+    const isActive = dto.isActive !== undefined
+      ? Boolean(dto.isActive)
+      : (rawStatus ? rawStatus === 'active' : true);
+
+    return {
+      id: Number(dto.id),
       name: dto.name || '',
       barcode: dto.barcode || '',
-      costPrice: Number(dto.costPrice) || 0,
+      costPrice: Number(dto.costPrice || dto.buyingPrice) || 0,
       sellingPrice: Number(dto.sellingPrice) || 0,
       buyingPrice: Number(dto.buyingPrice) || 0,
       stockQuantity: Number(dto.stock ?? dto.stockQuantity) || 0,
       stock: Number(dto.stock ?? dto.stockQuantity) || 0,
+      categoryId: dto.categoryId != null ? Number(dto.categoryId) : null,
+      manufacturerId: dto.manufacturerId != null ? Number(dto.manufacturerId) : null,
+      productGroupId: dto.productGroupId != null ? Number(dto.productGroupId) : null,
+      type: dto.type != null ? String(dto.type).toLowerCase() : undefined,
       refillOptions: dto.refillOptions || [],
-      isActive: dto.isActive !== undefined ? Boolean(dto.isActive) : (dto.status !== 'INACTIVE'),
-      status: dto.status,
+      isActive,
+      status: rawStatus || (isActive ? 'active' : 'inactive'),
       createdAt: dto.createdAt || '',
       updatedAt: dto.updatedAt || ''
     };

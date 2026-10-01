@@ -563,8 +563,25 @@ export class ManageProductComponent implements OnInit, OnDestroy {
             }
 
             result.subscribe({
-                  next: () => {
-                        this.catalogStore.invalidate();
+                  next: (savedResponse: any) => {
+                        const savedId = savedResponse?.id ?? this.state.productId();
+                        const payload = this.state.buildProductPayload();
+
+                        // Incrementally add / update in the canonical catalog store
+                        this.catalogStore.addProduct(payload, savedId);
+
+                        // If unified group price was requested, propagate selling price to siblings in catalog store
+                        if (propagateGroupSellingPrice && payload.productGroupId) {
+                              const newPrice = this.state.getCurrentSellingPrice();
+                              if (newPrice !== null) {
+                                    const groupId = Number(payload.productGroupId);
+                                    this.catalogStore.products().forEach(p => {
+                                          if (p.productGroupId === groupId && p.id !== savedId) {
+                                                this.catalogStore.patchProduct({ id: p.id, sellingPrice: newPrice });
+                                          }
+                                    });
+                              }
+                        }
 
                         // Keep the baseline price in sync so later saves compare against the persisted value.
                         const savedPrice = this.state.getCurrentSellingPrice();
