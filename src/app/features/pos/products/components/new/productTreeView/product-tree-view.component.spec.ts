@@ -48,6 +48,9 @@ describe('ProductTreeViewComponent', () => {
             httpMock
                   .expectOne(request => request.url.includes('/products/tree'))
                   .flush({ tree: mockTree, statistics: {} });
+            httpMock
+                  .expectOne(request => request.url.includes('/products/all-products'))
+                  .flush([]);
             fixture.detectChanges();
       });
 

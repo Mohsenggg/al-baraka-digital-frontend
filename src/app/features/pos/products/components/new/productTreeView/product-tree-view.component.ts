@@ -10,7 +10,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { Observable, map } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
+import { CatalogProduct } from '../../../../../../core/products/models/catalog-product.model';
 import { SidebarComponent } from '../../../../../../shared/components/sidebar/sidebar.component';
 import { NotificationService } from '../../../../../../shared/services/notification.service';
 import { ConfirmService } from '../../../../../../shared/services/confirm.service';
@@ -130,10 +131,14 @@ export class ProductTreeViewComponent implements OnInit {
 
             this.isLoading.set(true);
             this.errorMessage.set(null);
-            this.productApiService.getProductTree().subscribe({
-                  next: (res: any) => {
-                        const tree: CategoryNode[] = res.tree || [];
-                        this.treeData.set(expansionState ? this.applyExpansionState(tree, expansionState) : tree);
+            forkJoin({
+                  skeleton: this.productApiService.getHierarchySkeleton(),
+                  catalog: this.catalogStore.loadCatalog()
+            }).subscribe({
+                  next: ({ skeleton }) => {
+                        const rawTree: CategoryNode[] = skeleton?.tree || [];
+                        const populated = this.populateTreeWithCatalogProducts(rawTree);
+                        this.treeData.set(expansionState ? this.applyExpansionState(populated, expansionState) : populated);
                         this.isLoading.set(false);
                   },
                   error: (err: any) => {
@@ -142,6 +147,60 @@ export class ProductTreeViewComponent implements OnInit {
                         this.isLoading.set(false);
                   }
             });
+      }
+
+      private populateTreeWithCatalogProducts(tree: CategoryNode[]): CategoryNode[] {
+            const catalog = this.catalogStore.products();
+            if (!catalog || catalog.length === 0) {
+                  return tree;
+            }
+
+            const productsByGroup = new Map<string, TreeProductItem[]>();
+            for (const p of catalog) {
+                  if (p.productGroupId != null) {
+                        const groupKey = String(p.productGroupId);
+                        let list = productsByGroup.get(groupKey);
+                        if (!list) {
+                              list = [];
+                              productsByGroup.set(groupKey, list);
+                        }
+                        list.push(this.mapCatalogToTreeProduct(p));
+                  }
+            }
+
+            return tree.map(category => ({
+                  ...category,
+                  brands: (category.brands || []).map(brand => ({
+                        ...brand,
+                        groups: (brand.groups || []).map(group => ({
+                              ...group,
+                              products: productsByGroup.get(String(group.id)) || []
+                        }))
+                  })),
+                  directGroups: (category.directGroups || []).map(group => ({
+                        ...group,
+                        products: productsByGroup.get(String(group.id)) || []
+                  }))
+            }));
+      }
+
+      private mapCatalogToTreeProduct(p: CatalogProduct): TreeProductItem {
+            return {
+                  id: p.id,
+                  sku: p.sku || p.barcode || '',
+                  name: p.name,
+                  productGroupId: p.productGroupId ?? 0,
+                  sellingPrice: p.sellingPrice ?? 0,
+                  buyingPrice: p.buyingPrice ?? p.costPrice ?? 0,
+                  price0: p.price0,
+                  price1: p.price1,
+                  price2: p.price2,
+                  price3: p.price3,
+                  price4: p.price4,
+                  stock: p.stockQuantity ?? p.stock ?? 0,
+                  type: (p.type as ProductType) || 'STANDARD',
+                  status: (p.status as ProductStatus) || 'active'
+            };
       }
 
       /** Snapshot of the current expansion state, keyed by node tier + id. */
@@ -1099,9 +1158,17 @@ export class ProductTreeViewComponent implements OnInit {
             moveObs.subscribe({
                   next: () => {
                         this.nodeActionKey.set(null);
-                        this.catalogStore.invalidate();
-                        if (target.mode === 'bulk-products') {
+                        if (target.mode === 'single-product') {
+                              const targetGroupId = Number(this.moveTargetGroupId());
+                              this.catalogStore.patchProduct({ id: Number(target.nodeId), productGroupId: targetGroupId });
+                        } else if (target.mode === 'bulk-products') {
+                              const targetGroupId = Number(this.moveTargetGroupId());
+                              for (const pid of target.productIds) {
+                                    this.catalogStore.patchProduct({ id: Number(pid), productGroupId: targetGroupId });
+                              }
                               this.clearSelection();
+                        } else {
+                              this.catalogStore.invalidate();
                         }
                         this.closeMoveDialog(true);
                         this.notificationService.success(successMsg);

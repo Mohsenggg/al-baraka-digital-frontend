@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, catchError, tap, throwError } from 'rxjs';
 import { ProductApiService } from './product-api.service';
 import { ProductCatalogStore } from '../../../../core/products/services/product-catalog.store';
 import type { ProductFilterParams, ProductListItemDto } from '../models/product.models';
+import type { CatalogProduct } from '../../../../core/products/models/catalog-product.model';
 
 @Injectable({
       providedIn: 'root'
@@ -17,7 +18,7 @@ export class ProductStateService {
       private _error = new BehaviorSubject<string | null>(null);
       public error$ = this._error.asObservable();
 
-      public isLoading = signal<boolean>(false);
+      public isLoading = this.catalogStore.isLoading;
       public currentPage = signal<number>(1);
       public pageSize = signal<number>(100);
 
@@ -27,14 +28,6 @@ export class ProductStateService {
       private skeletonSignal = signal<any[]>([]);
       public skeleton = this.skeletonSignal.asReadonly();
       public treeData = this.skeletonSignal.asReadonly(); // Backward compatibility
-
-      // ==========================================
-      // Stream 2: Paginated Table State (Server-Driven)
-      // ==========================================
-      private _pagedProducts = signal<ProductListItemDto[]>([]);
-      public products = this._pagedProducts.asReadonly();
-      public totalProducts = signal<number>(0);
-      public totalPages = signal<number>(1);
 
       // Search & Status filters
       public searchQuery = signal<string>('');
@@ -56,6 +49,113 @@ export class ProductStateService {
       public profitPercentMax = signal<number | null>(null);
       public stockMin = signal<number | null>(null);
       public stockMax = signal<number | null>(null);
+
+      // ==========================================
+      // Stream 2: In-Memory Filtered & Paged Products
+      // ==========================================
+
+      /** Full list of products after applying active search, category, brand, group, and range filters */
+      public readonly filteredProducts = computed<CatalogProduct[]>(() => {
+            const all = this.catalogStore.products();
+            const query = this.searchQuery().trim().toLowerCase();
+            const status = this.selectedStatus().trim().toLowerCase();
+            const selectedCats = this.selectedCategories().map(String);
+            const selectedBrs = this.selectedBrands().map(String);
+            const selectedGrps = this.selectedProductGroups().map(String);
+
+            const bMin = this.buyingPriceMin();
+            const bMax = this.buyingPriceMax();
+            const sMin = this.sellingPriceMin();
+            const sMax = this.sellingPriceMax();
+            const pValMin = this.profitValueMin();
+            const pValMax = this.profitValueMax();
+            const pPctMin = this.profitPercentMin();
+            const pPctMax = this.profitPercentMax();
+            const stMin = this.stockMin();
+            const stMax = this.stockMax();
+
+            return all.filter(p => {
+                  // Search query (matches name or barcode)
+                  if (query) {
+                        const matchName = p.name ? p.name.toLowerCase().includes(query) : false;
+                        const matchBarcode = p.barcode ? p.barcode.toLowerCase().includes(query) : false;
+                        if (!matchName && !matchBarcode) return false;
+                  }
+
+                  // Status filter
+                  if (status) {
+                        const pStatus = p.status ? p.status.toLowerCase() : (p.isActive ? 'active' : 'inactive');
+                        if (pStatus !== status) return false;
+                  }
+
+                  // Category filter
+                  if (selectedCats.length > 0) {
+                        if (p.categoryId == null || !selectedCats.includes(String(p.categoryId))) {
+                              return false;
+                        }
+                  }
+
+                  // Brand / Manufacturer filter
+                  if (selectedBrs.length > 0) {
+                        if (p.manufacturerId == null || !selectedBrs.includes(String(p.manufacturerId))) {
+                              return false;
+                        }
+                  }
+
+                  // Product Group filter
+                  if (selectedGrps.length > 0) {
+                        if (p.productGroupId == null || !selectedGrps.includes(String(p.productGroupId))) {
+                              return false;
+                        }
+                  }
+
+                  // Buying price range
+                  if (bMin != null && p.buyingPrice < bMin) return false;
+                  if (bMax != null && p.buyingPrice > bMax) return false;
+
+                  // Selling price range
+                  if (sMin != null && p.sellingPrice < sMin) return false;
+                  if (sMax != null && p.sellingPrice > sMax) return false;
+
+                  // Profit value & percentage
+                  const profitVal = (p.sellingPrice || 0) - (p.buyingPrice || 0);
+                  if (pValMin != null && profitVal < pValMin) return false;
+                  if (pValMax != null && profitVal > pValMax) return false;
+
+                  if (pPctMin != null || pPctMax != null) {
+                        const profitPct = p.buyingPrice > 0 ? (profitVal / p.buyingPrice) * 100 : 0;
+                        if (pPctMin != null && profitPct < pPctMin) return false;
+                        if (pPctMax != null && profitPct > pPctMax) return false;
+                  }
+
+                  // Stock quantity range
+                  const stock = p.stockQuantity ?? p.stock ?? 0;
+                  if (stMin != null && stock < stMin) return false;
+                  if (stMax != null && stock > stMax) return false;
+
+                  return true;
+            });
+      });
+
+      public readonly totalProducts = computed(() => this.filteredProducts().length);
+      public readonly totalPages = computed(() => Math.ceil(this.totalProducts() / this.pageSize()) || 1);
+
+      /** Current page slice of products for the main management table */
+      public readonly products = computed<ProductListItemDto[]>(() => {
+            const start = (this.currentPage() - 1) * this.pageSize();
+            const paged = this.filteredProducts().slice(start, start + this.pageSize());
+            return paged.map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  barcode: p.barcode,
+                  code: p.barcode,
+                  sellingPrice: p.sellingPrice,
+                  buyingPrice: p.buyingPrice,
+                  stock: p.stockQuantity ?? p.stock ?? 0,
+                  status: (p.status as any) || (p.isActive ? 'active' : 'inactive'),
+                  type: (p.type as any) || 'inventory'
+            }));
+      });
 
       // Category options extracted from Skeleton
       public categories = computed(() => {
@@ -147,11 +247,13 @@ export class ProductStateService {
       // ==========================================
 
       /**
-       * Initial loader: loads skeleton once, then fetches first page of products.
+       * Initial loader: loads skeleton and loads canonical catalog in-memory.
        */
       public loadProducts(): void {
             this.loadSkeleton();
-            this.loadProductsPage();
+            this.catalogStore.loadCatalog().subscribe({
+                  error: (err) => this.handleError(err)
+            });
       }
 
       /**
@@ -174,38 +276,10 @@ export class ProductStateService {
       }
 
       /**
-       * Loads paginated product page from backend via indexed JPA specification query.
+       * Backward compatibility placeholder (pagination is now in-memory via computed signals).
        */
       public loadProductsPage(): void {
-            this.isLoading.set(true);
-            this._loading.next(true);
-            this.clearError();
-
-            const params: ProductFilterParams = {
-                  page: Math.max(0, this.currentPage() - 1),
-                  size: this.pageSize(),
-                  query: this.searchQuery()?.trim() || undefined,
-                  categoryId: this.selectedCategories().length > 0 ? Number(this.selectedCategories()[0]) : undefined,
-                  manufacturerId: this.selectedBrands().length > 0 ? Number(this.selectedBrands()[0]) : undefined,
-                  productGroupId: this.selectedProductGroups().length > 0 ? Number(this.selectedProductGroups()[0]) : undefined,
-                  status: this.selectedStatus() || undefined
-            };
-
-            this.api.listProducts(params).subscribe({
-                  next: (res) => {
-                        this._pagedProducts.set(res.content || []);
-                        this.totalProducts.set(res.totalElements || 0);
-                        this.totalPages.set(res.totalPages || 1);
-                        this.isLoading.set(false);
-                        this._loading.next(false);
-                  },
-                  error: (err) => {
-                        console.error('Failed to load products page', err);
-                        this.isLoading.set(false);
-                        this._loading.next(false);
-                        this.handleError(err);
-                  }
-            });
+            // In-memory pagination is automatic via computed signals
       }
 
       // ==========================================
@@ -229,8 +303,6 @@ export class ProductStateService {
             if (updatedGroups.length !== this.selectedProductGroups().length) {
                   this.selectedProductGroups.set(updatedGroups);
             }
-
-            this.loadProductsPage();
       }
 
       public setSelectedBrands(ids: (number | string)[]): void {
@@ -247,26 +319,21 @@ export class ProductStateService {
                         this.selectedProductGroups.set(updatedGroups);
                   }
             }
-
-            this.loadProductsPage();
       }
 
       public setSelectedProductGroups(ids: (number | string)[]): void {
             this.selectedProductGroups.set(ids);
             this.currentPage.set(1);
-            this.loadProductsPage();
       }
 
       public setSearchQuery(query: string): void {
             this.searchQuery.set(query);
             this.currentPage.set(1);
-            this.loadProductsPage();
       }
 
       public setSelectedStatus(status: string): void {
             this.selectedStatus.set(status);
             this.currentPage.set(1);
-            this.loadProductsPage();
       }
 
       public setAdvancedFilters(filters: {
@@ -292,7 +359,6 @@ export class ProductStateService {
             if (filters.stockMin !== undefined) this.stockMin.set(filters.stockMin);
             if (filters.stockMax !== undefined) this.stockMax.set(filters.stockMax);
             this.currentPage.set(1);
-            this.loadProductsPage();
       }
 
       public clearAdvancedFilters(): void {
@@ -307,7 +373,6 @@ export class ProductStateService {
             this.stockMin.set(null);
             this.stockMax.set(null);
             this.currentPage.set(1);
-            this.loadProductsPage();
       }
 
       public clearFilters(): void {
@@ -327,7 +392,6 @@ export class ProductStateService {
             this.stockMin.set(null);
             this.stockMax.set(null);
             this.currentPage.set(1);
-            this.loadProductsPage();
       }
 
       public hasActiveFilters(): boolean {
@@ -383,21 +447,18 @@ export class ProductStateService {
       public setPage(page: number): void {
             if (page > 0 && page <= this.totalPages() && page !== this.currentPage()) {
                   this.currentPage.set(page);
-                  this.loadProductsPage();
             }
       }
 
       public previousPage(): void {
             if (this.currentPage() > 1) {
                   this.currentPage.update(p => p - 1);
-                  this.loadProductsPage();
             }
       }
 
       public nextPage(): void {
             if (this.currentPage() < this.totalPages()) {
                   this.currentPage.update(p => p + 1);
-                  this.loadProductsPage();
             }
       }
 
@@ -413,7 +474,6 @@ export class ProductStateService {
             return this.api.deleteProduct(productId).pipe(
                   tap(() => {
                         this.catalogStore.removeProduct(productId);
-                        this.loadProductsPage();
                   }),
                   catchError(err => {
                         this.handleError(err);

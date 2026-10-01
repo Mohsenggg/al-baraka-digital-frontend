@@ -8,6 +8,11 @@ export interface CatalogProduct extends Product {
   productGroupId?: number | null;
   type?: ProductType | string;
   sku?: string;
+  price0?: number;
+  price1?: number;
+  price2?: number;
+  price3?: number;
+  price4?: number;
 }
 
 export interface CatalogFilterCriteria {
