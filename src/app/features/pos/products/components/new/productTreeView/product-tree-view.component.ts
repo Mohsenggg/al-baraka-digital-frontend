@@ -155,33 +155,117 @@ export class ProductTreeViewComponent implements OnInit {
                   return tree;
             }
 
-            const productsByGroup = new Map<string, TreeProductItem[]>();
-            for (const p of catalog) {
-                  if (p.productGroupId != null) {
-                        const groupKey = String(p.productGroupId);
-                        let list = productsByGroup.get(groupKey);
-                        if (!list) {
-                              list = [];
-                              productsByGroup.set(groupKey, list);
+            // 1. Index all existing group and category IDs in the tree skeleton
+            const validGroupIds = new Set<string>();
+            const validCategoryIds = new Set<string>();
+
+            for (const cat of tree) {
+                  validCategoryIds.add(String(cat.id));
+                  for (const brand of cat.brands || []) {
+                        for (const group of brand.groups || []) {
+                              validGroupIds.add(String(group.id));
                         }
-                        list.push(this.mapCatalogToTreeProduct(p));
+                  }
+                  for (const group of cat.directGroups || []) {
+                        if (Number(group.id) > 0) {
+                              validGroupIds.add(String(group.id));
+                        }
                   }
             }
 
-            return tree.map(category => ({
-                  ...category,
-                  brands: (category.brands || []).map(brand => ({
+            // 2. Partition catalog products into Grouped, Direct-to-Category, and Unassigned
+            const productsByGroupId = new Map<string, TreeProductItem[]>();
+            const directProductsByCategoryId = new Map<string, TreeProductItem[]>();
+            const unassignedProducts: TreeProductItem[] = [];
+
+            for (const p of catalog) {
+                  const item = this.mapCatalogToTreeProduct(p);
+                  const groupKey = p.productGroupId != null ? String(p.productGroupId) : null;
+                  const catKey = p.categoryId != null ? String(p.categoryId) : null;
+
+                  if (groupKey && validGroupIds.has(groupKey)) {
+                        let list = productsByGroupId.get(groupKey);
+                        if (!list) {
+                              list = [];
+                              productsByGroupId.set(groupKey, list);
+                        }
+                        list.push(item);
+                  } else if (catKey && validCategoryIds.has(catKey)) {
+                        let list = directProductsByCategoryId.get(catKey);
+                        if (!list) {
+                              list = [];
+                              directProductsByCategoryId.set(catKey, list);
+                        }
+                        list.push(item);
+                  } else {
+                        unassignedProducts.push(item);
+                  }
+            }
+
+            // 3. Populate existing categories, brands, and direct groups
+            const populatedTree: CategoryNode[] = tree.map(category => {
+                  const catKey = String(category.id);
+
+                  const brands = (category.brands || []).map(brand => ({
                         ...brand,
                         groups: (brand.groups || []).map(group => ({
                               ...group,
-                              products: productsByGroup.get(String(group.id)) || []
+                              products: productsByGroupId.get(String(group.id)) || []
                         }))
-                  })),
-                  directGroups: (category.directGroups || []).map(group => ({
-                        ...group,
-                        products: productsByGroup.get(String(group.id)) || []
-                  }))
-            }));
+                  }));
+
+                  // Retain real direct groups (filtering out any previous synthetic ones if re-populating)
+                  const directGroups: ProductGroupNode[] = (category.directGroups || [])
+                        .filter(g => Number(g.id) > 0)
+                        .map(group => ({
+                              ...group,
+                              products: productsByGroupId.get(String(group.id)) || []
+                        }));
+
+                  // If category has direct products without an explicit group, append synthetic direct group
+                  const directProds = directProductsByCategoryId.get(catKey);
+                  if (directProds && directProds.length > 0) {
+                        directGroups.push({
+                              id: -Number(category.id),
+                              code: `${category.code}-DIRECT`,
+                              name: 'منتجات عامة / بدون مجموعة',
+                              categoryId: category.id,
+                              brandId: null,
+                              isPriceUnified: false,
+                              products: directProds,
+                              expanded: false
+                        });
+                  }
+
+                  return {
+                        ...category,
+                        brands,
+                        directGroups
+                  };
+            });
+
+            // 4. Attach unassigned category if any unassigned products exist
+            if (unassignedProducts.length > 0) {
+                  populatedTree.push({
+                        id: 0,
+                        code: '00',
+                        name: 'غير مصنف / أخرى',
+                        brands: [],
+                        directGroups: [{
+                              id: -9999,
+                              code: 'OTHER-DIRECT',
+                              name: 'منتجات غير مصنفة',
+                              categoryId: 0,
+                              brandId: null,
+                              isPriceUnified: false,
+                              products: unassignedProducts,
+                              expanded: false
+                        }],
+                        expanded: false
+                  });
+            }
+
+            return populatedTree;
       }
 
       private mapCatalogToTreeProduct(p: CatalogProduct): TreeProductItem {
@@ -621,6 +705,7 @@ export class ProductTreeViewComponent implements OnInit {
 
       /** A node is deletable only when it has no children (empty node rule). */
       isNodeDeletable(type: TreeNodeType, id: number | string): boolean {
+            if (Number(id) <= 0) return false;
             return !this.nodesWithChildren()[type].has(this.nodeKey(id));
       }
 
@@ -723,6 +808,11 @@ export class ProductTreeViewComponent implements OnInit {
       submitRename(): void {
             const target = this.renameTarget();
             if (!target || this.isRenameSaving()) return;
+
+            if (Number(target.id) <= 0) {
+                  this.renameError.set('لا يمكن تعديل اسم المجموعات أو الأقسام العامة التلقائية');
+                  return;
+            }
 
             const trimmedName = this.renameValue().trim();
             if (trimmedName === target.name.trim()) {
@@ -956,6 +1046,11 @@ export class ProductTreeViewComponent implements OnInit {
       openMoveGroup(category: CategoryNode, brand: BrandNode | null, group: ProductGroupNode, event?: Event): void {
             if (event) event.stopPropagation();
 
+            if (Number(group.id) <= 0) {
+                  this.notificationService.warning('المجموعات العامة التلقائية لا يمكن نقلها كهيكل، يمكنك نقل منتجاتها بشكل فردي أو جماعي');
+                  return;
+            }
+
             this.openMoveDialog({
                   mode: 'group',
                   nodeType: 'group',
@@ -1049,11 +1144,13 @@ export class ProductTreeViewComponent implements OnInit {
             const target = this.moveTarget();
             const excludedId = target?.mode === 'brand' ? target.currentParentId : null;
 
-            return this.treeData().map(category => ({
-                  id: category.id,
-                  label: category.name,
-                  disabled: excludedId !== null && this.nodeKey(category.id) === this.nodeKey(excludedId)
-            }));
+            return this.treeData()
+                  .filter(category => Number(category.id) > 0)
+                  .map(category => ({
+                        id: category.id,
+                        label: category.name,
+                        disabled: excludedId !== null && this.nodeKey(category.id) === this.nodeKey(excludedId)
+                  }));
       });
 
       moveBrandOptions = computed(() => {
@@ -1093,11 +1190,13 @@ export class ProductTreeViewComponent implements OnInit {
             const target = this.moveTarget();
             const excludedId = target?.mode === 'single-product' ? target.currentParentId : null;
 
-            return groups.map((group: ProductGroupNode) => ({
-                  id: group.id,
-                  label: group.name,
-                  disabled: excludedId !== null && this.nodeKey(group.id) === this.nodeKey(excludedId)
-            }));
+            return groups
+                  .filter((group: ProductGroupNode) => Number(group.id) > 0)
+                  .map((group: ProductGroupNode) => ({
+                        id: group.id,
+                        label: group.name,
+                        disabled: excludedId !== null && this.nodeKey(group.id) === this.nodeKey(excludedId)
+                  }));
       });
 
       isMoveSelectionValid = computed(() => {
@@ -1213,6 +1312,11 @@ export class ProductTreeViewComponent implements OnInit {
       toggleGroupPriceUnification(group: ProductGroupNode, event?: Event): void {
             if (event) event.stopPropagation();
             if (this.nodeActionKey()) return;
+
+            if (Number(group.id) <= 0) {
+                  this.notificationService.warning('لا يمكن تفعيل السعر الموحد للمجموعات العامة أو غير المصنفة');
+                  return;
+            }
 
             const nextValue = !group.isPriceUnified;
             this.nodeActionKey.set(this.nodeActionKeyOf('price', 'group', group.id));
