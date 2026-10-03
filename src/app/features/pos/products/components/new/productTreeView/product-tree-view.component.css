@@ -1374,11 +1374,19 @@
       max-width: 380px;
 }
 
+.empty-state-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+}
+
 .btn-reset-search {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      margin-top: 8px;
       padding: 8px 16px;
       background: var(--pos-primary, #1e3a8a);
       color: white;
@@ -1750,6 +1758,12 @@
       font-size: 1rem;
 }
 
+.btn-node-action.btn-add:hover:not(:disabled) {
+      color: #059669;
+      background-color: #ecfdf5;
+      border-color: #a7f3d0;
+}
+
 .btn-node-action.btn-rename:hover:not(:disabled) {
       color: #7c3aed;
       background-color: #f3e8ff;
@@ -2111,3 +2125,189 @@
 .tree-viewport.has-bulk-bar {
       padding-bottom: 104px;
 }
+
+/* ============================= */
+/* EDIT MODE: LEVEL ADD BARS     */
+/* ============================= */
+
+.tree-level-add-bar {
+      display: flex;
+      align-items: center;
+      width: 100%;
+}
+
+.tree-level-add-bar.category-level-add {
+      margin-bottom: 4px;
+}
+
+.tree-level-add-bar.brand-level-add {
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px dashed #e2e8f0;
+}
+
+.tree-level-add-bar.group-level-add,
+.tree-level-add-bar.direct-group-level-add {
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px dashed #e2e8f0;
+}
+
+.btn-level-add {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 9px 16px;
+      background-color: #ffffff;
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 9px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      flex-direction: row-reverse;
+}
+
+.btn-level-add .material-icons-outlined {
+      font-size: 1.15rem;
+      transition: transform 0.2s ease;
+}
+
+.btn-level-add:hover {
+      transform: translateY(-1px);
+}
+
+.btn-level-add:hover .material-icons-outlined {
+      transform: scale(1.1);
+}
+
+/* Category level add button */
+.btn-level-add.btn-add-category {
+      background-color: #ffffff;
+      border-color: #93c5fd;
+      color: var(--pos-primary, #1e3a8a);
+      box-shadow: 0 1px 3px rgba(30, 58, 138, 0.06);
+}
+
+.btn-level-add.btn-add-category:hover {
+      background-color: #eff6ff;
+      border-color: var(--pos-primary, #1e3a8a);
+      border-style: solid;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.12);
+}
+
+/* Brand level add button */
+.btn-level-add.btn-add-brand {
+      background-color: #f8fafc;
+      border-color: #bfdbfe;
+      color: #1d4ed8;
+}
+
+.btn-level-add.btn-add-brand:hover {
+      background-color: #eff6ff;
+      border-color: #3b82f6;
+      border-style: solid;
+}
+
+/* Group level add button */
+.btn-level-add.btn-add-group {
+      background-color: #f8fafc;
+      border-color: #bfdbfe;
+      color: #2563eb;
+}
+
+.btn-level-add.btn-add-group:hover {
+      background-color: #eff6ff;
+      border-color: #3b82f6;
+      border-style: solid;
+}
+
+/* Direct Group add button */
+.btn-level-add.btn-add-direct-group {
+      background-color: #f8fafc;
+      border-color: #a7f3d0;
+      color: #059669;
+}
+
+.btn-level-add.btn-add-direct-group:hover {
+      background-color: #ecfdf5;
+      border-color: #10b981;
+      border-style: solid;
+}
+
+/* Empty Branch Inline helper */
+.empty-branch-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      color: #64748b;
+      font-size: 0.8rem;
+}
+
+.empty-branch-inline .material-icons-outlined {
+      font-size: 1.15rem;
+      color: #94a3b8;
+}
+
+/* Create Modal Icon & Checkbox variants */
+.node-modal-icon.create-icon.category-create-icon {
+      background-color: #eff6ff;
+      color: var(--pos-primary, #1e3a8a);
+}
+
+.node-modal-icon.create-icon.brand-create-icon {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+}
+
+.node-modal-icon.create-icon.group-create-icon {
+      background-color: #e0e7ff;
+      color: #4338ca;
+}
+
+.modal-checkbox-row {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+}
+
+.modal-inline-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+}
+
+.modal-inline-checkbox input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      cursor: pointer;
+      accent-color: var(--pos-primary, #1e3a8a);
+}
+
+.checkbox-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--pos-text-primary, #0f172a);
+}
+
+.checkbox-subtext {
+      font-size: 0.72rem;
+      color: #64748b;
+      padding-inline-start: 25px;
+}
+

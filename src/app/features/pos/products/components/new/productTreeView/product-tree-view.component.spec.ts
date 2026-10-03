@@ -631,4 +631,213 @@ describe('ProductTreeViewComponent', () => {
                   expect(component.nodeActionKey()).toBeNull();
             });
       });
+
+      describe('Node creation (Create Category, Brand, Group)', () => {
+            it('should render the tree level add action bars only while edit mode is active', () => {
+                  component.expandAll();
+                  component.isEditMode.set(false);
+                  fixture.detectChanges();
+
+                  expect(fixture.debugElement.queryAll(By.css('.tree-level-add-bar')).length).toBe(0);
+
+                  component.isEditMode.set(true);
+                  fixture.detectChanges();
+
+                  expect(fixture.debugElement.queryAll(By.css('.tree-level-add-bar.category-level-add')).length).toBe(1);
+                  expect(fixture.debugElement.queryAll(By.css('.tree-level-add-bar.brand-level-add')).length).toBeGreaterThan(0);
+                  expect(fixture.debugElement.queryAll(By.css('.tree-level-add-bar.group-level-add')).length).toBeGreaterThan(0);
+            });
+
+            it('should open the create dialog for a new Category with root sibling names', () => {
+                  component.openCreateCategory();
+                  fixture.detectChanges();
+
+                  const target = component.createTarget();
+                  expect(target).toBeTruthy();
+                  expect(target?.type).toBe('category');
+                  expect(target?.parentId).toBeNull();
+                  expect(target?.siblingNames.length).toBe(component.treeData().length);
+
+                  const modalEl = fixture.debugElement.query(By.css('.create-modal'));
+                  expect(modalEl).toBeTruthy();
+                  expect(modalEl.nativeElement.textContent).toContain('إضافة قسم جديد');
+            });
+
+            it('should open the create dialog for a new Brand with scoped sibling names', () => {
+                  const category = component.treeData()[0];
+                  component.openCreateBrand(category);
+                  fixture.detectChanges();
+
+                  const target = component.createTarget();
+                  expect(target).toBeTruthy();
+                  expect(target?.type).toBe('brand');
+                  expect(target?.parentId).toBe(category.id);
+                  expect(target?.siblingNames).toEqual((category.brands || []).map(b => b.name));
+
+                  const modalEl = fixture.debugElement.query(By.css('.create-modal'));
+                  expect(modalEl).toBeTruthy();
+                  expect(modalEl.nativeElement.textContent).toContain('إضافة شركة / العلامة التجارية جديد');
+            });
+
+            it('should open the create dialog for a new Product Group under a Brand', () => {
+                  const category = component.treeData()[0];
+                  const brand = category.brands[0];
+                  component.openCreateGroup(category, brand);
+                  fixture.detectChanges();
+
+                  const target = component.createTarget();
+                  expect(target).toBeTruthy();
+                  expect(target?.type).toBe('group');
+                  expect(target?.parentId).toBe(brand.id);
+                  expect(target?.brand).toBe(brand);
+                  expect(target?.siblingNames).toEqual((brand.groups || []).map(g => g.name));
+
+                  const modalEl = fixture.debugElement.query(By.css('.create-modal'));
+                  expect(modalEl).toBeTruthy();
+                  expect(modalEl.nativeElement.textContent).toContain('إضافة مجموعة المنتجات جديد');
+                  expect(fixture.debugElement.query(By.css('.modal-checkbox-row'))).toBeTruthy();
+            });
+
+            it('should open the create dialog for a direct Product Group under a Category', () => {
+                  const liquidsCategory = component.treeData().find(c => c.code === '08')!;
+                  component.openCreateGroup(liquidsCategory, null);
+                  fixture.detectChanges();
+
+                  const target = component.createTarget();
+                  expect(target).toBeTruthy();
+                  expect(target?.type).toBe('group');
+                  expect(target?.brand).toBeNull();
+                  expect(target?.parentId).toBe(liquidsCategory.id);
+                  expect(target?.siblingNames).toEqual((liquidsCategory.directGroups || []).map(g => g.name));
+            });
+
+            it('should reject invalid or duplicate node names during submitCreate()', () => {
+                  component.openCreateCategory();
+                  component.createNameValue.set(' ');
+                  component.submitCreate();
+
+                  expect(component.createError()).toBe('اسم العنصر مطلوب');
+
+                  const existingName = component.treeData()[0].name;
+                  component.createNameValue.set(existingName);
+                  component.submitCreate();
+
+                  expect(component.createError()).toBe('يوجد عنصر آخر بنفس الاسم داخل نفس النطاق');
+            });
+
+            it('should POST /api/products/tree/categories on Category creation and prepend to treeData', () => {
+                  const successSpy = spyOn(TestBed.inject(NotificationService), 'success');
+                  component.openCreateCategory();
+                  component.createNameValue.set('قسم جديد للأجهزة');
+
+                  component.submitCreate();
+
+                  const request = httpMock.expectOne('/api/products/tree/categories');
+                  expect(request.request.method).toBe('POST');
+                  expect(request.request.body).toEqual({ name: 'قسم جديد للأجهزة', code: undefined });
+
+                  const newCatMock: CategoryNode = {
+                        id: 5001,
+                        code: '5001',
+                        name: 'قسم جديد للأجهزة',
+                        brands: [],
+                        directGroups: [],
+                        expanded: true
+                  };
+                  request.flush(newCatMock);
+
+                  expect(component.createTarget()).toBeNull();
+                  expect(component.treeData()[0].id).toBe(5001);
+                  expect(component.treeData()[0].name).toBe('قسم جديد للأجهزة');
+                  expect(successSpy).toHaveBeenCalledWith(jasmine.stringMatching(/تم إنشاء القسم/));
+            });
+
+            it('should POST /api/products/tree/brands on Brand creation and append to category brands', () => {
+                  const category = component.treeData()[0];
+                  const initialCount = (category.brands || []).length;
+                  const successSpy = spyOn(TestBed.inject(NotificationService), 'success');
+
+                  component.openCreateBrand(category);
+                  component.createNameValue.set('شركة لوتس');
+
+                  component.submitCreate();
+
+                  const request = httpMock.expectOne('/api/products/tree/brands');
+                  expect(request.request.method).toBe('POST');
+                  expect(request.request.body).toEqual({ name: 'شركة لوتس', categoryId: category.id, code: undefined });
+
+                  const newBrandMock: BrandNode = {
+                        id: 6001,
+                        code: '6001',
+                        name: 'شركة لوتس',
+                        categoryId: category.id,
+                        groups: [],
+                        expanded: true
+                  };
+                  request.flush(newBrandMock);
+
+                  expect(component.createTarget()).toBeNull();
+                  const updatedCategory = component.treeData().find(c => c.id === category.id)!;
+                  expect(updatedCategory.brands.length).toBe(initialCount + 1);
+                  expect(updatedCategory.brands.some(b => b.name === 'شركة لوتس')).toBeTrue();
+                  expect(successSpy).toHaveBeenCalledWith(jasmine.stringMatching(/تم إنشاء الشركة/));
+            });
+
+            it('should POST /api/products/tree/groups with isPriceUnified flag and insert into brand', () => {
+                  const category = component.treeData()[0];
+                  const brand = category.brands[0];
+                  const initialCount = (brand.groups || []).length;
+                  const successSpy = spyOn(TestBed.inject(NotificationService), 'success');
+
+                  component.openCreateGroup(category, brand);
+                  component.createNameValue.set('مجموعة مساحيق أوتوماتيك');
+                  component.createIsPriceUnified.set(true);
+
+                  component.submitCreate();
+
+                  const request = httpMock.expectOne('/api/products/tree/groups');
+                  expect(request.request.method).toBe('POST');
+                  expect(request.request.body).toEqual({
+                        name: 'مجموعة مساحيق أوتوماتيك',
+                        categoryId: category.id,
+                        brandId: brand.id,
+                        isPriceUnified: true,
+                        code: undefined
+                  });
+
+                  const newGroupMock: ProductGroupNode = {
+                        id: 7001,
+                        code: '7001',
+                        name: 'مجموعة مساحيق أوتوماتيك',
+                        categoryId: category.id,
+                        brandId: brand.id,
+                        isPriceUnified: true,
+                        products: [],
+                        expanded: true
+                  };
+                  request.flush(newGroupMock);
+
+                  expect(component.createTarget()).toBeNull();
+                  const updatedBrand = component.treeData().find(c => c.id === category.id)!.brands.find(b => b.id === brand.id)!;
+                  expect(updatedBrand.groups.length).toBe(initialCount + 1);
+                  const created = updatedBrand.groups.find(g => g.id === 7001)!;
+                  expect(created.name).toBe('مجموعة مساحيق أوتوماتيك');
+                  expect(created.isPriceUnified).toBeTrue();
+                  expect(successSpy).toHaveBeenCalledWith(jasmine.stringMatching(/تم إنشاء مجموعة المنتجات/));
+            });
+
+            it('should surface backend error message when creation fails with conflict or validation error', () => {
+                  component.openCreateCategory();
+                  component.createNameValue.set('قسم متعارض');
+
+                  component.submitCreate();
+
+                  httpMock
+                        .expectOne('/api/products/tree/categories')
+                        .flush({ message: 'Category name already exists' }, { status: 409, statusText: 'Conflict' });
+
+                  expect(component.createError()).toBe('Category name already exists');
+                  expect(component.createTarget()).toBeTruthy();
+            });
+      });
 });

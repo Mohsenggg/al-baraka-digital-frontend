@@ -181,14 +181,31 @@
                         </div>
                         <h3>لم يتم العثور على نتائج</h3>
                         <p>لا توجد أقسام أو منتجات مطابقة لكلمات البحث أو الفلاتر المحددة.</p>
-                        <button type="button" class="btn-reset-search" (click)="clearAllFilters()">
-                              <span class="material-icons-outlined">refresh</span>
-                              إعادة ضبط البحث والتصفية
-                        </button>
+                        <div class="empty-state-actions">
+                              <button type="button" class="btn-reset-search" (click)="clearAllFilters()">
+                                    <span class="material-icons-outlined">refresh</span>
+                                    إعادة ضبط البحث والتصفية
+                              </button>
+                              <button type="button" class="btn-level-add btn-add-category" *ngIf="isEditMode()"
+                                    (click)="openCreateCategory($event)">
+                                    <span class="material-icons-outlined">create_new_folder</span>
+                                    <span>إضافة قسم رئيسي جديد</span>
+                              </button>
+                        </div>
                   </div>
 
                   <!-- Tree Root Container -->
                   <div class="tree-root-container" *ngIf="!isLoading() && !errorMessage() && filteredTree().length > 0">
+
+                        <!-- CATEGORY LEVEL: Create Category Action (Task Requirement 1) -->
+                        <div class="tree-level-add-bar category-level-add" *ngIf="isEditMode()">
+                              <button type="button" class="btn-level-add btn-add-category"
+                                    (click)="openCreateCategory($event)"
+                                    title="إضافة قسم رئيسي جديد إلى شجرة المنتجات">
+                                    <span class="material-icons-outlined">create_new_folder</span>
+                                    <span>إضافة قسم رئيسي جديد</span>
+                              </button>
+                        </div>
 
                         <!-- CATEGORY NODE (Level 1) -->
                         <div class="category-block" *ngFor="let category of filteredTree(); trackBy: trackByCategoryId"
@@ -237,8 +254,14 @@
                                                       {{ getCategoryProductsCount(category) }} منتج
                                                 </span>
                                           </div>
-                                          <!-- Edit Mode actions: rename / delete category (Task 5) -->
+                                          <!-- Edit Mode actions: add brand / rename / delete category -->
                                           <div class="node-edit-actions" *ngIf="isEditMode()">
+                                                <button type="button" class="btn-node-action btn-add"
+                                                      [disabled]="isNodeActionPending('category', category.id)"
+                                                      (click)="openCreateBrand(category, $event)"
+                                                      title="إضافة شركة / علامة تجارية في هذا القسم">
+                                                      <span class="material-icons-outlined">add</span>
+                                                </button>
                                                 <button type="button" class="btn-node-action btn-rename"
                                                       [disabled]="isNodeActionPending('category', category.id)"
                                                       (click)="openRenameCategory(category, $event)"
@@ -262,7 +285,7 @@
                                     <!-- ============================= -->
                                     <!-- A. BRANDS LIST (Level 2) -->
                                     <!-- ============================= -->
-                                    <div class="brands-branch" *ngIf="category.brands && category.brands.length > 0">
+                                    <div class="brands-branch" *ngIf="(category.brands && category.brands.length > 0) || isEditMode()">
                                           <div class="brand-block"
                                                 *ngFor="let brand of category.brands; trackBy: trackByBrandId"
                                                 [class.is-expanded]="brand.expanded">
@@ -311,8 +334,15 @@
                                                                         {{ getBrandProductsCount(brand) }} منتج
                                                                   </span>
                                                             </div>
-                                                            <!-- Edit Mode actions: rename / delete brand (Task 5) -->
+                                                            <!-- Edit Mode actions: add group / rename / move / delete brand -->
                                                             <div class="node-edit-actions" *ngIf="isEditMode()">
+                                                                  <button type="button"
+                                                                        class="btn-node-action btn-add"
+                                                                        [disabled]="isNodeActionPending('brand', brand.id)"
+                                                                        (click)="openCreateGroup(category, brand, $event)"
+                                                                        title="إضافة مجموعة منتجات في هذه الشركة">
+                                                                        <span class="material-icons-outlined">add</span>
+                                                                  </button>
                                                                   <button type="button"
                                                                         class="btn-node-action btn-rename"
                                                                         [disabled]="isNodeActionPending('brand', brand.id)"
@@ -442,8 +472,34 @@
                                                             </div>
 
                                                       </div>
+
+                                                      <!-- Empty Group Notice for Brand -->
+                                                      <div class="empty-branch-inline" *ngIf="(!brand.groups || brand.groups.length === 0) && !isEditMode()">
+                                                            <span class="material-icons-outlined">layers_clear</span>
+                                                            <span>لا توجد مجموعات مسجلة في هذه الشركة.</span>
+                                                      </div>
+
+                                                      <!-- BRAND LEVEL: Create Product Group Action (Task Requirement 3) -->
+                                                      <div class="tree-level-add-bar group-level-add" *ngIf="isEditMode()">
+                                                            <button type="button" class="btn-level-add btn-add-group"
+                                                                  (click)="openCreateGroup(category, brand, $event)"
+                                                                  title="إضافة مجموعة منتجات جديدة داخل هذه الشركة">
+                                                                  <span class="material-icons-outlined">add</span>
+                                                                  <span>إضافة مجموعة منتجات في {{ brand.name }}</span>
+                                                            </button>
+                                                      </div>
                                                 </div>
 
+                                          </div>
+
+                                          <!-- CATEGORY LEVEL: Create Brand Action (Task Requirement 2) -->
+                                          <div class="tree-level-add-bar brand-level-add" *ngIf="isEditMode()">
+                                                <button type="button" class="btn-level-add btn-add-brand"
+                                                      (click)="openCreateBrand(category, $event)"
+                                                      title="إضافة شركة جديدة داخل هذا القسم">
+                                                      <span class="material-icons-outlined">add</span>
+                                                      <span>إضافة شركة في {{ category.name }}</span>
+                                                </button>
                                           </div>
                                     </div>
 
@@ -545,6 +601,23 @@
                                                 </div>
 
                                           </div>
+
+                                          <!-- DIRECT GROUPS LEVEL: Create Direct Group Action -->
+                                          <div class="tree-level-add-bar direct-group-level-add" *ngIf="isEditMode()">
+                                                <button type="button" class="btn-level-add btn-add-direct-group"
+                                                      (click)="openCreateGroup(category, null, $event)"
+                                                      title="إضافة مجموعة منتجات مباشرة داخل هذا القسم">
+                                                      <span class="material-icons-outlined">add</span>
+                                                      <span>إضافة مجموعة مباشرة في {{ category.name }}</span>
+                                                </button>
+                                          </div>
+                                    </div>
+
+                                    <!-- Empty Category Body Helper for View Mode -->
+                                    <div class="empty-branch-inline"
+                                          *ngIf="(!category.brands || category.brands.length === 0) && (!category.directGroups || category.directGroups.length === 0) && !isEditMode()">
+                                          <span class="material-icons-outlined">folder_open</span>
+                                          <span>لا توجد شركات أو مجموعات مسجلة في هذا القسم حالياً.</span>
                                     </div>
 
                               </div>
@@ -579,6 +652,67 @@
 
       <!-- SIDEBAR: NAVIGATION -->
       <app-sidebar [expanded]="sidebarVisible()" (toggle)="onToggleSidebar()"></app-sidebar>
+
+      <!-- ============================= -->
+      <!-- EDIT MODE: CREATE NODE DIALOG -->
+      <!-- ============================= -->
+      <div class="node-modal-overlay" *ngIf="createTarget() as target" (click)="closeCreateDialog()">
+            <div class="node-modal create-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+                  <div class="node-modal-header">
+                        <div class="node-modal-icon create-icon" [ngClass]="target.type + '-create-icon'">
+                              <span class="material-icons-outlined" *ngIf="target.type === 'category'">create_new_folder</span>
+                              <span class="material-icons-outlined" *ngIf="target.type === 'brand'">storefront</span>
+                              <span class="material-icons-outlined" *ngIf="target.type === 'group'">layers</span>
+                        </div>
+                        <div>
+                              <h3>إضافة {{ nodeTypeLabels[target.type] }} جديد</h3>
+                              <p>{{ target.contextLabel }}</p>
+                        </div>
+                  </div>
+
+                  <div class="node-modal-body">
+                        <label class="node-modal-label" for="node-create-input">
+                              اسم {{ nodeTypeLabels[target.type] }} <span class="req-star">*</span>
+                        </label>
+                        <input id="node-create-input" type="text" class="node-modal-input" dir="auto" maxlength="255"
+                              autocomplete="off" [placeholder]="'أدخل اسم ' + nodeTypeLabels[target.type] + '...'"
+                              [value]="createNameValue()" (input)="onCreateNameInput($event)"
+                              (keydown)="onCreateKeydown($event)">
+
+                        <!-- For Product Groups: Unified Price option -->
+                        <div class="modal-checkbox-row" *ngIf="target.type === 'group'">
+                              <label class="modal-inline-checkbox">
+                                    <input type="checkbox" [checked]="createIsPriceUnified()"
+                                          (change)="toggleCreatePriceUnified($event)">
+                                    <span class="checkbox-text">تفعيل السعر الموحد لمنتجات المجموعة</span>
+                              </label>
+                              <span class="checkbox-subtext">سيكون سعر البيع موحداً لكافة المنتجات التابعة لهذه المجموعة.</span>
+                        </div>
+
+                        <div class="node-modal-hint">
+                              <span class="material-icons-outlined">info</span>
+                              <span>يجب أن يكون الاسم بين 2 و 255 حرفاً، وفريداً داخل نفس النطاق.</span>
+                        </div>
+
+                        <div class="node-modal-error" *ngIf="createError()">
+                              <span class="material-icons-outlined">error_outline</span>
+                              <span>{{ createError() }}</span>
+                        </div>
+                  </div>
+
+                  <div class="node-modal-actions">
+                        <button type="button" class="btn-modal btn-modal-cancel" [disabled]="isCreateSaving()"
+                              (click)="closeCreateDialog()">إلغاء</button>
+                        <button type="button" class="btn-modal btn-modal-save"
+                              [disabled]="isCreateSaving() || !createNameValue().trim() || !!createError()"
+                              (click)="submitCreate()">
+                              <span class="material-icons-outlined" *ngIf="isCreateSaving()">hourglass_top</span>
+                              <span class="material-icons-outlined" *ngIf="!isCreateSaving()">add_circle</span>
+                              <span>{{ isCreateSaving() ? 'جارٍ الإضافة...' : 'إضافة ' + nodeTypeLabels[target.type] }}</span>
+                        </button>
+                  </div>
+            </div>
+      </div>
 
       <!-- ============================= -->
       <!-- EDIT MODE: RENAME NODE DIALOG (Task 5) -->

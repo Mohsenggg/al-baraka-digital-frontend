@@ -14,6 +14,7 @@ import type {
       CategoryChildNodesDto,
       ProductGroupTreeNodeDto
 } from '../models/product.models';
+import type { CategoryNode, BrandNode, ProductGroupNode } from '../components/new/productTreeView/models/product-tree.models';
 
 @Injectable({
       providedIn: 'root'
@@ -122,6 +123,30 @@ export class ProductApiService {
       }
 
       // ─── Tree hierarchy mutations (Product Tree Edit Mode) ────────────────
+
+      public createTreeCategory(name: string, code?: string): Observable<CategoryNode> {
+            return this.http.post<CategoryNode>(`${this.apiUrl}/tree/categories`, { name, code });
+      }
+
+      public createTreeBrand(name: string, categoryId: number | string, code?: string): Observable<BrandNode> {
+            return this.http.post<BrandNode>(`${this.apiUrl}/tree/brands`, { name, categoryId, code });
+      }
+
+      public createTreeProductGroup(
+            name: string, 
+            categoryId: number | string, 
+            brandId?: number | string | null, 
+            isPriceUnified?: boolean, 
+            code?: string
+      ): Observable<ProductGroupNode> {
+            return this.http.post<ProductGroupNode>(`${this.apiUrl}/tree/groups`, { 
+                  name, 
+                  categoryId, 
+                  brandId: brandId ?? null, 
+                  isPriceUnified: !!isPriceUnified, 
+                  code 
+            });
+      }
 
       public renameCategory(id: number | string, name: string): Observable<void> {
             return this.http.patch<void>(`${this.apiUrl}/tree/categories/${id}/rename`, { name });

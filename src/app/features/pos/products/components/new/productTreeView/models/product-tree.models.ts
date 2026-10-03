@@ -92,6 +92,17 @@ export interface RenameNodeTarget extends TreeNodeActionTarget {
       contextLabel: string;
 }
 
+/** Create specific payload: defines the hierarchy level and parent scope for creating a new item. */
+export interface CreateNodeTarget {
+      type: TreeNodeType;
+      /** Parent scope id (categoryId for brand; brandId or categoryId for group; null for category). */
+      parentId?: number | string | null;
+      category?: CategoryNode | null;
+      brand?: BrandNode | null;
+      siblingNames: string[];
+      contextLabel: string;
+}
+
 export interface NodeNameValidationResult {
       valid: boolean;
       error: string | null;

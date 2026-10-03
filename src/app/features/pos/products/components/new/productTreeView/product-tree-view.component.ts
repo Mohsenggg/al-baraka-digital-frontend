@@ -35,6 +35,7 @@ import {
       TreeNodeType,
       TreeNodeActionTarget,
       RenameNodeTarget,
+      CreateNodeTarget,
       NodeNameValidationResult,
       MoveNodeTarget,
       MOVE_DIRECT_BRAND_VALUE,
@@ -95,6 +96,16 @@ export class ProductTreeViewComponent implements OnInit {
       isRenameSaving = computed(() => {
             const target = this.renameTarget();
             return !!target && this.nodeActionKey() === this.nodeActionKeyOf('rename', target.type, target.id);
+      });
+
+      // ─── Node creation state (Category, Brand, Group) ───────────────────
+      createTarget = signal<CreateNodeTarget | null>(null);
+      createNameValue = signal('');
+      createIsPriceUnified = signal(false);
+      createError = signal<string | null>(null);
+      isCreateSaving = computed(() => {
+            const target = this.createTarget();
+            return !!target && this.nodeActionKey() === this.createActionKeyOf(target);
       });
 
       /** Arabic labels for the editable hierarchy tiers (used by dialogs / toasts). */
@@ -709,12 +720,13 @@ export class ProductTreeViewComponent implements OnInit {
             return !this.nodesWithChildren()[type].has(this.nodeKey(id));
       }
 
-      /** True while a rename / delete / move / price-toggle request for this exact node is in flight. */
+      /** True while a rename / delete / move / price-toggle / create request for this exact node is in flight. */
       isNodeActionPending(type: TreeNodeType | 'product', id: number | string): boolean {
             return this.nodeActionKey() === this.nodeActionKeyOf('rename', type, id) ||
                   this.nodeActionKey() === this.nodeActionKeyOf('delete', type, id) ||
                   this.nodeActionKey() === this.nodeActionKeyOf('move', type, id) ||
-                  this.nodeActionKey() === this.nodeActionKeyOf('price', type, id);
+                  this.nodeActionKey() === this.nodeActionKeyOf('price', type, id) ||
+                  this.nodeActionKey() === `create:${type}:${this.nodeKey(id)}`;
       }
 
       private nodeKey(id: number | string): string {
@@ -727,6 +739,226 @@ export class ProductTreeViewComponent implements OnInit {
             id: number | string
       ): string {
             return `${action}:${type}:${this.nodeKey(id)}`;
+      }
+
+      private createActionKeyOf(target: CreateNodeTarget): string {
+            return `create:${target.type}:${target.parentId ?? 'root'}`;
+      }
+
+      /* ============================= */
+      /* NODE CREATION                 */
+      /* ============================= */
+
+      openCreateCategory(event?: Event): void {
+            if (event) event.stopPropagation();
+
+            this.openCreateDialog({
+                  type: 'category',
+                  parentId: null,
+                  category: null,
+                  brand: null,
+                  siblingNames: this.treeData().map(cat => cat.name),
+                  contextLabel: 'قسم رئيسي جديد'
+            });
+      }
+
+      openCreateBrand(category: CategoryNode, event?: Event): void {
+            if (event) event.stopPropagation();
+            category.expanded = true;
+
+            this.openCreateDialog({
+                  type: 'brand',
+                  parentId: category.id,
+                  category,
+                  brand: null,
+                  siblingNames: (category.brands || []).map(b => b.name),
+                  contextLabel: `داخل قسم: ${category.name}`
+            });
+      }
+
+      openCreateGroup(category: CategoryNode, brand: BrandNode | null, event?: Event): void {
+            if (event) event.stopPropagation();
+            category.expanded = true;
+            if (brand) brand.expanded = true;
+
+            const siblingNames = (brand ? brand.groups || [] : category.directGroups || []).map(g => g.name);
+
+            this.openCreateDialog({
+                  type: 'group',
+                  parentId: brand ? brand.id : category.id,
+                  category,
+                  brand,
+                  siblingNames,
+                  contextLabel: brand
+                        ? `داخل شركة: ${brand.name} (قسم ${category.name})`
+                        : `مجموعة مباشرة داخل قسم: ${category.name}`
+            });
+      }
+
+      private openCreateDialog(target: CreateNodeTarget): void {
+            this.createError.set(null);
+            this.createNameValue.set('');
+            this.createIsPriceUnified.set(false);
+            this.createTarget.set(target);
+      }
+
+      closeCreateDialog(force: boolean = false): void {
+            if (!force && this.isCreateSaving()) return;
+
+            this.createTarget.set(null);
+            this.createNameValue.set('');
+            this.createIsPriceUnified.set(false);
+            this.createError.set(null);
+      }
+
+      onCreateNameInput(event: Event): void {
+            this.createNameValue.set((event.target as HTMLInputElement).value);
+            this.createError.set(null);
+      }
+
+      onCreateKeydown(event: KeyboardEvent): void {
+            if (event.key === 'Enter') {
+                  event.preventDefault();
+                  this.submitCreate();
+            }
+      }
+
+      toggleCreatePriceUnified(event: Event): void {
+            this.createIsPriceUnified.set((event.target as HTMLInputElement).checked);
+      }
+
+      submitCreate(): void {
+            const target = this.createTarget();
+            if (!target || this.isCreateSaving()) return;
+
+            const trimmedName = this.createNameValue().trim();
+            const validation: NodeNameValidationResult = validateNodeName(trimmedName, target.siblingNames);
+            if (!validation.valid) {
+                  this.createError.set(validation.error);
+                  return;
+            }
+
+            this.nodeActionKey.set(this.createActionKeyOf(target));
+            this.executeCreate(target, trimmedName).subscribe({
+                  next: (createdNode: any) => {
+                        this.nodeActionKey.set(null);
+                        this.catalogStore.invalidate();
+                        this.applyCreatedNode(target, createdNode, trimmedName);
+                        this.closeCreateDialog(true);
+                        this.notificationService.success(
+                              `تم إنشاء ${this.nodeTypeLabels[target.type]} "${trimmedName}" بنجاح`
+                        );
+                  },
+                  error: (err: unknown) => {
+                        this.nodeActionKey.set(null);
+                        this.createError.set(
+                              this.resolveErrorMessage(err, 'تعذر إنشاء العنصر. يرجى المحاولة مرة أخرى.')
+                        );
+                  }
+            });
+      }
+
+      private executeCreate(target: CreateNodeTarget, name: string): Observable<any> {
+            switch (target.type) {
+                  case 'category':
+                        return this.productApiService.createTreeCategory(name);
+                  case 'brand':
+                        return this.productApiService.createTreeBrand(name, target.parentId!);
+                  case 'group':
+                        return this.productApiService.createTreeProductGroup(
+                              name,
+                              target.category ? target.category.id : target.parentId!,
+                              target.brand ? target.brand.id : null,
+                              this.createIsPriceUnified()
+                        );
+            }
+      }
+
+      private applyCreatedNode(target: CreateNodeTarget, createdNode: any, name: string): void {
+            if (target.type === 'category') {
+                  const newCategory: CategoryNode = {
+                        id: createdNode?.id ?? Date.now(),
+                        code: createdNode?.code ?? '',
+                        name: createdNode?.name ?? name,
+                        brands: [],
+                        directGroups: [],
+                        expanded: true
+                  };
+                  this.treeData.update(tree => [newCategory, ...tree]);
+                  return;
+            }
+
+            this.treeData.update(tree =>
+                  tree.map(category => {
+                        if (target.type === 'brand') {
+                              if (category.id !== target.parentId) return category;
+
+                              const newBrand: BrandNode = {
+                                    id: createdNode?.id ?? Date.now(),
+                                    code: createdNode?.code ?? '',
+                                    name: createdNode?.name ?? name,
+                                    categoryId: category.id,
+                                    groups: [],
+                                    expanded: true
+                              };
+
+                              return {
+                                    ...category,
+                                    expanded: true,
+                                    brands: [...(category.brands || []), newBrand]
+                              };
+                        }
+
+                        // target.type === 'group'
+                        if (target.brand) {
+                              if (category.id !== target.category?.id) return category;
+
+                              return {
+                                    ...category,
+                                    expanded: true,
+                                    brands: (category.brands || []).map(brand => {
+                                          if (brand.id !== target.brand!.id) return brand;
+
+                                          const newGroup: ProductGroupNode = {
+                                                id: createdNode?.id ?? Date.now(),
+                                                code: createdNode?.code ?? '',
+                                                name: createdNode?.name ?? name,
+                                                categoryId: category.id,
+                                                brandId: brand.id,
+                                                isPriceUnified: this.createIsPriceUnified(),
+                                                products: [],
+                                                expanded: true
+                                          };
+
+                                          return {
+                                                ...brand,
+                                                expanded: true,
+                                                groups: [...(brand.groups || []), newGroup]
+                                          };
+                                    })
+                              };
+                        } else {
+                              if (category.id !== target.parentId) return category;
+
+                              const newGroup: ProductGroupNode = {
+                                    id: createdNode?.id ?? Date.now(),
+                                    code: createdNode?.code ?? '',
+                                    name: createdNode?.name ?? name,
+                                    categoryId: category.id,
+                                    brandId: null,
+                                    isPriceUnified: this.createIsPriceUnified(),
+                                    products: [],
+                                    expanded: true
+                              };
+
+                              return {
+                                    ...category,
+                                    expanded: true,
+                                    directGroups: [...(category.directGroups || []), newGroup]
+                              };
+                        }
+                  })
+            );
       }
 
       /* ============================= */
