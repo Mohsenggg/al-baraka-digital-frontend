@@ -92,8 +92,10 @@
                       displayKey="name"
                       searchPlaceholder="البحث بالاسم"
                       title="الشركة / العلامة التجارية"
+                      addActionText="اضافة علامة تجارية جديدة"
                       emptyMessage="لا توجد شركات لهذا القسم"
                       (itemSelected)="selectBrand($event)"
+                      (addClicked)="openOverlay('brand')"
                       (closeDropdown)="closeDropdowns()">
                     </app-floating-dropdown>
                   </ng-template>
@@ -116,8 +118,10 @@
                     displayKey="name"
                     searchPlaceholder="البحث بالاسم"
                     title="مجموعة المنتجات"
+                    addActionText="اضافة مجموعة منتجات جديدة"
                     emptyMessage="لا توجد مجموعات متاحة"
                     (itemSelected)="selectProductGroup($event)"
+                    (addClicked)="openOverlay('productGroup')"
                     (closeDropdown)="closeDropdowns()">
                   </app-floating-dropdown>
                 </div>

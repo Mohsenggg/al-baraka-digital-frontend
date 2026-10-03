@@ -63,7 +63,7 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       activeTab: 'basic' | 'composition' = 'basic';
       sidebarVisible = signal(false);
       activeDropdown: 'attribute' | 'category' | 'manufacturer' | 'supplier' | 'brand' | 'productGroup' | null = null;
-      showOverlay: 'category' | 'manufacturer' | 'supplier' | 'attribute' | null = null;
+      showOverlay: 'category' | 'manufacturer' | 'supplier' | 'attribute' | 'brand' | 'productGroup' | null = null;
 
       @ViewChild('attributeTrigger') attributeTrigger?: ElementRef<HTMLButtonElement>;
 
@@ -375,7 +375,7 @@ export class ManageProductComponent implements OnInit, OnDestroy {
             return this.state.getAvailableAttributesForDropdown();
       }
 
-      openOverlay(type: 'category' | 'manufacturer' | 'supplier' | 'attribute'): void {
+      openOverlay(type: 'category' | 'manufacturer' | 'supplier' | 'attribute' | 'brand' | 'productGroup'): void {
             this.showOverlay = type;
             this.activeDropdown = null;
       }
@@ -384,7 +384,7 @@ export class ManageProductComponent implements OnInit, OnDestroy {
             this.showOverlay = null;
       }
 
-      addNewItem(type: 'category' | 'manufacturer' | 'supplier' | 'attribute', name: string): void {
+      addNewItem(type: 'category' | 'manufacturer' | 'supplier' | 'attribute' | 'brand' | 'productGroup', name: string): void {
             this.state.addNewReferenceItem(type, name);
             this.closeOverlay();
       }
@@ -395,6 +395,8 @@ export class ManageProductComponent implements OnInit, OnDestroy {
                   case 'manufacturer': return 'شركة مصنعة';
                   case 'supplier': return 'مورد';
                   case 'attribute': return 'سمة';
+                  case 'brand': return 'علامة تجارية';
+                  case 'productGroup': return 'مجموعة منتجات';
                   default: return '';
             }
       }

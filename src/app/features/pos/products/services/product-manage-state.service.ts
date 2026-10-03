@@ -629,7 +629,7 @@ export class ProductManageStateService {
             control?.setValue(currentValues.filter(v => v !== id));
       }
 
-      addNewReferenceItem(type: 'category' | 'manufacturer' | 'supplier' | 'attribute', name: string): void {
+      addNewReferenceItem(type: 'category' | 'manufacturer' | 'supplier' | 'attribute' | 'brand' | 'productGroup', name: string): void {
             const cleanName = name.trim();
             if (!cleanName) return;
 
@@ -642,8 +642,7 @@ export class ProductManageStateService {
                               this.selectCategory(res);
                               this.isPageLoading.set(false);
                         },
-                        error: (err) => {
-                              this.saveError.set('فشل في إضافة الفئة');
+                        error: () => {
                               this.isPageLoading.set(false);
                         }
                   });
@@ -654,8 +653,7 @@ export class ProductManageStateService {
                               this.selectManufacturer(res);
                               this.isPageLoading.set(false);
                         },
-                        error: (err) => {
-                              this.saveError.set('فشل في إضافة الشركة المصنعة');
+                        error: () => {
                               this.isPageLoading.set(false);
                         }
                   });
@@ -666,8 +664,7 @@ export class ProductManageStateService {
                               this.toggleSupplier(res);
                               this.isPageLoading.set(false);
                         },
-                        error: (err) => {
-                              this.saveError.set('فشل في إضافة المورد');
+                        error: () => {
                               this.isPageLoading.set(false);
                         }
                   });
@@ -678,8 +675,53 @@ export class ProductManageStateService {
                               this.selectPendingAttribute(res);
                               this.isPageLoading.set(false);
                         },
-                        error: (err) => {
-                              this.saveError.set('فشل في إضافة السمة');
+                        error: () => {
+                              this.isPageLoading.set(false);
+                        }
+                  });
+            } else if (type === 'brand') {
+                  const categoryId = this.productForm.get('categoryId')?.value;
+                  if (!categoryId) { this.isPageLoading.set(false); return; }
+
+                  this.api.createTreeBrand(cleanName, categoryId).subscribe({
+                        next: (res) => {
+                              const newBrand: BrandTreeNodeDto = {
+                                    id: res.id as number,
+                                    name: res.name,
+                                    categoryId: res.categoryId as number,
+                                    code: res.code,
+                                    groups: []
+                              };
+                              this.brandsSignal.update(list => [...list, newBrand]);
+                              this.selectBrand(newBrand);
+                              this.hasNoBrandsForCategory.set(false);
+                              this.isPageLoading.set(false);
+                        },
+                        error: () => {
+                              this.isPageLoading.set(false);
+                        }
+                  });
+            } else if (type === 'productGroup') {
+                  const categoryId = this.productForm.get('categoryId')?.value;
+                  if (!categoryId) { this.isPageLoading.set(false); return; }
+
+                  const brandId = this.selectedBrandId() ?? null;
+
+                  this.api.createTreeProductGroup(cleanName, categoryId, brandId).subscribe({
+                        next: (res) => {
+                              const newGroup: ProductGroupTreeNodeDto = {
+                                    id: res.id as number,
+                                    name: res.name,
+                                    categoryId: res.categoryId as number,
+                                    brandId: res.brandId as number | null,
+                                    code: res.code,
+                                    isPriceUnified: !!res.isPriceUnified
+                              };
+                              this.productGroupsSignal.update(list => [...list, newGroup]);
+                              this.selectProductGroup(newGroup);
+                              this.isPageLoading.set(false);
+                        },
+                        error: () => {
                               this.isPageLoading.set(false);
                         }
                   });
