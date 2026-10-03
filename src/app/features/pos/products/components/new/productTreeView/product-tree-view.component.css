@@ -459,9 +459,9 @@
       font-size: 0.9rem;
 }
 
-.cat-color { color: var(--pos-primary, #1e3a8a); }
-.brand-color { color: #1d4ed8; }
-.group-color { color: #2563eb; }
+.cat-color { color: #1e748a; }
+.brand-color { color: #1e748a; }
+.group-color { color: #247a8c; }
 .prod-color { color: #059669; }
 .stock-color { color: #d97706; }
 
@@ -519,21 +519,21 @@
 
 .category-block {
       background: var(--pos-card-bg, #ffffff);
-      border: 1px solid var(--pos-primary, #1e3a8a);
+      border: 1px solid #1e748a;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(30, 58, 138, 0.14);
+      box-shadow: 0 2px 10px rgba(30, 116, 138, 0.12);
       transition: all 0.2s ease;
       overflow: hidden;
 }
 
 .category-block:hover {
-      border-color: var(--pos-primary-hover, #1e40af);
-      box-shadow: 0 6px 18px rgba(30, 58, 138, 0.18);
+      border-color: #17637a;
+      box-shadow: 0 6px 18px rgba(30, 116, 138, 0.16);
 }
 
 .category-block.is-expanded {
-      border-color: var(--pos-primary, #1e3a8a);
-      box-shadow: 0 6px 20px rgba(30, 58, 138, 0.2);
+      border-color: #1e748a;
+      box-shadow: 0 6px 20px rgba(30, 116, 138, 0.18);
 }
 
 .category-row {
@@ -541,11 +541,11 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
-      /* Solid primary fill + a fixed translucent sheen. Only the fill colour
+      /* Solid teal fill + a fixed translucent sheen. Only the fill colour
          changes on hover, so the transition never flashes the white page
          behind it (a gradient cannot be interpolated). */
-      background-color: var(--pos-primary, #1e3a8a);
-      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 100%);
+      background-color: #1e748a;
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
       color: #ffffff;
       cursor: pointer;
       user-select: none;
@@ -559,7 +559,7 @@
 }
 
 .category-row:hover {
-      background-color: var(--pos-primary-hover, #1e40af);
+      background-color: #17637a;
 }
 
 .row-leading {
@@ -585,12 +585,12 @@
 }
 
 .btn-node-toggle:hover {
-      background-color: var(--pos-primary, #1e3a8a);
+      background-color: #1e748a;
       color: #ffffff;
-      border-color: var(--pos-primary, #1e3a8a);
+      border-color: #1e748a;
 }
 
-/* The category header sits on the solid primary surface, so its toggle inverts on hover. */
+/* The category header sits on the solid teal surface, so its toggle inverts on hover. */
 .category-row .btn-node-toggle:hover {
       background-color: rgba(255, 255, 255, 0.25);
       color: #ffffff;
@@ -681,8 +681,8 @@
 }
 
 .category-code-tag {
-      background-color: #e2e8f0;
-      color: #334155;
+      background-color: rgba(255, 255, 255, 0.18);
+      color: rgba(255, 255, 255, 0.92);
 }
 
 .level-indicator {
@@ -690,10 +690,10 @@
       font-weight: 600;
 }
 
-/* Category header is a dark primary surface, so its level label inverts. */
+/* Category header is a teal surface, so its level label inverts. */
 .level-cat { color: rgba(255, 255, 255, 0.78); }
-.level-brand { color: #1d4ed8; }
-.level-group { color: #2563eb; }
+.level-brand { color: #1e748a; }
+.level-group { color: #247a8c; }
 .level-direct-group { color: #059669; }
 
 .row-trailing {
@@ -728,13 +728,13 @@
 }
 
 .count-pill.primary-pill {
-      background: #dbeafe;
-      color: #1d4ed8;
-      border: 1px solid #bfdbfe;
+      background: #cce9ef;
+      color: #0d4f5e;
+      border: 1px solid #9acfda;
 }
 
 .count-pill.primary-pill .pill-icon {
-      color: #1d4ed8;
+      color: #1e748a;
 }
 
 /* Unified selling price badge (Phase 3) */
@@ -762,8 +762,8 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      background: #fafbfc;
-      border-right: 3px solid var(--pos-primary, #1e3a8a);
+      background: #f5fbfc;
+      border-right: 3px solid #1e748a;
       margin-right: 14px;
 }
 
@@ -780,19 +780,19 @@
 
 .brand-block {
       background: #ffffff;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #cce9ef;
       border-radius: 10px;
       overflow: hidden;
       transition: all 0.15s ease;
 }
 
 .brand-block:hover {
-      border-color: #cbd5e1;
+      border-color: #9acfda;
 }
 
 .brand-block.is-expanded {
-      border-color: #93c5fd;
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+      border-color: #9acfda;
+      box-shadow: 0 2px 8px rgba(30, 116, 138, 0.08);
 }
 
 .brand-row {
@@ -801,8 +801,8 @@
       justify-content: space-between;
       padding: 10px 14px;
       /* Fill + fixed sheen split so the hover tint fades smoothly. */
-      background-color: #dbeafe;
-      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0) 100%);
+      background-color: #d4eef3;
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 100%);
       cursor: pointer;
       user-select: none;
       transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -810,16 +810,16 @@
 }
 
 .brand-block.is-expanded .brand-row {
-      border-bottom: 1px solid #bfdbfe;
+      border-bottom: 1px solid #9acfda;
 }
 
 .brand-row:hover {
-      background-color: #bfdbfe;
+      background-color: #b8e3ec;
 }
 
 .brand-badge {
-      background-color: #bfdbfe;
-      color: #1d4ed8;
+      background-color: #9acfda;
+      color: #0d4f5e;
       width: 30px;
       height: 30px;
 }
@@ -833,8 +833,8 @@
 }
 
 .brand-code-tag {
-      background-color: #bfdbfe;
-      color: #1d4ed8;
+      background-color: #9acfda;
+      color: #0d4f5e;
 }
 
 .brand-children-container {
@@ -843,7 +843,7 @@
       flex-direction: column;
       gap: 10px;
       background: #ffffff;
-      border-right: 3px solid #bfdbfe;
+      border-right: 3px solid #9acfda;
       margin-right: 14px;
 }
 
@@ -853,15 +853,15 @@
 
 .group-block {
       background: #ffffff;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #daf0f4;
       border-radius: 8px;
       overflow: hidden;
       transition: all 0.15s ease;
 }
 
 .group-block.is-expanded {
-      border-color: #bfdbfe;
-      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.05);
+      border-color: #b8e3ec;
+      box-shadow: 0 2px 6px rgba(30, 116, 138, 0.05);
 }
 
 .group-row {
@@ -870,7 +870,7 @@
       justify-content: space-between;
       padding: 8px 12px;
       /* Fill + fixed sheen split so the hover tint fades smoothly. */
-      background-color: #eff6ff;
+      background-color: #eaf6f8;
       background-image: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
       cursor: pointer;
       user-select: none;
@@ -879,16 +879,16 @@
 }
 
 .group-block.is-expanded .group-row {
-      border-bottom: 1px solid #dbeafe;
+      border-bottom: 1px solid #cce9ef;
 }
 
 .group-row:hover {
-      background-color: #dbeafe;
+      background-color: #d4eef3;
 }
 
 .group-badge {
-      background-color: #dbeafe;
-      color: #2563eb;
+      background-color: #b8e3ec;
+      color: #1e748a;
       width: 28px;
       height: 28px;
 }
@@ -907,14 +907,14 @@
 }
 
 .group-code-tag {
-      background-color: #dbeafe;
-      color: #2563eb;
+      background-color: #cce9ef;
+      color: #1e748a;
 }
 
 .group-children-container {
       padding: 0;
       background: #ffffff;
-      border-right: 3px solid #dbeafe;
+      border-right: 3px solid #cce9ef;
       margin-right: 14px;
 }
 
@@ -1005,7 +1005,7 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background-color: var(--pos-primary, #1e3a8a);
+      background-color: #1e748a;
       opacity: 0.7;
       flex-shrink: 0;
 }
@@ -1024,7 +1024,7 @@
 }
 
 .tree-prod-name:hover {
-      color: var(--pos-primary, #1e3a8a);
+      color: #1e748a;
       text-decoration: underline;
 }
 
@@ -1096,7 +1096,7 @@
 }
 
 .selling-price {
-      color: var(--pos-primary, #1e3a8a);
+      color: #1e748a;
 }
 
 .price-na {
@@ -1308,8 +1308,8 @@
 }
 
 .btn-action.btn-view:hover {
-      color: var(--pos-primary, #1e3a8a);
-      background-color: #dbeafe;
+      color: #1e748a;
+      background-color: #d4eef3;
 }
 
 .btn-action.btn-edit:hover {
@@ -1715,11 +1715,11 @@
 }
 
 .leaf-products-table tbody tr.row-selected {
-      background-color: #eff6ff;
+      background-color: #eaf6f8;
 }
 
 .leaf-products-table tbody tr.row-selected:hover {
-      background-color: #dbeafe;
+      background-color: #d4eef3;
 }
 
 /* ============================= */
@@ -2041,7 +2041,7 @@
       align-items: center;
       gap: 18px;
       padding: 10px 18px;
-      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, #1e748a 0%, #1a8fa8 100%);
       border-radius: 14px;
       box-shadow: 0 14px 34px rgba(15, 23, 42, 0.35);
       direction: rtl;
@@ -2065,7 +2065,7 @@
 
 .bulk-bar-info .material-icons-outlined {
       font-size: 1.15rem;
-      color: #bfdbfe;
+      color: #cce9ef;
 }
 
 .bulk-count {
@@ -2097,11 +2097,11 @@
 .btn-bulk-move {
       background: #ffffff;
       border: 1px solid #ffffff;
-      color: var(--pos-primary, #1e3a8a);
+      color: #1e748a;
 }
 
 .btn-bulk-move:hover {
-      background: #dbeafe;
+      background: #d4eef3;
       transform: translateY(-1px);
 }
 
@@ -2188,41 +2188,41 @@
 /* Category level add button */
 .btn-level-add.btn-add-category {
       background-color: #ffffff;
-      border-color: #93c5fd;
-      color: var(--pos-primary, #1e3a8a);
-      box-shadow: 0 1px 3px rgba(30, 58, 138, 0.06);
+      border-color: #9acfda;
+      color: #1e748a;
+      box-shadow: 0 1px 3px rgba(30, 116, 138, 0.06);
 }
 
 .btn-level-add.btn-add-category:hover {
-      background-color: #eff6ff;
-      border-color: var(--pos-primary, #1e3a8a);
+      background-color: #eaf6f8;
+      border-color: #1e748a;
       border-style: solid;
-      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.12);
+      box-shadow: 0 4px 12px rgba(30, 116, 138, 0.12);
 }
 
 /* Brand level add button */
 .btn-level-add.btn-add-brand {
-      background-color: #f8fafc;
-      border-color: #bfdbfe;
-      color: #1d4ed8;
+      background-color: #f5fbfc;
+      border-color: #9acfda;
+      color: #0d4f5e;
 }
 
 .btn-level-add.btn-add-brand:hover {
-      background-color: #eff6ff;
-      border-color: #3b82f6;
+      background-color: #d4eef3;
+      border-color: #1e748a;
       border-style: solid;
 }
 
 /* Group level add button */
 .btn-level-add.btn-add-group {
-      background-color: #f8fafc;
-      border-color: #bfdbfe;
-      color: #2563eb;
+      background-color: #f5fbfc;
+      border-color: #b8e3ec;
+      color: #247a8c;
 }
 
 .btn-level-add.btn-add-group:hover {
-      background-color: #eff6ff;
-      border-color: #3b82f6;
+      background-color: #eaf6f8;
+      border-color: #1e748a;
       border-style: solid;
 }
 
@@ -2259,18 +2259,18 @@
 
 /* Create Modal Icon & Checkbox variants */
 .node-modal-icon.create-icon.category-create-icon {
-      background-color: #eff6ff;
-      color: var(--pos-primary, #1e3a8a);
+      background-color: #d4eef3;
+      color: #1e748a;
 }
 
 .node-modal-icon.create-icon.brand-create-icon {
-      background-color: #dbeafe;
-      color: #1d4ed8;
+      background-color: #cce9ef;
+      color: #0d4f5e;
 }
 
 .node-modal-icon.create-icon.group-create-icon {
-      background-color: #e0e7ff;
-      color: #4338ca;
+      background-color: #eaf6f8;
+      color: #247a8c;
 }
 
 .modal-checkbox-row {
