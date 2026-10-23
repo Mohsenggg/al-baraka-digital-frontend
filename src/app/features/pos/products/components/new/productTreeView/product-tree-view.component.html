@@ -200,8 +200,7 @@
                         <!-- CATEGORY LEVEL: Create Category Action (Task Requirement 1) -->
                         <div class="tree-level-add-bar category-level-add" *ngIf="isEditMode()">
                               <button type="button" class="btn-level-add btn-add-category"
-                                    (click)="openCreateCategory($event)"
-                                    title="إضافة قسم رئيسي جديد إلى شجرة المنتجات">
+                                    (click)="openCreateCategory($event)" title="إضافة قسم رئيسي جديد إلى شجرة المنتجات">
                                     <span class="material-icons-outlined">create_new_folder</span>
                                     <span>إضافة قسم رئيسي جديد</span>
                               </button>
@@ -231,7 +230,7 @@
                                           <!-- Category Title & Code -->
                                           <div class="node-info">
                                                 <div class="node-name-wrap">
-                                                      <span class="level-indicator level-cat">قسم</span>
+                                                      <!-- <span class="level-indicator level-cat">قــسـم</span> -->
                                                       <span class="node-title category-title">{{ category.name }}</span>
                                                       <!-- <span class="code-tag category-code-tag">كود: {{ category.code }}</span> -->
                                                 </div>
@@ -285,7 +284,8 @@
                                     <!-- ============================= -->
                                     <!-- A. BRANDS LIST (Level 2) -->
                                     <!-- ============================= -->
-                                    <div class="brands-branch" *ngIf="(category.brands && category.brands.length > 0) || isEditMode()">
+                                    <div class="brands-branch"
+                                          *ngIf="(category.brands && category.brands.length > 0) || isEditMode()">
                                           <div class="brand-block"
                                                 *ngFor="let brand of category.brands; trackBy: trackByBrandId"
                                                 [class.is-expanded]="brand.expanded">
@@ -312,7 +312,8 @@
                                                             <!-- Brand Title & Code -->
                                                             <div class="node-info">
                                                                   <div class="node-name-wrap">
-                                                                        <span class="level-indicator level-brand">شركة</span>
+                                                                        <span
+                                                                              class="level-indicator level-brand">شركة</span>
                                                                         <span class="node-title brand-title">{{
                                                                               brand.name }}</span>
                                                                         <!-- <span class="code-tag brand-code-tag">كود: {{ brand.code }}</span> -->
@@ -336,8 +337,7 @@
                                                             </div>
                                                             <!-- Edit Mode actions: add group / rename / move / delete brand -->
                                                             <div class="node-edit-actions" *ngIf="isEditMode()">
-                                                                  <button type="button"
-                                                                        class="btn-node-action btn-add"
+                                                                  <button type="button" class="btn-node-action btn-add"
                                                                         [disabled]="isNodeActionPending('brand', brand.id)"
                                                                         (click)="openCreateGroup(category, brand, $event)"
                                                                         title="إضافة مجموعة منتجات في هذه الشركة">
@@ -408,7 +408,8 @@
                                                                                     <span class="unified-price-tag"
                                                                                           *ngIf="group.isPriceUnified"
                                                                                           title="سعر البيع موحّد لجميع منتجات المجموعة">
-                                                                                          <span class="material-icons-outlined tag-icon">sell</span>
+                                                                                          <span
+                                                                                                class="material-icons-outlined tag-icon">sell</span>
                                                                                           سعر موحد
                                                                                     </span>
                                                                                     <!-- <span class="code-tag group-code-tag">كود: {{ group.code }}</span> -->
@@ -433,7 +434,9 @@
                                                                                     (click)="toggleGroupPriceUnification(group, $event)"
                                                                                     [title]="group.isPriceUnified ? 'إلغاء السعر الموحد للمجموعة (لن تتغير الأسعار الحالية)' : 'تفعيل السعر الموحد للمجموعة (لن تتغير الأسعار الحالية)'">
                                                                                     <span
-                                                                                          class="material-icons-outlined">{{ group.isPriceUnified ? 'link_off' : 'link' }}</span>
+                                                                                          class="material-icons-outlined">{{
+                                                                                          group.isPriceUnified ?
+                                                                                          'link_off' : 'link' }}</span>
                                                                               </button>
                                                                               <button type="button"
                                                                                     class="btn-node-action btn-rename"
@@ -474,13 +477,15 @@
                                                       </div>
 
                                                       <!-- Empty Group Notice for Brand -->
-                                                      <div class="empty-branch-inline" *ngIf="(!brand.groups || brand.groups.length === 0) && !isEditMode()">
+                                                      <div class="empty-branch-inline"
+                                                            *ngIf="(!brand.groups || brand.groups.length === 0) && !isEditMode()">
                                                             <span class="material-icons-outlined">layers_clear</span>
                                                             <span>لا توجد مجموعات مسجلة في هذه الشركة.</span>
                                                       </div>
 
                                                       <!-- BRAND LEVEL: Create Product Group Action (Task Requirement 3) -->
-                                                      <div class="tree-level-add-bar group-level-add" *ngIf="isEditMode()">
+                                                      <div class="tree-level-add-bar group-level-add"
+                                                            *ngIf="isEditMode()">
                                                             <button type="button" class="btn-level-add btn-add-group"
                                                                   (click)="openCreateGroup(category, brand, $event)"
                                                                   title="إضافة مجموعة منتجات جديدة داخل هذه الشركة">
@@ -541,7 +546,8 @@
                                                                         <span class="unified-price-tag"
                                                                               *ngIf="group.isPriceUnified"
                                                                               title="سعر البيع موحّد لجميع منتجات المجموعة">
-                                                                              <span class="material-icons-outlined tag-icon">sell</span>
+                                                                              <span
+                                                                                    class="material-icons-outlined tag-icon">sell</span>
                                                                               سعر موحد
                                                                         </span>
                                                                         <!-- <span class="code-tag group-code-tag">كود: {{ group.code }}</span> -->
@@ -563,8 +569,9 @@
                                                                         [disabled]="isNodeActionPending('group', group.id)"
                                                                         (click)="toggleGroupPriceUnification(group, $event)"
                                                                         [title]="group.isPriceUnified ? 'إلغاء السعر الموحد للمجموعة (لن تتغير الأسعار الحالية)' : 'تفعيل السعر الموحد للمجموعة (لن تتغير الأسعار الحالية)'">
-                                                                        <span
-                                                                              class="material-icons-outlined">{{ group.isPriceUnified ? 'link_off' : 'link' }}</span>
+                                                                        <span class="material-icons-outlined">{{
+                                                                              group.isPriceUnified ? 'link_off' : 'link'
+                                                                              }}</span>
                                                                   </button>
                                                                   <button type="button"
                                                                         class="btn-node-action btn-rename"
@@ -660,7 +667,8 @@
             <div class="node-modal create-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
                   <div class="node-modal-header">
                         <div class="node-modal-icon create-icon" [ngClass]="target.type + '-create-icon'">
-                              <span class="material-icons-outlined" *ngIf="target.type === 'category'">create_new_folder</span>
+                              <span class="material-icons-outlined"
+                                    *ngIf="target.type === 'category'">create_new_folder</span>
                               <span class="material-icons-outlined" *ngIf="target.type === 'brand'">storefront</span>
                               <span class="material-icons-outlined" *ngIf="target.type === 'group'">layers</span>
                         </div>
@@ -686,7 +694,8 @@
                                           (change)="toggleCreatePriceUnified($event)">
                                     <span class="checkbox-text">تفعيل السعر الموحد لمنتجات المجموعة</span>
                               </label>
-                              <span class="checkbox-subtext">سيكون سعر البيع موحداً لكافة المنتجات التابعة لهذه المجموعة.</span>
+                              <span class="checkbox-subtext">سيكون سعر البيع موحداً لكافة المنتجات التابعة لهذه
+                                    المجموعة.</span>
                         </div>
 
                         <div class="node-modal-hint">
@@ -708,7 +717,8 @@
                               (click)="submitCreate()">
                               <span class="material-icons-outlined" *ngIf="isCreateSaving()">hourglass_top</span>
                               <span class="material-icons-outlined" *ngIf="!isCreateSaving()">add_circle</span>
-                              <span>{{ isCreateSaving() ? 'جارٍ الإضافة...' : 'إضافة ' + nodeTypeLabels[target.type] }}</span>
+                              <span>{{ isCreateSaving() ? 'جارٍ الإضافة...' : 'إضافة ' + nodeTypeLabels[target.type]
+                                    }}</span>
                         </button>
                   </div>
             </div>

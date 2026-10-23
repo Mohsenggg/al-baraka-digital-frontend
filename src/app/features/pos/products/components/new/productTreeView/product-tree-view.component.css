@@ -96,12 +96,12 @@
       align-items: center;
       gap: 4px;
       padding: 3px 10px;
-      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-      color: var(--pos-primary, #1e3a8a);
+      background: linear-gradient(135deg, #edf8fa 0%, #cce9ef 100%);
+      color: #1e748a;
       font-size: 0.72rem;
       font-weight: 700;
       border-radius: 20px;
-      border: 1px solid #bfdbfe;
+      border: 1px solid #9acfda;
 }
 
 .view-pill-badge .material-icons-outlined {
@@ -127,8 +127,15 @@
 }
 
 @keyframes badge-pop {
-      from { opacity: 0; transform: scale(0.9); }
-      to   { opacity: 1; transform: scale(1); }
+      from {
+            opacity: 0;
+            transform: scale(0.9);
+      }
+
+      to {
+            opacity: 1;
+            transform: scale(1);
+      }
 }
 
 .page-subtitle {
@@ -173,13 +180,13 @@
 }
 
 .btn-view-mode:hover {
-      color: var(--pos-primary, #1e3a8a);
+      color: #1e748a;
       background-color: rgba(255, 255, 255, 0.6);
 }
 
 .btn-view-mode.active {
       background-color: #ffffff;
-      color: var(--pos-primary, #1e3a8a);
+      color: #1e748a;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
@@ -267,8 +274,8 @@
 .search-input:focus {
       outline: none;
       background-color: #ffffff;
-      border-color: var(--pos-primary, #1e3a8a);
-      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+      border-color: #1e748a;
+      box-shadow: 0 0 0 3px rgba(30, 116, 138, 0.12);
 }
 
 .search-icon-static {
@@ -346,20 +353,20 @@
 }
 
 .filter-select:hover {
-      border-color: #93c5fd;
-      color: var(--pos-primary, #1e3a8a);
+      border-color: #9acfda;
+      color: #1e748a;
 }
 
 .filter-select:focus {
       outline: none;
-      border-color: var(--pos-primary, #1e3a8a);
-      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+      border-color: #1e748a;
+      box-shadow: 0 0 0 3px rgba(30, 116, 138, 0.12);
 }
 
 .filter-select-wrapper.has-value .filter-select {
-      border-color: rgba(30, 58, 138, 0.4);
-      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-      color: var(--pos-primary, #1e3a8a);
+      border-color: rgba(30, 116, 138, 0.45);
+      background: linear-gradient(135deg, #edf8fa 0%, #cce9ef 100%);
+      color: #1e748a;
 }
 
 /* Tree Control Buttons (Expand All / Collapse All) */
@@ -389,9 +396,9 @@
 }
 
 .btn-tree-ctrl:hover {
-      background-color: #f1f5f9;
-      border-color: #cbd5e1;
-      color: var(--pos-primary, #1e3a8a);
+      background-color: #eaf6f8;
+      border-color: #9acfda;
+      color: #1e748a;
       transform: translateY(-1px);
 }
 
@@ -450,20 +457,34 @@
 }
 
 .stat-pill.highlight {
-      background: #eff6ff;
-      border-color: #dbeafe;
-      color: var(--pos-primary, #1e3a8a);
+      background: #edf8fa;
+      border-color: #cce9ef;
+      color: #1e748a;
 }
 
 .stat-pill-icon {
       font-size: 0.9rem;
 }
 
-.cat-color { color: #1e748a; }
-.brand-color { color: #1e748a; }
-.group-color { color: #247a8c; }
-.prod-color { color: #059669; }
-.stock-color { color: #d97706; }
+.cat-color {
+      color: #1e748a;
+}
+
+.brand-color {
+      color: #1e748a;
+}
+
+.group-color {
+      color: #247a8c;
+}
+
+.prod-color {
+      color: #059669;
+}
+
+.stock-color {
+      color: #d97706;
+}
 
 .stat-pill-val {
       font-weight: 700;
@@ -546,7 +567,8 @@
          behind it (a gradient cannot be interpolated). */
       background-color: #1e748a;
       background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
-      color: #ffffff;
+      /* Soft teal-tinted off-white: easier on the eye than pure #ffffff */
+      color: #d8f3f8;
       cursor: pointer;
       user-select: none;
       border-bottom: 1px solid transparent;
@@ -613,8 +635,8 @@
 }
 
 .category-badge {
-      background-color: rgba(255, 255, 255, 0.18);
-      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #c8edf4;
 }
 
 .node-info {
@@ -633,42 +655,53 @@
 .node-title {
       font-weight: 700;
       color: var(--pos-text-primary, #0f172a);
+      letter-spacing: -0.2px;
 }
 
 .category-title {
-      font-size: 1.02rem;
+      font-size: 1.3rem;
+      letter-spacing: -0.3px;
 }
 
-/* Category row uses the solid primary surface, so its text / pills invert. */
+.brand-title {
+      font-size: 0.97rem;
+}
+
+.group-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+}
+
+/* Category row uses the solid teal surface, so its text / pills use a soft off-white. */
 .category-row .node-title {
-      color: #ffffff;
+      color: #e8f6f9;
 }
 
 .category-row .count-pill {
-      background: rgba(255, 255, 255, 0.14);
-      color: #ffffff;
+      background: rgba(255, 255, 255, 0.12);
+      color: #ceeaf1;
       transition: background-color 0.2s ease;
 }
 
 .category-row .count-pill .pill-icon {
-      color: rgba(255, 255, 255, 0.75);
+      color: rgba(200, 237, 244, 0.65);
 }
 
 .category-row .count-pill.primary-pill {
-      background: rgba(255, 255, 255, 0.22);
-      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.25);
 }
 
 .category-row .count-pill.primary-pill .pill-icon {
-      color: #ffffff;
+      color: #ceeaf1;
 }
 
 .category-row:hover .count-pill {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.17);
 }
 
 .category-row:hover .count-pill.primary-pill {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.26);
 }
 
 .code-tag {
@@ -686,15 +719,44 @@
 }
 
 .level-indicator {
-      font-size: 0.68rem;
-      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      flex-shrink: 0;
 }
 
-/* Category header is a teal surface, so its level label inverts. */
-.level-cat { color: rgba(255, 255, 255, 0.78); }
-.level-brand { color: #1e748a; }
-.level-group { color: #247a8c; }
-.level-direct-group { color: #059669; }
+/* Category header is a teal surface: pill uses a luminous teal-tinted off-white */
+.level-cat {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #c8edf4;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+/* Brand level: teal-100 pill on the teal-100 brand row */
+.level-brand {
+      background-color: rgba(30, 116, 138, 0.12);
+      color: #0d4f5e;
+      border: 1px solid rgba(30, 116, 138, 0.2);
+}
+
+/* Group level: lighter teal pill on the teal-50 group row */
+.level-group {
+      background-color: rgba(30, 116, 138, 0.08);
+      color: #1e748a;
+      border: 1px solid rgba(30, 116, 138, 0.15);
+}
+
+/* Direct group: green accent pill */
+.level-direct-group {
+      background-color: rgba(5, 150, 105, 0.1);
+      color: #059669;
+      border: 1px solid rgba(5, 150, 105, 0.18);
+}
 
 .row-trailing {
       display: flex;
@@ -801,8 +863,8 @@
       justify-content: space-between;
       padding: 10px 14px;
       /* Fill + fixed sheen split so the hover tint fades smoothly. */
-      background-color: #d4eef3;
-      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 100%);
+      background-color: #93cbd7;
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.233) 0%, rgba(255, 255, 255, 0) 100%);
       cursor: pointer;
       user-select: none;
       transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -829,7 +891,7 @@
 }
 
 .brand-title {
-      font-size: 0.94rem;
+      font-size: 0.97rem;
 }
 
 .brand-code-tag {
@@ -903,7 +965,8 @@
 }
 
 .group-title {
-      font-size: 0.88rem;
+      font-size: 0.92rem;
+      font-weight: 600;
 }
 
 .group-code-tag {
@@ -987,12 +1050,30 @@
 }
 
 /* Columns widths */
-.col-tree-prod    { width: 30%; }
-.col-tree-stock   { width: 14%; }
-.col-tree-buying  { width: 13%; }
-.col-tree-selling { width: 13%; }
-.col-tree-profit  { width: 18%; }
-.col-tree-actions { width: 12%; text-align: center; }
+.col-tree-prod {
+      width: 30%;
+}
+
+.col-tree-stock {
+      width: 14%;
+}
+
+.col-tree-buying {
+      width: 13%;
+}
+
+.col-tree-selling {
+      width: 13%;
+}
+
+.col-tree-profit {
+      width: 18%;
+}
+
+.col-tree-actions {
+      width: 12%;
+      text-align: center;
+}
 
 /* Product cell styling */
 .product-cell-content {
@@ -1417,6 +1498,7 @@
       .toolbar-content {
             gap: 8px;
       }
+
       .tree-controls-group {
             margin-right: 0;
       }
@@ -1428,9 +1510,11 @@
             align-items: stretch;
             gap: 12px;
       }
+
       .search-bar-wrapper {
             max-width: 100%;
       }
+
       .category-children-container,
       .brand-children-container,
       .group-children-container {
@@ -1462,14 +1546,19 @@
       width: 48px;
       height: 48px;
       border: 4px solid #f1f5f9;
-      border-top: 4px solid var(--pos-primary, #1e3a8a);
+      border-top: 4px solid #1e748a;
       border-radius: 50%;
       animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+            transform: rotate(0deg);
+      }
+
+      100% {
+            transform: rotate(360deg);
+      }
 }
 
 .tree-loading-state p {
@@ -1526,6 +1615,7 @@
       background-color: #dc2626;
       transform: translateY(-1px);
 }
+
 /* ============================= */
 /* EDIT MODE: HEADER TOGGLE      */
 /* ============================= */
@@ -1538,8 +1628,8 @@
       padding: 0 18px;
       height: 38px;
       background-color: #ffffff;
-      color: var(--pos-primary, #1e3a8a);
-      border: 1px solid var(--pos-primary, #1e3a8a);
+      color: #1e748a;
+      border: 1px solid #1e748a;
       border-radius: 9px;
       font-size: 0.85rem;
       font-weight: 600;
@@ -1550,9 +1640,9 @@
 }
 
 .btn-edit-mode:hover {
-      background-color: #eff6ff;
+      background-color: #eaf6f8;
       transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(30, 58, 138, 0.15);
+      box-shadow: 0 4px 10px rgba(30, 116, 138, 0.15);
 }
 
 /* Active (done-editing) state — outlined rose/red, same shape as default */
@@ -1627,7 +1717,7 @@
       align-items: center;
       gap: 5px;
       padding: 4px 12px;
-      background: var(--pos-primary, #1e3a8a);
+      background: #1e748a;
       color: #ffffff;
       border-radius: 20px;
       font-size: 0.74rem;
@@ -1711,7 +1801,7 @@
       height: 16px;
       margin: 0;
       cursor: pointer;
-      accent-color: var(--pos-primary, #1e3a8a);
+      accent-color: #1e748a;
 }
 
 .leaf-products-table tbody tr.row-selected {
@@ -1822,8 +1912,15 @@
 }
 
 @keyframes node-modal-in {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+            opacity: 0;
+            transform: translateY(12px);
+      }
+
+      to {
+            opacity: 1;
+            transform: translateY(0);
+      }
 }
 
 .node-modal-header {
@@ -1841,8 +1938,8 @@
       width: 38px;
       height: 38px;
       border-radius: 10px;
-      background-color: #eff6ff;
-      color: var(--pos-primary, #1e3a8a);
+      background-color: #d4eef3;
+      color: #1e748a;
       flex-shrink: 0;
 }
 
@@ -1886,8 +1983,8 @@
 }
 
 .node-modal-input:focus {
-      border-color: var(--pos-primary, #1e3a8a);
-      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+      border-color: #1e748a;
+      box-shadow: 0 0 0 3px rgba(30, 116, 138, 0.12);
 }
 
 .node-modal-hint {
@@ -1959,13 +2056,13 @@
 }
 
 .btn-modal-save {
-      background-color: var(--pos-primary, #1e3a8a);
+      background-color: #1e748a;
       color: #ffffff;
 }
 
 .btn-modal-save:hover:not(:disabled) {
-      background-color: #2563eb;
-      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.22);
+      background-color: #17637a;
+      box-shadow: 0 4px 12px rgba(30, 116, 138, 0.25);
 }
 
 .btn-modal-save:disabled,
@@ -2013,8 +2110,8 @@
 }
 
 .node-modal-select:focus {
-      border-color: var(--pos-primary, #1e3a8a);
-      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+      border-color: #1e748a;
+      box-shadow: 0 0 0 3px rgba(30, 116, 138, 0.12);
 }
 
 .node-modal-select option {
@@ -2049,8 +2146,15 @@
 }
 
 @keyframes bulk-bar-in {
-      from { opacity: 0; transform: translate(-50%, 14px); }
-      to   { opacity: 1; transform: translate(-50%, 0); }
+      from {
+            opacity: 0;
+            transform: translate(-50%, 14px);
+      }
+
+      to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+      }
 }
 
 .bulk-bar-info {
@@ -2310,4 +2414,3 @@
       color: #64748b;
       padding-inline-start: 25px;
 }
-
