@@ -4,6 +4,7 @@ import type { ProductType } from '../../../features/pos/products/models/product.
 export interface CatalogProduct extends Product {
   status?: string;
   categoryId?: number | null;
+  brandId?: number | null;
   manufacturerId?: number | null;
   productGroupId?: number | null;
   type?: ProductType | string;

@@ -63,6 +63,9 @@ export class ProductStateService {
             const selectedBrs = this.selectedBrands().map(String);
             const selectedGrps = this.selectedProductGroups().map(String);
 
+            const groupBrandMap = this.groupToBrandMap();
+            const groupCatMap = this.groupToCategoryMap();
+
             const bMin = this.buyingPriceMin();
             const bMax = this.buyingPriceMax();
             const sMin = this.sellingPriceMin();
@@ -90,14 +93,20 @@ export class ProductStateService {
 
                   // Category filter
                   if (selectedCats.length > 0) {
-                        if (p.categoryId == null || !selectedCats.includes(String(p.categoryId))) {
+                        const directCatId = p.categoryId != null ? String(p.categoryId) : null;
+                        const groupCatId = p.productGroupId != null ? groupCatMap.get(String(p.productGroupId)) : null;
+                        const productCatId = directCatId || groupCatId;
+                        if (!productCatId || !selectedCats.includes(productCatId)) {
                               return false;
                         }
                   }
 
-                  // Brand / Manufacturer filter
+                  // Brand filter (resolved via product's brandId or its ProductGroup's brand in the hierarchy skeleton)
                   if (selectedBrs.length > 0) {
-                        if (p.manufacturerId == null || !selectedBrs.includes(String(p.manufacturerId))) {
+                        const directBrandId = p.brandId != null ? String(p.brandId) : null;
+                        const groupBrandId = p.productGroupId != null ? groupBrandMap.get(String(p.productGroupId)) : null;
+                        const productBrandId = directBrandId || groupBrandId;
+                        if (!productBrandId || !selectedBrs.includes(productBrandId)) {
                               return false;
                         }
                   }
@@ -242,6 +251,37 @@ export class ProductStateService {
             return Array.from(groupsMap.values());
       });
 
+      // Lookup map from ProductGroup ID (as string) to Brand ID (as string)
+      public readonly groupToBrandMap = computed<Map<string, string>>(() => {
+            const map = new Map<string, string>();
+            for (const cat of this.skeletonSignal()) {
+                  for (const brand of cat.brands || []) {
+                        const brandIdStr = String(brand.id);
+                        for (const group of brand.groups || []) {
+                              map.set(String(group.id), brandIdStr);
+                        }
+                  }
+            }
+            return map;
+      });
+
+      // Lookup map from ProductGroup ID (as string) to Category ID (as string)
+      public readonly groupToCategoryMap = computed<Map<string, string>>(() => {
+            const map = new Map<string, string>();
+            for (const cat of this.skeletonSignal()) {
+                  const catIdStr = String(cat.id);
+                  for (const group of cat.directGroups || []) {
+                        map.set(String(group.id), catIdStr);
+                  }
+                  for (const brand of cat.brands || []) {
+                        for (const group of brand.groups || []) {
+                              map.set(String(group.id), catIdStr);
+                        }
+                  }
+            }
+            return map;
+      });
+
       // ==========================================
       // Loaders
       // ==========================================
@@ -290,18 +330,24 @@ export class ProductStateService {
             this.selectedCategories.set(ids);
             this.currentPage.set(1);
 
-            // Cascade: filter out brand selections that are no longer available
-            const validBrandIds = this.availableBrands().map(b => String(b.id));
-            const updatedBrands = this.selectedBrands().filter(id => validBrandIds.includes(String(id)));
-            if (updatedBrands.length !== this.selectedBrands().length) {
-                  this.selectedBrands.set(updatedBrands);
-            }
+            // Cascade: if user clears Categories, reset dependent Brand and Group filters
+            if (ids.length === 0) {
+                  this.selectedBrands.set([]);
+                  this.selectedProductGroups.set([]);
+            } else {
+                  // Cascade: filter out brand selections that are no longer available in the selected categories
+                  const validBrandIds = this.availableBrands().map(b => String(b.id));
+                  const updatedBrands = this.selectedBrands().filter(id => validBrandIds.includes(String(id)));
+                  if (updatedBrands.length !== this.selectedBrands().length) {
+                        this.selectedBrands.set(updatedBrands);
+                  }
 
-            // Cascade: filter out group selections that are no longer available
-            const validGroupIds = this.availableGroups().map(g => String(g.id));
-            const updatedGroups = this.selectedProductGroups().filter(id => validGroupIds.includes(String(id)));
-            if (updatedGroups.length !== this.selectedProductGroups().length) {
-                  this.selectedProductGroups.set(updatedGroups);
+                  // Cascade: filter out group selections that are no longer available
+                  const validGroupIds = this.availableGroups().map(g => String(g.id));
+                  const updatedGroups = this.selectedProductGroups().filter(id => validGroupIds.includes(String(id)));
+                  if (updatedGroups.length !== this.selectedProductGroups().length) {
+                        this.selectedProductGroups.set(updatedGroups);
+                  }
             }
       }
 

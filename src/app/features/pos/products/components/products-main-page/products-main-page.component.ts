@@ -208,7 +208,8 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
             const selected = this.selectedBrands();
             if (selected.length === 0) return 'الشركات (الكل)';
             if (selected.length === 1) {
-                  const brand = this.availableBrands().find(b => String(b.id) === String(selected[0]));
+                  const brand = this.availableBrands().find(b => String(b.id) === String(selected[0]))
+                        || this.state.allBrands().find(b => String(b.id) === String(selected[0]));
                   return brand ? brand.name : 'شركة واحدة محددة';
             }
             return `الشركات (${selected.length})`;
