@@ -276,8 +276,10 @@ export class CashierPageComponent implements OnInit {
       /** Units that will be added to the child product */
       get refillChildUnitsAdded(): number {
             const opt = this.selectedRefillOption;
-            if (!opt || opt.parentQuantity === 0) return 0;
-            return Math.floor(this.refillParentUnits * (opt.childQuantity / opt.parentQuantity));
+            if (!opt || opt.parentQuantity <= 0) return 0;
+            const units = Number(this.refillParentUnits);
+            if (!Number.isFinite(units) || units <= 0) return 0;
+            return Math.floor(units * (opt.childQuantity / opt.parentQuantity));
       }
 
       /**
@@ -302,13 +304,41 @@ export class CashierPageComponent implements OnInit {
       /** Remaining parent stock after the transfer */
       get refillParentRemainingAfter(): number {
             if (!this.refillSelectedParentId) return 0;
-            return this.getParentStock(this.refillSelectedParentId) - this.refillParentUnits;
+            const units = Number(this.refillParentUnits);
+            const validUnits = Number.isFinite(units) && units > 0 ? units : 0;
+            return this.getParentStock(this.refillSelectedParentId) - validUnits;
       }
 
       /** Max parent units the cashier can transfer (limited by available live parent stock) */
       get refillParentMaxUnits(): number {
             if (!this.refillSelectedParentId) return 0;
             return this.getParentStock(this.refillSelectedParentId);
+      }
+
+      decrementRefillParentUnits(): void {
+            const current = Math.floor(Number(this.refillParentUnits)) || 1;
+            this.refillParentUnits = Math.max(1, current - 1);
+      }
+
+      incrementRefillParentUnits(): void {
+            const current = Math.floor(Number(this.refillParentUnits)) || 0;
+            const max = this.refillParentMaxUnits;
+            if (max > 0) {
+                  this.refillParentUnits = Math.min(max, Math.max(1, current + 1));
+            }
+      }
+
+      onRefillParentUnitsChange(value: any): void {
+            this.refillParentUnits = value;
+      }
+
+      normalizeRefillParentUnits(): void {
+            const parsed = Math.floor(Number(this.refillParentUnits));
+            if (!Number.isFinite(parsed) || parsed < 1) {
+                  this.refillParentUnits = 1;
+            } else {
+                  this.refillParentUnits = parsed;
+            }
       }
 
       onRefillParentSelect(parentId: number) {
@@ -383,8 +413,9 @@ export class CashierPageComponent implements OnInit {
       }
 
       async confirmRefill() {
+            this.normalizeRefillParentUnits();
             const childQty = this.refillChildUnitsAdded;
-            if (!this.refillProduct || !this.refillSelectedParentId || childQty < 1) return;
+            if (!this.refillProduct || !this.refillSelectedParentId || childQty < 1 || this.refillParentRemainingAfter < 0 || this.refillParentMaxUnits <= 0) return;
             
             this.isRefillLoading.set(true);
             try {
