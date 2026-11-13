@@ -2236,7 +2236,7 @@
 }
 
 .refill-section--transfer {
-  padding: 12px;
+  padding: 14px 16px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
@@ -2245,22 +2245,23 @@
 
 .refill-transfer-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 12px;
 }
 
-.refill-transfer-label {
-  font-size: 0.86rem;
-  color: #0f172a;
-  font-weight: 700;
-}
-
-.refill-transfer-hint {
+.refill-field-caption {
   font-size: 0.76rem;
+  font-weight: 600;
   color: #64748b;
-  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+.refill-parent-name {
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
 }
 
 .refill-transfer-stepper {
@@ -2271,14 +2272,14 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 999px;
-  padding: 6px;
+  padding: 6px 8px;
   width: fit-content;
   margin: 0 auto;
 }
 
 .refill-stepper-btn {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border: 1px solid #cbd5e1;
   border-radius: 999px;
   background: #ffffff;
@@ -2300,13 +2301,13 @@
 }
 
 .refill-stepper-input {
-  width: 68px;
-  min-width: 68px;
-  padding: 7px 8px;
+  width: 76px;
+  min-width: 76px;
+  padding: 7px 10px;
   border: 1px solid #cbd5e1;
   border-radius: 999px;
   text-align: center;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: #0f172a;
   background: #ffffff;
@@ -2329,53 +2330,49 @@
 
 .refill-preview-simple {
   margin: 0;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 100%);
-  border: 1px solid #dbeafe;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
+  gap: 14px;
 }
 
-.refill-preview-detail {
+.refill-preview-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
 }
 
-.refill-preview-simple__label {
-  font-size: 0.74rem;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.refill-preview-simple__value {
-  font-size: 0.95rem;
+.refill-received-item-name {
+  font-size: 1.12rem;
   font-weight: 800;
-  color: var(--pos-primary);
-  text-align: left;
+  color: #0f172a;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
-.refill-ratio-tag {
+.refill-received-qty-badge {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #475569;
-  background: #ffffff;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
 }
 
-.refill-ratio-tag .material-icons-outlined {
-  font-size: 0.95rem;
-  color: #64748b;
+.refill-received-qty {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: var(--pos-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .refill-section--conversion {

@@ -102,9 +102,8 @@
                               <!-- Withdraw (Parent Quantity) -->
                               <section class="refill-section refill-section--transfer">
                                     <div class="refill-transfer-header">
-                                          <div class="refill-transfer-label">
-                                                السحب من: <strong>{{ selectedRefillOption?.parentProductName }}</strong>
-                                          </div>
+                                          <span class="refill-field-caption">السحب من</span>
+                                          <strong class="refill-parent-name">{{ selectedRefillOption?.parentProductName }}</strong>
                                     </div>
 
                                     <div class="refill-transfer-stepper">
@@ -134,8 +133,13 @@
                               <!-- Get (Child Quantity) -->
                               <section class="refill-section refill-section--preview">
                                     <div class="refill-preview-simple">
-                                          <span class="refill-preview-simple__label">ستستلم</span>
-                                          <strong class="refill-preview-simple__value">+{{ refillChildUnitsAdded }} {{ refillProduct?.name }}</strong>
+                                          <div class="refill-preview-info">
+                                                <span class="refill-field-caption">ستستلم</span>
+                                                <strong class="refill-received-item-name">{{ refillProduct?.name }}</strong>
+                                          </div>
+                                          <div class="refill-received-qty-badge">
+                                                <strong class="refill-received-qty" dir="ltr">+{{ refillChildUnitsAdded }}</strong>
+                                          </div>
                                     </div>
                               </section>
 

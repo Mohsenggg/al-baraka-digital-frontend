@@ -343,15 +343,7 @@ export class CashierPageComponent implements OnInit {
 
       onRefillParentSelect(parentId: number) {
             this.refillSelectedParentId = parentId;
-            const opt = this.selectedRefillOption;
-            if (!opt) {
-                  this.refillParentUnits = 1;
-                  return;
-            }
-            const parentStock = this.getParentStock(parentId);
-            const ratio = opt.parentQuantity > 0 ? (opt.childQuantity / opt.parentQuantity) : 1;
-            const minParentUnits = ratio > 0 ? Math.ceil(this.refillMissingChildQty / ratio) : 1;
-            this.refillParentUnits = parentStock > 0 ? Math.max(1, Math.min(minParentUnits, parentStock)) : 1;
+            this.refillParentUnits = 1;
       }
 
       async onAddItem(event: { product: Product, quantity: number }) {
@@ -389,18 +381,7 @@ export class CashierPageComponent implements OnInit {
 
                         const selectedParent = capableParent ?? preferredParent;
                         this.refillSelectedParentId = selectedParent.parentProductId;
-
-                        const selectedParentStock = this.getParentStock(selectedParent.parentProductId);
-                        const ratio = selectedParent.parentQuantity > 0
-                              ? (selectedParent.childQuantity / selectedParent.parentQuantity)
-                              : 1;
-                        const minParentUnits = ratio > 0
-                              ? Math.ceil(missingChildQty / ratio)
-                              : 1;
-
-                        this.refillParentUnits = selectedParentStock > 0
-                              ? Math.max(1, Math.min(minParentUnits, selectedParentStock))
-                              : 1;
+                        this.refillParentUnits = 1;
 
                         this.showRefillDialog.set(true);
                         return;
