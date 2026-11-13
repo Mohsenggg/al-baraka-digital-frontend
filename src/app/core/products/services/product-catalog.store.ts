@@ -62,7 +62,10 @@ export class ProductCatalogStore {
     this._error.set(null);
 
     return this.http.get<any[]>(`${this.apiUrl}/all-products`).pipe(
-      map(dtoList => dtoList.map(dto => this.mapDtoToCatalogProduct(dto))),
+      map(dtoList => {
+        const mapped = dtoList.map(dto => this.mapDtoToCatalogProduct(dto));
+        return this.syncParentStockInCatalog(mapped);
+      }),
       tap(products => {
         this._products.set(products);
         this._lastLoadedAt.set(Date.now());
@@ -128,20 +131,25 @@ export class ProductCatalogStore {
    * Can accept either a CatalogProduct or a ProductManagePayload (along with an optional ID).
    */
   public addProduct(productOrPayload: CatalogProduct | ProductManagePayload, id?: number): CatalogProduct {
+    const targetId = Number(id ?? (productOrPayload as any).id);
+    const existing = this.findById(targetId);
     const product: CatalogProduct = this.isManagePayload(productOrPayload)
-      ? this.mapPayloadToCatalogProduct(productOrPayload, id)
+      ? this.mapPayloadToCatalogProduct(productOrPayload, targetId, existing)
       : productOrPayload;
 
     this._products.update(current => {
       const index = current.findIndex(p => p.id === product.id);
+      let next: CatalogProduct[];
       if (index > -1) {
-        const next = [...current];
+        next = [...current];
         next[index] = { ...next[index], ...product };
-        return next;
+      } else {
+        next = [...current, product];
       }
-      return [...current, product];
+      return this.syncParentStockInCatalog(next);
     });
 
+    
     return product;
   }
 
@@ -156,9 +164,10 @@ export class ProductCatalogStore {
    * Patch a single product when edited in Product Management form.
    */
   public patchProduct(updated: Partial<CatalogProduct> & { id: number }): void {
-    this._products.update(current =>
-      current.map(p => p.id === updated.id ? { ...p, ...updated } : p)
-    );
+    this._products.update(current => {
+      const mapped = current.map(p => p.id === updated.id ? { ...p, ...updated } : p);
+      return this.syncParentStockInCatalog(mapped);
+    });
   }
 
   // =========================================================================
@@ -177,16 +186,17 @@ export class ProductCatalogStore {
       }
     });
 
-    this._products.update(current =>
-      current.map(p => {
+    this._products.update(current => {
+      const mapped = current.map(p => {
         const key = p.barcode ? p.barcode.trim().toLowerCase() : '';
         if (updateMap.has(key)) {
           const newStock = updateMap.get(key)!;
           return { ...p, stockQuantity: newStock, stock: newStock };
         }
         return p;
-      })
-    );
+      });
+      return this.syncParentStockInCatalog(mapped);
+    });
   }
 
   /**
@@ -202,8 +212,8 @@ export class ProductCatalogStore {
       }
     });
 
-    this._products.update(current =>
-      current.map(p => {
+    this._products.update(current => {
+      const mapped = current.map(p => {
         const key = p.barcode ? p.barcode.trim().toLowerCase() : '';
         if (restoreMap.has(key)) {
           const addedQty = restoreMap.get(key)!;
@@ -211,8 +221,9 @@ export class ProductCatalogStore {
           return { ...p, stockQuantity: newStock, stock: newStock };
         }
         return p;
-      })
-    );
+      });
+      return this.syncParentStockInCatalog(mapped);
+    });
   }
 
   /**
@@ -283,9 +294,41 @@ export class ProductCatalogStore {
   // =========================================================================
 
   /**
+   * Synchronizes parentStock in all refillOptions across the catalog
+   * based on the actual stockQuantity of the parent products in the store.
+   */
+  public syncParentStockInCatalog(products: CatalogProduct[]): CatalogProduct[] {
+    const stockById = new Map<number, number>();
+    for (const p of products) {
+      stockById.set(p.id, p.stockQuantity ?? p.stock ?? 0);
+    }
+
+    let hasChanges = false;
+    const updated = products.map(p => {
+      if (!p.refillOptions || p.refillOptions.length === 0) return p;
+      let optionsChanged = false;
+      const newOptions = p.refillOptions.map(opt => {
+        const liveStock = stockById.get(opt.parentProductId);
+        if (liveStock !== undefined && opt.parentStock !== liveStock) {
+          optionsChanged = true;
+          return { ...opt, parentStock: liveStock };
+        }
+        return opt;
+      });
+      if (optionsChanged) {
+        hasChanges = true;
+        return { ...p, refillOptions: newOptions };
+      }
+      return p;
+    });
+
+    return hasChanges ? updated : products;
+  }
+
+  /**
    * Converts a ProductManagePayload into a standard CatalogProduct.
    */
-  public mapPayloadToCatalogProduct(payload: ProductManagePayload, id?: number): CatalogProduct {
+  public mapPayloadToCatalogProduct(payload: ProductManagePayload, id?: number, existing?: CatalogProduct): CatalogProduct {
     const targetId = Number(id ?? payload.id);
     const defaultBarcode = payload.barcodes?.find(b => b.isDefault) ?? payload.barcodes?.[0];
     const totalStock = payload.barcodes?.reduce((sum, b) => sum + (Number(b.stock) || 0), 0) ?? 0;
@@ -293,6 +336,8 @@ export class ProductCatalogStore {
     const buyingPrice = Number(defaultBarcode?.buyingPrice) || 0;
     const status = payload.status ? String(payload.status).toLowerCase() : 'active';
     const isActive = status === 'active';
+
+    const existingProduct = existing ?? this.findById(targetId);
 
     return {
       id: targetId,
@@ -309,14 +354,20 @@ export class ProductCatalogStore {
       productGroupId: payload.productGroupId != null ? Number(payload.productGroupId) : null,
       status,
       isActive,
-      refillOptions: payload.conversions?.map(c => ({
-        parentProductId: Number(c.parentProductId),
-        parentProductName: c.parentProductName || '',
-        parentQuantity: Number(c.parentQuantity) || 1,
-        childQuantity: Number(c.childQuantity) || 1,
-        parentStock: 0,
-        isDefault: Boolean(c.isDefault)
-      })) || [],
+      refillOptions: payload.conversions?.map(c => {
+        const parentId = Number(c.parentProductId);
+        const parentInStore = this.findById(parentId);
+        const existingParentStock = existingProduct?.refillOptions?.find(o => o.parentProductId === parentId)?.parentStock;
+        const parentStock = parentInStore ? (parentInStore.stockQuantity ?? parentInStore.stock ?? 0) : (existingParentStock ?? 0);
+        return {
+          parentProductId: parentId,
+          parentProductName: c.parentProductName || parentInStore?.name || '',
+          parentQuantity: Number(c.parentQuantity) || 1,
+          childQuantity: Number(c.childQuantity) || 1,
+          parentStock,
+          isDefault: Boolean(c.isDefault)
+        };
+      }) || [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

@@ -182,8 +182,12 @@ export interface ProductManagePayload {
       propagateGroupSellingPrice?: boolean;
       hasConversion: boolean;
       conversions: ProductConversionDto[];
-      hasComposition: boolean;
-      composition: ProductCompositionDto[];
+      /** Maps to backend hasMaterials / materials */
+      hasMaterials?: boolean;
+      materials?: ProductCompositionDto[];
+      /** Legacy aliases kept for form compatibility */
+      hasComposition?: boolean;
+      composition?: ProductCompositionDto[];
 }
 
 export interface GroupPriceSummary {

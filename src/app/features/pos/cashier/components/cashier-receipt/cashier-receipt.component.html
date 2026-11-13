@@ -119,7 +119,6 @@
             <div class="table-container pos-card">
                   <div class="table-header">
                         <div class="th-cell num-col">#</div>
-                        <div class="th-cell code-col">كود الصنف</div>
                         <div class="th-cell name-col">اسم الصنف</div>
                         <div class="th-cell price-col">السعر</div>
                         <div class="th-cell qty-col">الكمية</div>
@@ -131,8 +130,10 @@
                   <div class="table-body">
                         <div class="table-row" *ngFor="let item of items; let i = index; trackBy: trackByProductId"
                               [class.stock-error-row]="!!item.stockError">
-                              <div class="td-cell num-col">{{ i + 1 }}</div>
-                              <div class="td-cell code-col">{{ item.product.barcode || '-' }}</div>
+                              <button type="button" class="td-cell num-col copy-barcode"
+                                    [attr.title]="item.product.barcode || null"
+                                    aria-label="نسخ باركود الصنف"
+                                    (click)="copyProductBarcode(item.product.barcode)">{{ i + 1 }}</button>
                               <div class="td-cell name-col">
                                     <div class="name-cell-content">
                                           <span>{{ item.productName }}</span>

@@ -231,8 +231,8 @@ export class ProductManageStateService {
                   supplierIds: formValue.supplierIds,
                   hasConversion,
                   conversions: hasConversion ? formValue.conversions : [],
-                  hasComposition: formValue.hasComposition,
-                  composition: formValue.hasComposition ? formValue.composition : []
+                  hasMaterials: formValue.hasComposition,
+                  materials: formValue.hasComposition ? formValue.composition : []
             };
       }
 
@@ -758,7 +758,7 @@ export class ProductManageStateService {
                   manufacturerId: detail.manufacturerId,
                   supplierIds: detail.supplierIds,
                   hasConversion: detail.hasConversion || !!detail.conversions?.length,
-                  hasComposition: detail.hasComposition
+                  hasComposition: detail.hasMaterials || detail.hasComposition || false
             });
 
             if (detail.categoryId) {
@@ -807,8 +807,10 @@ export class ProductManageStateService {
             }
 
             this.compositionFormArray.clear();
-            if (detail.composition && detail.composition.length) {
-                  detail.composition.forEach(comp => {
+            // Support both `materials` (from backend) and legacy `composition` field
+            const compositionItems = detail.materials || detail.composition || [];
+            if (compositionItems.length) {
+                  compositionItems.forEach(comp => {
                         this.compositionFormArray.push(this.fb.group({
                               materialId: [comp.materialId, Validators.required],
                               quantity: [comp.quantity, [Validators.required, Validators.min(0.01)]],

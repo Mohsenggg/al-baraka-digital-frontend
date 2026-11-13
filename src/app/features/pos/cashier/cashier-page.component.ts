@@ -15,6 +15,7 @@ import { SidebarComponent } from '../../../shared/components/sidebar/sidebar.com
 import { CashierStateService } from './services/cashier-state.service';
 import { CreateReceiptInput, Product, CartItem, PaymentMethod } from '../core/models/pos.models';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { ProductCatalogStore } from '../../../core/products/services/product-catalog.store';
 
 @Component({
       selector: 'app-cashier-page',
@@ -34,6 +35,7 @@ import { NotificationService } from '../../../shared/services/notification.servi
 })
 export class CashierPageComponent implements OnInit {
       private state = inject(CashierStateService);
+      private catalogStore = inject(ProductCatalogStore);
       private notifications = inject(NotificationService);
 
       sidebarVisible = signal(false);
@@ -258,6 +260,19 @@ export class CashierPageComponent implements OnInit {
             return this.refillProduct?.refillOptions?.find(o => o.parentProductId === this.refillSelectedParentId) ?? null;
       }
 
+      /**
+       * Returns live stock of the parent product directly from catalogStore if available,
+       * or falls back to the static parentStock on the refillOption.
+       */
+      getParentStock(parentProductId: number): number {
+            const parent = this.catalogStore.findById(parentProductId) ?? this.products().find(p => p.id === parentProductId);
+            if (parent && parent.stockQuantity != null) {
+                  return parent.stockQuantity;
+            }
+            const opt = this.refillProduct?.refillOptions?.find(o => o.parentProductId === parentProductId);
+            return opt?.parentStock ?? 0;
+      }
+
       /** Units that will be added to the child product */
       get refillChildUnitsAdded(): number {
             const opt = this.selectedRefillOption;
@@ -266,83 +281,105 @@ export class CashierPageComponent implements OnInit {
       }
 
       /**
-       * How many child units are still missing to fulfil the original sale quantity.
+       * Total quantity needed across any existing cart row + the new quantity being added.
+       */
+      get refillTotalNeededQuantity(): number {
+            if (!this.refillProduct) return 0;
+            const currentItem = this.cartItems().find(i => i.productId === this.refillProduct!.id);
+            return (currentItem?.quantity || 0) + this.refillOriginalSaleQuantity;
+      }
+
+      /**
+       * How many child units are still missing to fulfil the total sale quantity.
        * e.g. stock=9, requested=20 → shortage = 11
        */
       get refillMissingChildQty(): number {
             if (!this.refillProduct) return 0;
             const currentStock = this.refillProduct.stockQuantity ?? 0;
-            const totalNeeded = (this.cartItems().find(i => i.productId === this.refillProduct!.id)?.quantity ?? 0)
-                  + this.refillOriginalSaleQuantity;
-            return Math.max(0, totalNeeded - currentStock);
+            return Math.max(0, this.refillTotalNeededQuantity - currentStock);
       }
 
       /** Remaining parent stock after the transfer */
       get refillParentRemainingAfter(): number {
-            const opt = this.selectedRefillOption;
-            if (!opt) return 0;
-            return (opt.parentStock ?? 0) - this.refillParentUnits;
+            if (!this.refillSelectedParentId) return 0;
+            return this.getParentStock(this.refillSelectedParentId) - this.refillParentUnits;
       }
 
-      /** Max parent units the cashier can transfer (limited by available parent stock) */
+      /** Max parent units the cashier can transfer (limited by available live parent stock) */
       get refillParentMaxUnits(): number {
-            const opt = this.selectedRefillOption;
-            return opt ? (opt.parentStock ?? 0) : 0;
+            if (!this.refillSelectedParentId) return 0;
+            return this.getParentStock(this.refillSelectedParentId);
       }
 
       onRefillParentSelect(parentId: number) {
             this.refillSelectedParentId = parentId;
-            // Reset to 1 when switching parent
-            this.refillParentUnits = 1;
+            const opt = this.selectedRefillOption;
+            if (!opt) {
+                  this.refillParentUnits = 1;
+                  return;
+            }
+            const parentStock = this.getParentStock(parentId);
+            const ratio = opt.parentQuantity > 0 ? (opt.childQuantity / opt.parentQuantity) : 1;
+            const minParentUnits = ratio > 0 ? Math.ceil(this.refillMissingChildQty / ratio) : 1;
+            this.refillParentUnits = parentStock > 0 ? Math.max(1, Math.min(minParentUnits, parentStock)) : 1;
       }
 
       async onAddItem(event: { product: Product, quantity: number }) {
-            const currentItem = this.cartItems().find(i => i.productId === event.product.id);
-            const totalRequested = (currentItem?.quantity || 0) + event.quantity;
+            // Always obtain the canonical product from catalogStore to ensure latest stock & refillOptions
+            const canonicalProduct = this.catalogStore.findById(event.product.id)
+                  ?? (event.product.barcode ? this.catalogStore.findByBarcode(event.product.barcode) : null)
+                  ?? event.product;
 
-            if (event.product.stockQuantity < totalRequested) {
-                  const options = event.product.refillOptions;
+            const currentItem = this.cartItems().find(i => i.productId === canonicalProduct.id);
+            const totalRequested = (currentItem?.quantity || 0) + event.quantity;
+            const currentStock = canonicalProduct.stockQuantity ?? 0;
+
+            if (currentStock < totalRequested) {
+                  const options = canonicalProduct.refillOptions;
 
                   if (options && options.length > 0) {
                         // How many child units are still missing after current stock
-                        const missingChildQty = totalRequested - event.product.stockQuantity;
+                        const missingChildQty = totalRequested - currentStock;
 
-                        this.refillProduct = event.product;
+                        this.refillProduct = canonicalProduct;
                         this.refillOriginalSaleQuantity = event.quantity;
 
-                        // Choose the default parent (or first option)
+                        // Choose the preferred parent (default or first)
                         const preferredParent = options.find(o => o.isDefault) ?? options[0];
 
-                        // Check if the preferred parent can cover the shortage
-                        // If not, find another parent that can (with the most stock)
+                        // Find a capable parent that has available live stock
                         const capableParent = options
-                              .filter(o => o.parentStock > 0)
-                              .sort((a, b) => b.parentStock - a.parentStock)
-                              .find(o => {
-                                    // max child units this parent can provide
-                                    const maxChild = o.parentStock * (o.childQuantity / o.parentQuantity);
+                              .map(o => ({ opt: o, liveStock: this.getParentStock(o.parentProductId) }))
+                              .filter(item => item.liveStock > 0)
+                              .sort((a, b) => b.liveStock - a.liveStock)
+                              .find(item => {
+                                    const maxChild = item.liveStock * (item.opt.childQuantity / item.opt.parentQuantity);
                                     return maxChild >= missingChildQty;
-                              });
+                              })?.opt;
 
                         const selectedParent = capableParent ?? preferredParent;
                         this.refillSelectedParentId = selectedParent.parentProductId;
 
-                        // Pre-fill stepper with the MINIMUM parent units needed to cover the shortage
-                        const ratio = selectedParent.childQuantity / selectedParent.parentQuantity;
+                        const selectedParentStock = this.getParentStock(selectedParent.parentProductId);
+                        const ratio = selectedParent.parentQuantity > 0
+                              ? (selectedParent.childQuantity / selectedParent.parentQuantity)
+                              : 1;
                         const minParentUnits = ratio > 0
                               ? Math.ceil(missingChildQty / ratio)
                               : 1;
 
-                        this.refillParentUnits = Math.max(1, Math.min(minParentUnits, selectedParent.parentStock));
+                        this.refillParentUnits = selectedParentStock > 0
+                              ? Math.max(1, Math.min(minParentUnits, selectedParentStock))
+                              : 1;
 
                         this.showRefillDialog.set(true);
                         return;
                   } else {
                         // Show insufficient stock message as a toast, and allow it to be added to cart with error state
-                        this.notifications.warning(`الكمية المطلوبة (${totalRequested}) تتجاوز الرصيد المتاح (${event.product.stockQuantity})`);
+                        this.notifications.warning(`الكمية المطلوبة (${totalRequested}) تتجاوز الرصيد المتاح (${currentStock})`);
                   }
             }
-            this.state.addCartItem(event.product, event.quantity);
+            this.state.addCartItem(canonicalProduct, event.quantity);
       }
 
       async confirmRefill() {

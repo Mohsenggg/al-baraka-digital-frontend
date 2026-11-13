@@ -9,6 +9,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 import { ProductSearchPopupComponent } from '../../../../../shared/components/product-search-popup/product-search-popup.component';
 import { ProductSearchService } from '../../../../../shared/services/product-search.service';
+import { NotificationService } from '../../../../../shared/services/notification.service';
 
 @Component({
       selector: 'app-cashier-receipt',
@@ -22,6 +23,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       private fb = inject(FormBuilder);
       private cdr = inject(ChangeDetectorRef);
       private productSearch = inject(ProductSearchService);
+      private notifications = inject(NotificationService);
       private destroy$ = new Subject<void>();
 
       @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
@@ -81,6 +83,20 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       onPaymentInputEnter(event: Event) {
             this.onPaidAmountChange(event);
             this.confirmPayment.emit();
+      }
+
+      async copyProductBarcode(barcode: string | null | undefined): Promise<void> {
+            if (!barcode) {
+                  this.notifications.warning('لا يوجد باركود لهذا الصنف');
+                  return;
+            }
+
+            try {
+                  await navigator.clipboard.writeText(barcode);
+                  this.notifications.success('تم نسخ باركود الصنف');
+            } catch {
+                  this.notifications.error('تعذر نسخ باركود الصنف');
+            }
       }
 
       inputForm!: FormGroup;
