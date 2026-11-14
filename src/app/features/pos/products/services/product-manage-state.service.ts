@@ -120,10 +120,13 @@ export class ProductManageStateService {
             this.saveError.set(null);
       }
 
-      resolveEditMode(id: number | null): void {
+      resolveEditMode(
+            id: number | null,
+            initialHierarchy?: { categoryId?: number | null; brandId?: number | null; productGroupId?: number | null }
+      ): void {
             if (!id || isNaN(id)) {
                   // Only load lookups if creating a new product
-                  this.loadReferenceData();
+                  this.loadReferenceData(initialHierarchy);
                   return;
             }
 
@@ -132,7 +135,9 @@ export class ProductManageStateService {
             this.loadProductForEdit(id);
       }
 
-      private loadReferenceData(): void {
+      private loadReferenceData(
+            initialHierarchy?: { categoryId?: number | null; brandId?: number | null; productGroupId?: number | null }
+      ): void {
             this.isPageLoading.set(true);
             forkJoin({
                   categories: this.api.getCategories().pipe(catchError(() => of([]))),
@@ -145,6 +150,18 @@ export class ProductManageStateService {
                         this.manufacturersSignal.set(data.manufacturers);
                         this.suppliersSignal.set(data.suppliers);
                         this.attributesSignal.set(data.attributes);
+
+                        if (initialHierarchy?.categoryId) {
+                              const catId = Number(initialHierarchy.categoryId);
+                              if (catId > 0) {
+                                    this.productForm.get('categoryId')?.setValue(catId);
+                                    this.loadCategoryChildNodes(
+                                          catId,
+                                          initialHierarchy.productGroupId,
+                                          initialHierarchy.brandId
+                                    );
+                              }
+                        }
                   }),
                   finalize(() => this.isPageLoading.set(false))
             ).subscribe();
@@ -500,7 +517,11 @@ export class ProductManageStateService {
             this.loadCategoryChildNodes(cat.id);
       }
 
-      loadCategoryChildNodes(categoryId: number, targetGroupId?: number | string | null): void {
+      loadCategoryChildNodes(
+            categoryId: number,
+            targetGroupId?: number | string | null,
+            targetBrandId?: number | string | null
+      ): void {
             this.isHierarchyLoading.set(true);
             this.api.getCategoryChildNodes(categoryId).pipe(
                   catchError(() => of({ categoryId, brands: [], directGroups: [] } as CategoryChildNodesDto)),
@@ -512,7 +533,26 @@ export class ProductManageStateService {
 
                   if (brands.length > 0) {
                         this.hasNoBrandsForCategory.set(false);
-                        if (targetGroupId != null) {
+
+                        // 1. If a specific brand was targeted
+                        if (targetBrandId != null && Number(targetBrandId) > 0) {
+                              const targetBrandStr = String(targetBrandId);
+                              const matchedBrand = brands.find(b => String(b.id) === targetBrandStr);
+                              if (matchedBrand) {
+                                    this.selectedBrandId.set(matchedBrand.id);
+                                    this.selectedBrandName.set(matchedBrand.name);
+                                    this.productGroupsSignal.set(matchedBrand.groups || []);
+
+                                    if (targetGroupId != null && Number(targetGroupId) > 0) {
+                                          const targetGroupStr = String(targetGroupId);
+                                          const matchedGroup = (matchedBrand.groups || []).find(g => String(g.id) === targetGroupStr);
+                                          if (matchedGroup) {
+                                                this.selectProductGroup(matchedGroup);
+                                          }
+                                    }
+                              }
+                        } else if (targetGroupId != null && Number(targetGroupId) > 0) {
+                              // 2. If only targetGroupId was targeted, locate which brand holds it
                               const targetIdStr = String(targetGroupId);
                               const matchedBrand = brands.find(b =>
                                     b.groups && b.groups.some(g => String(g.id) === targetIdStr)
@@ -521,11 +561,31 @@ export class ProductManageStateService {
                                     this.selectedBrandId.set(matchedBrand.id);
                                     this.selectedBrandName.set(matchedBrand.name);
                                     this.productGroupsSignal.set(matchedBrand.groups || []);
+
+                                    const matchedGroup = (matchedBrand.groups || []).find(g => String(g.id) === targetIdStr);
+                                    if (matchedGroup) {
+                                          this.selectProductGroup(matchedGroup);
+                                    }
+                              } else {
+                                    const matchedDirectGroup = directGroups.find(g => String(g.id) === targetIdStr);
+                                    if (matchedDirectGroup) {
+                                          this.hasNoBrandsForCategory.set(true);
+                                          this.productGroupsSignal.set(directGroups);
+                                          this.selectProductGroup(matchedDirectGroup);
+                                    }
                               }
                         }
                   } else if (directGroups.length > 0) {
                         this.hasNoBrandsForCategory.set(true);
                         this.productGroupsSignal.set(directGroups);
+
+                        if (targetGroupId != null && Number(targetGroupId) > 0) {
+                              const targetIdStr = String(targetGroupId);
+                              const matchedGroup = directGroups.find(g => String(g.id) === targetIdStr);
+                              if (matchedGroup) {
+                                    this.selectProductGroup(matchedGroup);
+                              }
+                        }
                   } else {
                         this.hasNoBrandsForCategory.set(false);
                         this.productGroupsSignal.set([]);

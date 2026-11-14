@@ -179,7 +179,16 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       private resolveEditMode(): void {
             const idParam = this.route.snapshot.paramMap.get('id');
             if (!idParam) {
-                  this.state.resolveEditMode(null);
+                  const queryParams = this.route.snapshot.queryParamMap;
+                  const categoryId = queryParams.get('categoryId') ? Number(queryParams.get('categoryId')) : null;
+                  const brandId = queryParams.get('brandId') ? Number(queryParams.get('brandId')) : null;
+                  const productGroupId = queryParams.get('productGroupId') ? Number(queryParams.get('productGroupId')) : null;
+
+                  this.state.resolveEditMode(null, {
+                        categoryId: categoryId && categoryId > 0 ? categoryId : null,
+                        brandId: brandId && brandId > 0 ? brandId : null,
+                        productGroupId: productGroupId && productGroupId > 0 ? productGroupId : null
+                  });
                   return;
             }
             const id = Number(idParam);

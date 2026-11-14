@@ -4,13 +4,15 @@ import {
       computed,
       inject,
       OnInit,
+      OnDestroy,
       HostListener,
       ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CatalogProduct } from '../../../../../../core/products/models/catalog-product.model';
 import { SidebarComponent } from '../../../../../../shared/components/sidebar/sidebar.component';
 import { NotificationService } from '../../../../../../shared/services/notification.service';
@@ -54,7 +56,7 @@ import { ProductCatalogStore } from '../../../../../../core/products/services/pr
       styleUrl: './product-tree-view.component.css',
       changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductTreeViewComponent implements OnInit {
+export class ProductTreeViewComponent implements OnInit, OnDestroy {
       private router = inject(Router);
       private productApiService = inject(ProductApiService);
       private catalogStore = inject(ProductCatalogStore);
@@ -71,8 +73,17 @@ export class ProductTreeViewComponent implements OnInit {
 
       // Search & Filters
       searchQuery = signal<string>('');
+      localSearchName = signal<string>('');
+      searchNameQuery = signal<string>('');
+      localSearchBarcode = signal<string>('');
+      searchBarcodeQuery = signal<string>('');
+      barcodeMatchMode = signal<'contains' | 'exact'>('contains');
+      barcodeNotFoundQuery = signal<string>('');
       selectedCategoryId = signal<string>('');
       selectedStockFilter = signal<string>('');
+
+      private searchNameSubject = new Subject<string>();
+      private searchBarcodeSubject = new Subject<string>();
 
       /** Two-way ngModel bridge for the search input — reads/writes the searchQuery signal. */
       get searchQueryModel(): string { return this.searchQuery(); }
@@ -135,6 +146,26 @@ export class ProductTreeViewComponent implements OnInit {
 
       ngOnInit(): void {
             this.loadTreeData();
+
+            this.searchNameSubject.pipe(
+                  debounceTime(300),
+                  distinctUntilChanged()
+            ).subscribe(query => {
+                  this.searchNameQuery.set(query.trim());
+            });
+
+            this.searchBarcodeSubject.pipe(
+                  debounceTime(300),
+                  distinctUntilChanged()
+            ).subscribe(query => {
+                  this.barcodeMatchMode.set('contains');
+                  this.searchBarcodeQuery.set(query.trim());
+            });
+      }
+
+      ngOnDestroy(): void {
+            this.searchNameSubject.complete();
+            this.searchBarcodeSubject.complete();
       }
 
       loadTreeData(preserveExpansion: boolean = false): void {
@@ -348,11 +379,16 @@ export class ProductTreeViewComponent implements OnInit {
       // Filtered tree computation
       filteredTree = computed(() => {
             const query = this.searchQuery().trim().toLowerCase();
+            const nameQuery = this.searchNameQuery().trim().toLowerCase();
+            const barcodeQuery = this.searchBarcodeQuery().trim().toLowerCase();
+            const barcodeMode = this.barcodeMatchMode();
             const categoryFilter = this.selectedCategoryId();
             const stockFilter = this.selectedStockFilter();
             const rawTree = this.treeData();
 
-            if (!query && !categoryFilter && !stockFilter) {
+            const isSearching = !!(query || nameQuery || barcodeQuery);
+
+            if (!isSearching && !categoryFilter && !stockFilter) {
                   return rawTree;
             }
 
@@ -364,41 +400,60 @@ export class ProductTreeViewComponent implements OnInit {
                         continue;
                   }
 
-                  const catMatches = !query || cat.name.toLowerCase().includes(query) || cat.code.toLowerCase().includes(query);
+                  const catGenericMatches = !query || cat.name.toLowerCase().includes(query) || cat.code.toLowerCase().includes(query);
+                  const catNameMatches = !nameQuery || cat.name.toLowerCase().includes(nameQuery) || cat.code.toLowerCase().includes(nameQuery);
 
                   // Filter brands
                   const filteredBrands: BrandNode[] = [];
                   for (const brand of cat.brands || []) {
-                        const brandMatches = !query || brand.name.toLowerCase().includes(query) || brand.code.toLowerCase().includes(query);
+                        const brandGenericMatches = !query || brand.name.toLowerCase().includes(query) || brand.code.toLowerCase().includes(query);
+                        const brandNameMatches = !nameQuery || brand.name.toLowerCase().includes(nameQuery) || brand.code.toLowerCase().includes(nameQuery);
 
                         const filteredBrandGroups: ProductGroupNode[] = [];
                         for (const group of brand.groups || []) {
-                              const groupMatches = !query || group.name.toLowerCase().includes(query) || group.code.toLowerCase().includes(query);
+                              const groupGenericMatches = !query || group.name.toLowerCase().includes(query) || group.code.toLowerCase().includes(query);
+                              const groupNameMatches = !nameQuery || group.name.toLowerCase().includes(nameQuery) || group.code.toLowerCase().includes(nameQuery);
 
                               const matchingProducts = (group.products || []).filter(product => {
-                                    const prodMatches = !query ||
+                                    const prodGenericMatches = !query ||
                                           product.name.toLowerCase().includes(query) ||
                                           product.sku.toLowerCase().includes(query) ||
-                                          (product.vendorCode && product.vendorCode.toLowerCase().includes(query));
+                                          (product.vendorCode && product.vendorCode.toLowerCase().includes(query)) ||
+                                          catGenericMatches || brandGenericMatches || groupGenericMatches;
+
+                                    const prodNameMatches = !nameQuery ||
+                                          product.name.toLowerCase().includes(nameQuery) ||
+                                          catNameMatches || brandNameMatches || groupNameMatches;
+
+                                    const prodBarcodeMatches = !barcodeQuery || (
+                                          barcodeMode === 'exact'
+                                                ? (product.sku && product.sku.toLowerCase() === barcodeQuery)
+                                                : (product.sku && product.sku.toLowerCase().includes(barcodeQuery))
+                                    );
 
                                     const stockMatches = this.checkStockFilter(product.stock, stockFilter);
-                                    return (catMatches || brandMatches || groupMatches || prodMatches) && stockMatches;
+
+                                    return prodGenericMatches && prodNameMatches && prodBarcodeMatches && stockMatches;
                               });
 
-                              if (catMatches || brandMatches || groupMatches || matchingProducts.length > 0) {
+                              const hasGroupMatch = matchingProducts.length > 0 || (
+                                    !barcodeQuery && (catNameMatches || brandNameMatches || groupNameMatches) && (catGenericMatches || brandGenericMatches || groupGenericMatches)
+                              );
+
+                              if (hasGroupMatch) {
                                     filteredBrandGroups.push({
                                           ...group,
                                           products: matchingProducts,
-                                          expanded: query ? true : group.expanded
+                                          expanded: isSearching ? true : group.expanded
                                     });
                               }
                         }
 
-                        if (catMatches || brandMatches || filteredBrandGroups.length > 0) {
+                        if (filteredBrandGroups.length > 0 || (!barcodeQuery && (catNameMatches || brandNameMatches) && (catGenericMatches || brandGenericMatches))) {
                               filteredBrands.push({
                                     ...brand,
                                     groups: filteredBrandGroups,
-                                    expanded: query ? true : brand.expanded
+                                    expanded: isSearching ? true : brand.expanded
                               });
                         }
                   }
@@ -406,33 +461,50 @@ export class ProductTreeViewComponent implements OnInit {
                   // Filter direct groups (without brands)
                   const filteredDirectGroups: ProductGroupNode[] = [];
                   for (const group of cat.directGroups || []) {
-                        const groupMatches = !query || group.name.toLowerCase().includes(query) || group.code.toLowerCase().includes(query);
+                        const groupGenericMatches = !query || group.name.toLowerCase().includes(query) || group.code.toLowerCase().includes(query);
+                        const groupNameMatches = !nameQuery || group.name.toLowerCase().includes(nameQuery) || group.code.toLowerCase().includes(nameQuery);
 
                         const matchingProducts = (group.products || []).filter(product => {
-                              const prodMatches = !query ||
+                              const prodGenericMatches = !query ||
                                     product.name.toLowerCase().includes(query) ||
                                     product.sku.toLowerCase().includes(query) ||
-                                    (product.vendorCode && product.vendorCode.toLowerCase().includes(query));
+                                    (product.vendorCode && product.vendorCode.toLowerCase().includes(query)) ||
+                                    catGenericMatches || groupGenericMatches;
+
+                              const prodNameMatches = !nameQuery ||
+                                    product.name.toLowerCase().includes(nameQuery) ||
+                                    catNameMatches || groupNameMatches;
+
+                              const prodBarcodeMatches = !barcodeQuery || (
+                                    barcodeMode === 'exact'
+                                          ? (product.sku && product.sku.toLowerCase() === barcodeQuery)
+                                          : (product.sku && product.sku.toLowerCase().includes(barcodeQuery))
+                              );
 
                               const stockMatches = this.checkStockFilter(product.stock, stockFilter);
-                              return (catMatches || groupMatches || prodMatches) && stockMatches;
+
+                              return prodGenericMatches && prodNameMatches && prodBarcodeMatches && stockMatches;
                         });
 
-                        if (catMatches || groupMatches || matchingProducts.length > 0) {
+                        const hasGroupMatch = matchingProducts.length > 0 || (
+                              !barcodeQuery && (catNameMatches || groupNameMatches) && (catGenericMatches || groupGenericMatches)
+                        );
+
+                        if (hasGroupMatch) {
                               filteredDirectGroups.push({
                                     ...group,
                                     products: matchingProducts,
-                                    expanded: query ? true : group.expanded
+                                    expanded: isSearching ? true : group.expanded
                               });
                         }
                   }
 
-                  if (catMatches || filteredBrands.length > 0 || filteredDirectGroups.length > 0) {
+                  if (filteredBrands.length > 0 || filteredDirectGroups.length > 0 || (!barcodeQuery && catNameMatches && catGenericMatches)) {
                         result.push({
                               ...cat,
                               brands: filteredBrands,
                               directGroups: filteredDirectGroups,
-                              expanded: query ? true : cat.expanded
+                              expanded: isSearching ? true : cat.expanded
                         });
                   }
             }
@@ -541,6 +613,94 @@ export class ProductTreeViewComponent implements OnInit {
 
       // Search & Filters controls
 
+      onSearchNameInput(event: Event): void {
+            const input = event.target as HTMLInputElement;
+            this.localSearchName.set(input.value);
+            this.barcodeNotFoundQuery.set('');
+            this.searchNameSubject.next(input.value);
+      }
+
+      onSearchNameKeyDown(event: KeyboardEvent): void {
+            if (event.key === 'Enter') {
+                  this.executeSharedSearch();
+            }
+      }
+
+      clearSearchName(): void {
+            this.localSearchName.set('');
+            this.searchNameQuery.set('');
+      }
+
+      onSearchBarcodeInput(event: Event): void {
+            const input = event.target as HTMLInputElement;
+            this.localSearchBarcode.set(input.value);
+            this.barcodeNotFoundQuery.set('');
+            this.barcodeMatchMode.set('contains');
+            this.searchBarcodeSubject.next(input.value);
+      }
+
+      onSearchBarcodeInputKeyDown(event: KeyboardEvent): void {
+            if (event.key === 'Enter') {
+                  this.executeSharedSearch();
+            }
+      }
+
+      clearSearchBarcode(): void {
+            this.localSearchBarcode.set('');
+            this.searchBarcodeQuery.set('');
+            this.barcodeNotFoundQuery.set('');
+            this.barcodeMatchMode.set('contains');
+      }
+
+      clearBarcodeNotFound(): void {
+            this.barcodeNotFoundQuery.set('');
+      }
+
+      hasExactBarcodeMatch(barcode: string): boolean {
+            const target = barcode.trim().toLowerCase();
+            if (!target) return false;
+            const rawTree = this.treeData();
+            for (const cat of rawTree) {
+                  for (const brand of cat.brands || []) {
+                        for (const group of brand.groups || []) {
+                              for (const p of group.products || []) {
+                                    if (p.sku && p.sku.toLowerCase() === target) return true;
+                              }
+                        }
+                  }
+                  for (const group of cat.directGroups || []) {
+                        for (const p of group.products || []) {
+                              if (p.sku && p.sku.toLowerCase() === target) return true;
+                        }
+                  }
+            }
+            return false;
+      }
+
+      executeSharedSearch(): void {
+            const barcodeVal = this.localSearchBarcode().trim();
+            const nameVal = this.localSearchName().trim();
+
+            this.searchNameQuery.set(nameVal);
+
+            if (barcodeVal) {
+                  this.barcodeMatchMode.set('exact');
+                  this.searchBarcodeQuery.set(barcodeVal);
+
+                  const exists = this.hasExactBarcodeMatch(barcodeVal);
+                  if (!exists) {
+                        this.barcodeNotFoundQuery.set(barcodeVal);
+                        this.notificationService.warning(`الباركود غير موجود: ${barcodeVal}`);
+                  } else {
+                        this.barcodeNotFoundQuery.set('');
+                  }
+            } else {
+                  this.barcodeNotFoundQuery.set('');
+                  this.barcodeMatchMode.set('contains');
+                  this.searchBarcodeQuery.set('');
+            }
+      }
+
       clearSearch(): void {
             this.searchQuery.set('');
       }
@@ -555,12 +715,61 @@ export class ProductTreeViewComponent implements OnInit {
 
       clearAllFilters(): void {
             this.searchQuery.set('');
+            this.localSearchName.set('');
+            this.searchNameQuery.set('');
+            this.localSearchBarcode.set('');
+            this.searchBarcodeQuery.set('');
+            this.barcodeNotFoundQuery.set('');
+            this.barcodeMatchMode.set('contains');
             this.selectedCategoryId.set('');
             this.selectedStockFilter.set('');
       }
 
       hasActiveFilters(): boolean {
-            return !!(this.searchQuery() || this.selectedCategoryId() || this.selectedStockFilter());
+            return !!(
+                  this.searchQuery() ||
+                  this.searchNameQuery() ||
+                  this.searchBarcodeQuery() ||
+                  this.selectedCategoryId() ||
+                  this.selectedStockFilter()
+            );
+      }
+
+      // Create Product from Node Actions
+      onCreateProductFromBrand(category: CategoryNode, brand: BrandNode, event?: Event): void {
+            if (event) event.stopPropagation();
+
+            const queryParams: Record<string, any> = {};
+            if (category && Number(category.id) > 0) {
+                  queryParams['categoryId'] = category.id;
+            }
+            if (brand && Number(brand.id) > 0) {
+                  queryParams['brandId'] = brand.id;
+            }
+
+            this.router.navigate(['/pos/product/manage'], { queryParams });
+      }
+
+      onCreateProductFromGroup(
+            category: CategoryNode,
+            brand: BrandNode | null,
+            group: ProductGroupNode,
+            event?: Event
+      ): void {
+            if (event) event.stopPropagation();
+
+            const queryParams: Record<string, any> = {};
+            if (category && Number(category.id) > 0) {
+                  queryParams['categoryId'] = category.id;
+            }
+            if (brand && Number(brand.id) > 0) {
+                  queryParams['brandId'] = brand.id;
+            }
+            if (group && Number(group.id) > 0) {
+                  queryParams['productGroupId'] = group.id;
+            }
+
+            this.router.navigate(['/pos/product/manage'], { queryParams });
       }
 
       // Row Actions

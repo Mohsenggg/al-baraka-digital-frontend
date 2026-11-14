@@ -6,28 +6,59 @@
             <!-- ============================= -->
             <div class="page-header">
                   <div class="header-content">
-                        <div class="header-titles">
-                              <div>
-                                    <div class="title-with-badge">
-                                          <h1 class="page-title">شجرة المنتجات</h1>
-                                          <!-- Edit Mode toggle -->
-                                          <button type="button" class="btn-edit-mode" [class.active]="isEditMode()"
-                                                (click)="toggleEditMode()"
-                                                [title]="isEditMode() ? 'إنهاء وضع التعديل' : 'تفعيل وضع تعديل الهيكل'">
-                                                <span class="material-icons-outlined">{{ isEditMode() ? 'check_circle' :
-                                                      'tune' }}</span>
-                                                <span>{{ isEditMode() ? 'إنهاء التعديل' : 'وضع التعديل' }}</span>
+                        <div class="header-start-group">
+                              <div class="title-with-badge">
+                                    <h1 class="page-title">شجرة المنتجات</h1>
+                                    <!-- Edit Mode toggle -->
+                                    <button type="button" class="btn-edit-mode" [class.active]="isEditMode()"
+                                          (click)="toggleEditMode()"
+                                          [title]="isEditMode() ? 'إنهاء وضع التعديل' : 'تفعيل وضع تعديل الهيكل'">
+                                          <span class="material-icons-outlined">{{ isEditMode() ? 'check_circle' :
+                                                'tune' }}</span>
+                                          <span>{{ isEditMode() ? 'إنهاء التعديل' : 'وضع التعديل' }}</span>
+                                    </button>
+
+                                    <span class="edit-pill-badge" *ngIf="isEditMode()">
+                                          <span class="material-icons-outlined">tune</span>
+                                          وضع التعديل
+                                    </span>
+                              </div>
+
+                              <!-- Search Inputs Group with One Shared Search Icon -->
+                              <div class="search-group-container">
+                                    <!-- Search by Product Name -->
+                                    <div class="search-field-wrapper search-name-wrapper">
+                                          <input type="text" class="pos-input search-input"
+                                                placeholder="بحث باسم المنتج..." [value]="localSearchName()"
+                                                (input)="onSearchNameInput($event)" (keydown)="onSearchNameKeyDown($event)"
+                                                autocomplete="off" dir="rtl" aria-label="بحث باسم المنتج">
+                                          <button type="button" class="clear-icon-button"
+                                                *ngIf="localSearchName() || searchNameQuery()" (click)="clearSearchName()"
+                                                aria-label="مسح بحث الاسم">
+                                                <span class="material-icons-outlined">close</span>
                                           </button>
-
-                                          <span class="edit-pill-badge" *ngIf="isEditMode()">
-                                                <span class="material-icons-outlined">tune</span>
-                                                وضع التعديل
-                                          </span>
                                     </div>
-                                    <!-- <p class="page-subtitle"> (قسم &larr;
-                                          شركة &larr; مجموعة &larr; منتج)</p> -->
 
+                                    <!-- Search by Barcode -->
+                                    <div class="search-field-wrapper search-barcode-wrapper">
+                                          <input type="text" class="pos-input search-input"
+                                                placeholder="بحث بالباركود..." [value]="localSearchBarcode()"
+                                                (input)="onSearchBarcodeInput($event)" (keydown)="onSearchBarcodeInputKeyDown($event)"
+                                                autocomplete="off" dir="rtl" aria-label="بحث بالباركود">
+                                          <button type="button" class="clear-icon-button"
+                                                *ngIf="localSearchBarcode() || searchBarcodeQuery()" (click)="clearSearchBarcode()"
+                                                aria-label="مسح بحث الباركود">
+                                                <span class="material-icons-outlined">close</span>
+                                          </button>
+                                    </div>
 
+                                    <!-- Shared Search Button -->
+                                    <button type="button" class="shared-search-btn"
+                                          (click)="executeSharedSearch()"
+                                          [disabled]="!localSearchName() && !localSearchBarcode()"
+                                          title="بحث" aria-label="بحث">
+                                          <span class="material-icons-outlined">search</span>
+                                    </button>
                               </div>
                         </div>
 
@@ -335,8 +366,13 @@
                                                                         {{ getBrandProductsCount(brand) }} منتج
                                                                   </span>
                                                             </div>
-                                                            <!-- Edit Mode actions: add group / rename / move / delete brand -->
+                                                            <!-- Edit Mode actions: add product / add group / rename / move / delete brand -->
                                                             <div class="node-edit-actions" *ngIf="isEditMode()">
+                                                                  <button type="button" class="btn-node-action btn-add-prod"
+                                                                        (click)="onCreateProductFromBrand(category, brand, $event)"
+                                                                        title="إضافة منتج جديد في هذه الشركة">
+                                                                        <span class="material-icons-outlined">post_add</span>
+                                                                  </button>
                                                                   <button type="button" class="btn-node-action btn-add"
                                                                         [disabled]="isNodeActionPending('brand', brand.id)"
                                                                         (click)="openCreateGroup(category, brand, $event)"
@@ -424,9 +460,14 @@
                                                                                     class="material-icons-outlined pill-icon">inventory_2</span>
                                                                               {{ group.products.length }} منتج
                                                                         </span>
-                                                                        <!-- Edit Mode actions: rename / delete group (Task 5) -->
+                                                                        <!-- Edit Mode actions: add product / unify price / rename / move / delete group -->
                                                                         <div class="node-edit-actions"
                                                                               *ngIf="isEditMode()">
+                                                                              <button type="button" class="btn-node-action btn-add-prod"
+                                                                                    (click)="onCreateProductFromGroup(category, brand, group, $event)"
+                                                                                    title="إضافة منتج جديد في هذه المجموعة">
+                                                                                    <span class="material-icons-outlined">post_add</span>
+                                                                              </button>
                                                                               <button type="button"
                                                                                     class="btn-node-action btn-unify-price"
                                                                                     [class.is-active]="group.isPriceUnified"
@@ -561,8 +602,13 @@
                                                                         class="material-icons-outlined pill-icon">inventory_2</span>
                                                                   {{ group.products.length }} منتج
                                                             </span>
-                                                            <!-- Edit Mode actions: rename / delete group (Task 5) -->
+                                                            <!-- Edit Mode actions: add product / unify price / rename / move / delete group -->
                                                             <div class="node-edit-actions" *ngIf="isEditMode()">
+                                                                  <button type="button" class="btn-node-action btn-add-prod"
+                                                                        (click)="onCreateProductFromGroup(category, null, group, $event)"
+                                                                        title="إضافة منتج جديد في هذه المجموعة">
+                                                                        <span class="material-icons-outlined">post_add</span>
+                                                                  </button>
                                                                   <button type="button"
                                                                         class="btn-node-action btn-unify-price"
                                                                         [class.is-active]="group.isPriceUnified"
