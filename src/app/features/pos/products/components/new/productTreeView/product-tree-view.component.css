@@ -89,8 +89,8 @@
 }
 
 .search-field-wrapper:focus-within {
-      border-color: var(--pos-primary, #1e3a8a);
-      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+      border-color: #00aec5;
+      box-shadow: 0 0 0 3px rgba(0, 174, 197, 0.15);
       background-color: #ffffff;
 }
 
@@ -100,7 +100,7 @@
       padding: 0 10px;
       border: none;
       border-radius: 0;
-      font-size: 0.8rem;
+      font-size: 0.88rem;
       background: transparent;
       color: var(--pos-text-primary, #1f2937);
       font-family: inherit;
@@ -123,17 +123,17 @@
       height: 34px;
       border: none;
       border-radius: 8px;
-      background-color: var(--pos-primary, #1e3a8a);
+      background-color: #00aec5;
       color: #ffffff;
       cursor: pointer;
       transition: all 0.2s ease;
-      box-shadow: 0 1px 3px rgba(30, 58, 138, 0.15);
+      box-shadow: 0 1px 3px rgba(0, 174, 197, 0.18);
 }
 
 .shared-search-btn:hover:not(:disabled) {
-      background-color: var(--pos-primary-hover, #1e40af);
+      background-color: #0099ad;
       transform: translateY(-1px);
-      box-shadow: 0 3px 8px rgba(30, 58, 138, 0.25);
+      box-shadow: 0 3px 8px rgba(0, 174, 197, 0.28);
 }
 
 .shared-search-btn:active:not(:disabled) {
@@ -225,12 +225,12 @@
       align-items: center;
       gap: 4px;
       padding: 3px 10px;
-      background: linear-gradient(135deg, #edf8fa 0%, #cce9ef 100%);
-      color: #1e748a;
-      font-size: 0.72rem;
+      background: linear-gradient(135deg, #e6f9fb 0%, #ccf2f6 100%);
+      color: #007c8c;
+      font-size: 0.78rem;
       font-weight: 700;
       border-radius: 20px;
-      border: 1px solid #9acfda;
+      border: 1px solid #80deea;
 }
 
 .view-pill-badge .material-icons-outlined {
@@ -244,7 +244,7 @@
       padding: 3px 10px;
       background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
       color: #92400e;
-      font-size: 0.72rem;
+      font-size: 0.78rem;
       font-weight: 700;
       border-radius: 20px;
       border: 1px solid #fcd34d;
@@ -269,7 +269,7 @@
 
 .page-subtitle {
       margin: 4px 0 0 0;
-      font-size: 0.82rem;
+      font-size: 0.84rem;
       color: var(--pos-text-secondary, #6b7280);
       font-weight: 400;
 }
@@ -296,7 +296,7 @@
       gap: 5px;
       padding: 6px 12px;
       height: 32px;
-      font-size: 0.8rem;
+      font-size: 0.86rem;
       font-weight: 600;
       color: var(--pos-text-secondary, #64748b);
       text-decoration: none;
@@ -309,13 +309,13 @@
 }
 
 .btn-view-mode:hover {
-      color: #1e748a;
+      color: #00aec5;
       background-color: rgba(255, 255, 255, 0.6);
 }
 
 .btn-view-mode.active {
       background-color: #ffffff;
-      color: #1e748a;
+      color: #007c8c;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
@@ -330,24 +330,24 @@
       gap: 8px;
       padding: 0 18px;
       height: 38px;
-      background-color: var(--pos-primary, #1e3a8a);
+      background-color: #00aec5;
       color: white;
       border: none;
       border-radius: 9px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
-      box-shadow: 0 2px 6px rgba(30, 58, 138, 0.15);
+      box-shadow: 0 2px 6px rgba(0, 174, 197, 0.2);
       white-space: nowrap;
       text-decoration: none;
       flex-direction: row-reverse;
 }
 
 .btn-add-product:hover {
-      background-color: var(--pos-primary-hover, #1e40af);
+      background-color: #0099ad;
       transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(30, 58, 138, 0.25);
+      box-shadow: 0 4px 10px rgba(0, 174, 197, 0.3);
 }
 
 .btn-add-product .material-icons-outlined {
@@ -403,8 +403,8 @@
 .search-input:focus {
       outline: none;
       background-color: #ffffff;
-      border-color: #1e748a;
-      box-shadow: 0 0 0 3px rgba(30, 116, 138, 0.12);
+      border-color: #00aec5;
+      box-shadow: 0 0 0 3px rgba(0, 174, 197, 0.12);
 }
 
 .search-icon-static {
@@ -482,20 +482,20 @@
 }
 
 .filter-select:hover {
-      border-color: #9acfda;
-      color: #1e748a;
+      border-color: #80deea;
+      color: #007c8c;
 }
 
 .filter-select:focus {
       outline: none;
-      border-color: #1e748a;
-      box-shadow: 0 0 0 3px rgba(30, 116, 138, 0.12);
+      border-color: #00aec5;
+      box-shadow: 0 0 0 3px rgba(0, 174, 197, 0.12);
 }
 
 .filter-select-wrapper.has-value .filter-select {
-      border-color: rgba(30, 116, 138, 0.45);
-      background: linear-gradient(135deg, #edf8fa 0%, #cce9ef 100%);
-      color: #1e748a;
+      border-color: rgba(0, 174, 197, 0.45);
+      background: linear-gradient(135deg, #e6f9fb 0%, #ccf2f6 100%);
+      color: #007c8c;
 }
 
 /* Tree Control Buttons (Expand All / Collapse All) */
@@ -516,7 +516,7 @@
       border-radius: 10px;
       background: #ffffff;
       color: #475569;
-      font-size: 0.8rem;
+      font-size: 0.86rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -525,9 +525,9 @@
 }
 
 .btn-tree-ctrl:hover {
-      background-color: #eaf6f8;
-      border-color: #9acfda;
-      color: #1e748a;
+      background-color: #e6f9fb;
+      border-color: #80deea;
+      color: #007c8c;
       transform: translateY(-1px);
 }
 
@@ -570,7 +570,7 @@
       gap: 8px;
       padding-top: 6px;
       border-top: 1px dashed #e2e8f0;
-      font-size: 0.76rem;
+      font-size: 0.82rem;
       color: #64748b;
       flex-wrap: wrap;
 }
@@ -579,32 +579,33 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 3px 8px;
+      padding: 4px 9px;
       background: #f8fafc;
       border-radius: 6px;
       border: 1px solid #f1f5f9;
+      font-size: 0.82rem;
 }
 
 .stat-pill.highlight {
-      background: #edf8fa;
-      border-color: #cce9ef;
-      color: #1e748a;
+      background: #e6f9fb;
+      border-color: #ccf2f6;
+      color: #007c8c;
 }
 
 .stat-pill-icon {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
 }
 
 .cat-color {
-      color: #1e748a;
+      color: #00aec5;
 }
 
 .brand-color {
-      color: #1e748a;
+      color: #00aec5;
 }
 
 .group-color {
-      color: #247a8c;
+      color: #0099ad;
 }
 
 .prod-color {
@@ -669,35 +670,32 @@
 
 .category-block {
       background: var(--pos-card-bg, #ffffff);
-      border: 1px solid #1e748a;
+      border: 1px solid #00aec5;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(30, 116, 138, 0.12);
+      box-shadow: 0 2px 10px rgba(0, 174, 197, 0.12);
       transition: all 0.2s ease;
       overflow: hidden;
 }
 
 .category-block:hover {
-      border-color: #17637a;
-      box-shadow: 0 6px 18px rgba(30, 116, 138, 0.16);
+      border-color: #0099ad;
+      box-shadow: 0 6px 18px rgba(0, 174, 197, 0.16);
 }
 
 .category-block.is-expanded {
-      border-color: #1e748a;
-      box-shadow: 0 6px 20px rgba(30, 116, 138, 0.18);
+      border-color: #00aec5;
+      box-shadow: 0 6px 20px rgba(0, 174, 197, 0.18);
 }
 
 .category-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 16px;
-      /* Solid teal fill + a fixed translucent sheen. Only the fill colour
-         changes on hover, so the transition never flashes the white page
-         behind it (a gradient cannot be interpolated). */
-      background-color: #1e748a;
-      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
-      /* Soft teal-tinted off-white: easier on the eye than pure #ffffff */
-      color: #d8f3f8;
+      padding: 13px 18px;
+      /* Solid teal fill + a fixed translucent sheen. */
+      background-color: #00aec5;
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 100%);
+      color: #ffffff;
       cursor: pointer;
       user-select: none;
       border-bottom: 1px solid transparent;
@@ -706,11 +704,11 @@
 }
 
 .category-block.is-expanded .category-row {
-      border-bottom-color: rgba(255, 255, 255, 0.18);
+      border-bottom-color: rgba(255, 255, 255, 0.22);
 }
 
 .category-row:hover {
-      background-color: #17637a;
+      background-color: #0099ad;
 }
 
 .row-leading {
@@ -736,9 +734,9 @@
 }
 
 .btn-node-toggle:hover {
-      background-color: #1e748a;
+      background-color: #00aec5;
       color: #ffffff;
-      border-color: #1e748a;
+      border-color: #00aec5;
 }
 
 /* The category header sits on the solid teal surface, so its toggle inverts on hover. */
@@ -757,15 +755,15 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: 9px;
       flex-shrink: 0;
 }
 
 .category-badge {
-      background-color: rgba(255, 255, 255, 0.15);
-      color: #c8edf4;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
 }
 
 .node-info {
@@ -788,49 +786,52 @@
 }
 
 .category-title {
-      font-size: 1.3rem;
+      font-size: 1.38rem;
       letter-spacing: -0.3px;
 }
 
 .brand-title {
-      font-size: 0.97rem;
+      font-size: 1.12rem;
 }
 
 .group-title {
-      font-size: 0.92rem;
-      font-weight: 600;
+      font-size: 1.02rem;
+      font-weight: 700;
 }
 
 /* Category row uses the solid teal surface, so its text / pills use a soft off-white. */
 .category-row .node-title {
-      color: #e8f6f9;
+      color: #ffffff;
 }
 
 .category-row .count-pill {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ceeaf1;
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      font-size: 0.8rem;
+      padding: 4px 10px;
       transition: background-color 0.2s ease;
 }
 
 .category-row .count-pill .pill-icon {
-      color: rgba(200, 237, 244, 0.65);
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.92rem;
 }
 
 .category-row .count-pill.primary-pill {
-      background: rgba(255, 255, 255, 0.18);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.26);
+      border-color: rgba(255, 255, 255, 0.4);
 }
 
 .category-row .count-pill.primary-pill .pill-icon {
-      color: #ceeaf1;
+      color: #ffffff;
 }
 
 .category-row:hover .count-pill {
-      background: rgba(255, 255, 255, 0.17);
+      background: rgba(255, 255, 255, 0.22);
 }
 
 .category-row:hover .count-pill.primary-pill {
-      background: rgba(255, 255, 255, 0.26);
+      background: rgba(255, 255, 255, 0.32);
 }
 
 .code-tag {
@@ -850,9 +851,9 @@
 .level-indicator {
       display: inline-flex;
       align-items: center;
-      padding: 2px 8px;
+      padding: 3px 9px;
       border-radius: 20px;
-      font-size: 0.72rem;
+      font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.2px;
       white-space: nowrap;
@@ -861,23 +862,23 @@
 
 /* Category header is a teal surface: pill uses a luminous teal-tinted off-white */
 .level-cat {
-      background-color: rgba(255, 255, 255, 0.15);
-      color: #c8edf4;
-      border: 1px solid rgba(255, 255, 255, 0.22);
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Brand level: teal-100 pill on the teal-100 brand row */
+/* Brand level: teal pill on the brand row */
 .level-brand {
-      background-color: rgba(30, 116, 138, 0.12);
-      color: #0d4f5e;
-      border: 1px solid rgba(30, 116, 138, 0.2);
+      background-color: rgba(0, 174, 197, 0.15);
+      color: #005662;
+      border: 1px solid rgba(0, 174, 197, 0.25);
 }
 
-/* Group level: lighter teal pill on the teal-50 group row */
+/* Group level: lighter teal pill on the group row */
 .level-group {
-      background-color: rgba(30, 116, 138, 0.08);
-      color: #1e748a;
-      border: 1px solid rgba(30, 116, 138, 0.15);
+      background-color: rgba(0, 174, 197, 0.1);
+      color: #007c8c;
+      border: 1px solid rgba(0, 174, 197, 0.2);
 }
 
 /* Direct group: green accent pill */
@@ -904,28 +905,28 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 3px 9px;
+      padding: 4px 10px;
       background: #f1f5f9;
       color: #475569;
       border-radius: 6px;
-      font-size: 0.72rem;
+      font-size: 0.78rem;
       font-weight: 600;
       white-space: nowrap;
 }
 
 .count-pill .pill-icon {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: #94a3b8;
 }
 
 .count-pill.primary-pill {
-      background: #cce9ef;
-      color: #0d4f5e;
-      border: 1px solid #9acfda;
+      background: #ccf2f6;
+      color: #005662;
+      border: 1px solid #80deea;
 }
 
 .count-pill.primary-pill .pill-icon {
-      color: #1e748a;
+      color: #007c8c;
 }
 
 /* Unified selling price badge (Phase 3) */
@@ -933,18 +934,18 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 2px 9px;
+      padding: 3px 10px;
       background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
       color: #047857;
       border: 1px solid #a7f3d0;
       border-radius: 999px;
-      font-size: 0.68rem;
+      font-size: 0.76rem;
       font-weight: 700;
       white-space: nowrap;
 }
 
 .unified-price-tag .tag-icon {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
 }
 
 /* Category Children Body */
@@ -953,8 +954,8 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      background: #f5fbfc;
-      border-right: 3px solid #1e748a;
+      background: #f4fbfd;
+      border-right: 3px solid #00aec5;
       margin-right: 14px;
 }
 
@@ -971,29 +972,29 @@
 
 .brand-block {
       background: #ffffff;
-      border: 1px solid #cce9ef;
+      border: 1px solid #b2ebf2;
       border-radius: 10px;
       overflow: hidden;
       transition: all 0.15s ease;
 }
 
 .brand-block:hover {
-      border-color: #9acfda;
+      border-color: #80deea;
 }
 
 .brand-block.is-expanded {
-      border-color: #9acfda;
-      box-shadow: 0 2px 8px rgba(30, 116, 138, 0.08);
+      border-color: #80deea;
+      box-shadow: 0 2px 8px rgba(0, 174, 197, 0.08);
 }
 
 .brand-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 14px;
+      padding: 11px 16px;
       /* Fill + fixed sheen split so the hover tint fades smoothly. */
-      background-color: #93cbd7;
-      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.233) 0%, rgba(255, 255, 255, 0) 100%);
+      background-color: #a7e9f2;
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%);
       cursor: pointer;
       user-select: none;
       transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -1001,31 +1002,33 @@
 }
 
 .brand-block.is-expanded .brand-row {
-      border-bottom: 1px solid #9acfda;
+      border-bottom: 1px solid #80deea;
 }
 
 .brand-row:hover {
-      background-color: #b8e3ec;
+      background-color: #c4f1f7;
 }
 
 .brand-badge {
-      background-color: #9acfda;
-      color: #0d4f5e;
-      width: 30px;
-      height: 30px;
+      background-color: #80deea;
+      color: #005662;
+      width: 32px;
+      height: 32px;
 }
 
 .brand-badge .material-icons-outlined {
-      font-size: 1.1rem;
+      font-size: 1.18rem;
 }
 
 .brand-title {
-      font-size: 0.97rem;
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: #004d58;
 }
 
 .brand-code-tag {
-      background-color: #9acfda;
-      color: #0d4f5e;
+      background-color: #80deea;
+      color: #005662;
 }
 
 .brand-children-container {
@@ -1034,7 +1037,7 @@
       flex-direction: column;
       gap: 10px;
       background: #ffffff;
-      border-right: 3px solid #9acfda;
+      border-right: 3px solid #80deea;
       margin-right: 14px;
 }
 
@@ -1044,25 +1047,25 @@
 
 .group-block {
       background: #ffffff;
-      border: 1px solid #daf0f4;
+      border: 1px solid #e0f7fa;
       border-radius: 8px;
       overflow: hidden;
       transition: all 0.15s ease;
 }
 
 .group-block.is-expanded {
-      border-color: #b8e3ec;
-      box-shadow: 0 2px 6px rgba(30, 116, 138, 0.05);
+      border-color: #b2ebf2;
+      box-shadow: 0 2px 6px rgba(0, 174, 197, 0.06);
 }
 
 .group-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
+      padding: 9px 14px;
       /* Fill + fixed sheen split so the hover tint fades smoothly. */
-      background-color: #eaf6f8;
-      background-image: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+      background-color: #f2fbfd;
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 100%);
       cursor: pointer;
       user-select: none;
       transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -1070,22 +1073,22 @@
 }
 
 .group-block.is-expanded .group-row {
-      border-bottom: 1px solid #cce9ef;
+      border-bottom: 1px solid #b2ebf2;
 }
 
 .group-row:hover {
-      background-color: #d4eef3;
+      background-color: #e0f7fa;
 }
 
 .group-badge {
-      background-color: #b8e3ec;
-      color: #1e748a;
-      width: 28px;
-      height: 28px;
+      background-color: #b2ebf2;
+      color: #007c8c;
+      width: 30px;
+      height: 30px;
 }
 
 .group-badge .material-icons-outlined {
-      font-size: 1rem;
+      font-size: 1.08rem;
 }
 
 .group-badge.direct-badge {
@@ -1094,19 +1097,20 @@
 }
 
 .group-title {
-      font-size: 0.92rem;
-      font-weight: 600;
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--pos-text-primary, #0f172a);
 }
 
 .group-code-tag {
-      background-color: #cce9ef;
-      color: #1e748a;
+      background-color: #ccf2f6;
+      color: #007c8c;
 }
 
 .group-children-container {
       padding: 0;
       background: #ffffff;
-      border-right: 3px solid #cce9ef;
+      border-right: 3px solid #ccf2f6;
       margin-right: 14px;
 }
 
@@ -1127,20 +1131,20 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 16px 20px;
+      padding: 18px 24px;
       color: #94a3b8;
-      font-size: 0.82rem;
+      font-size: 0.9rem;
       background-color: #f8fafc;
 }
 
 .no-products-msg .material-icons-outlined {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
 }
 
 .leaf-products-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.82rem;
+      font-size: 0.92rem;
       background: #ffffff;
 }
 
@@ -1150,11 +1154,11 @@
 }
 
 .leaf-products-table th {
-      padding: 8px 12px;
+      padding: 10px 14px;
       text-align: right;
-      font-size: 0.7rem;
+      font-size: 0.82rem;
       font-weight: 700;
-      color: #64748b;
+      color: #475569;
       letter-spacing: 0.3px;
       white-space: nowrap;
 }
@@ -1173,7 +1177,7 @@
 }
 
 .leaf-products-table td {
-      padding: 8px 12px;
+      padding: 10px 14px;
       vertical-align: middle;
       text-align: right;
 }
@@ -1212,11 +1216,11 @@
 }
 
 .product-leaf-dot {
-      width: 7px;
-      height: 7px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      background-color: #1e748a;
-      opacity: 0.7;
+      background-color: #00aec5;
+      opacity: 0.8;
       flex-shrink: 0;
 }
 
@@ -1227,6 +1231,7 @@
 }
 
 .tree-prod-name {
+      font-size: 0.96rem;
       font-weight: 600;
       color: var(--pos-text-primary, #1e293b);
       cursor: pointer;
@@ -1234,7 +1239,7 @@
 }
 
 .tree-prod-name:hover {
-      color: #1e748a;
+      color: #00838f;
       text-decoration: underline;
 }
 
@@ -1249,12 +1254,12 @@
       display: inline-flex;
       align-items: center;
       gap: 3px;
-      padding: 1px 6px;
+      padding: 2px 7px;
       background: #f1f5f9;
       color: #475569;
       border-radius: 4px;
       font-family: ui-monospace, 'Cascadia Code', monospace;
-      font-size: 0.68rem;
+      font-size: 0.78rem;
       direction: ltr;
 }
 
@@ -1264,9 +1269,9 @@
 }
 
 .vendor-tag {
-      font-size: 0.68rem;
+      font-size: 0.76rem;
       color: #64748b;
-      padding: 1px 5px;
+      padding: 2px 6px;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 4px;
@@ -1281,13 +1286,13 @@
 }
 
 .price-main {
-      font-size: 0.88rem;
+      font-size: 0.98rem;
       font-weight: 700;
       color: var(--pos-text-primary, #0f172a);
 }
 
 .curr {
-      font-size: 0.68rem;
+      font-size: 0.74rem;
       color: #64748b;
       font-weight: 500;
 }
@@ -1298,7 +1303,7 @@
       align-items: baseline;
       gap: 3px;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
 }
 
 .buying-price {
@@ -1306,12 +1311,12 @@
 }
 
 .selling-price {
-      color: #1e748a;
+      color: #00838f;
 }
 
 .price-na {
       color: #cbd5e1;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
 }
 
 /* Profit cell */
@@ -1327,18 +1332,18 @@
       align-items: baseline;
       gap: 3px;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       color: #059669;
 }
 
 .profit-pct {
       display: inline-flex;
       align-items: center;
-      padding: 2px 6px;
+      padding: 2px 7px;
       background-color: #d1fae5;
       color: #065f46;
       border-radius: 20px;
-      font-size: 0.68rem;
+      font-size: 0.76rem;
       font-weight: 700;
       white-space: nowrap;
       border: 1px solid #a7f3d0;
@@ -1518,8 +1523,8 @@
 }
 
 .btn-action.btn-view:hover {
-      color: #1e748a;
-      background-color: #d4eef3;
+      color: #00838f;
+      background-color: #e0f7fa;
 }
 
 .btn-action.btn-edit:hover {
@@ -1675,7 +1680,7 @@
       width: 48px;
       height: 48px;
       border: 4px solid #f1f5f9;
-      border-top: 4px solid #1e748a;
+      border-top: 4px solid #00aec5;
       border-radius: 50%;
       animation: spin 1s linear infinite;
 }
@@ -1757,10 +1762,10 @@
       padding: 0 18px;
       height: 38px;
       background-color: #ffffff;
-      color: #1e748a;
-      border: 1px solid #1e748a;
+      color: #007c8c;
+      border: 1.5px solid #00aec5;
       border-radius: 9px;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -1769,9 +1774,9 @@
 }
 
 .btn-edit-mode:hover {
-      background-color: #eaf6f8;
+      background-color: #e6f9fb;
       transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(30, 116, 138, 0.15);
+      box-shadow: 0 4px 10px rgba(0, 174, 197, 0.15);
 }
 
 /* Active (done-editing) state — outlined rose/red, same shape as default */
@@ -1846,10 +1851,10 @@
       align-items: center;
       gap: 5px;
       padding: 4px 12px;
-      background: #1e748a;
+      background: #00aec5;
       color: #ffffff;
       border-radius: 20px;
-      font-size: 0.74rem;
+      font-size: 0.82rem;
       font-weight: 700;
       white-space: nowrap;
 }
@@ -1930,15 +1935,15 @@
       height: 16px;
       margin: 0;
       cursor: pointer;
-      accent-color: #1e748a;
+      accent-color: #00aec5;
 }
 
 .leaf-products-table tbody tr.row-selected {
-      background-color: #eaf6f8;
+      background-color: #e0f7fa;
 }
 
 .leaf-products-table tbody tr.row-selected:hover {
-      background-color: #d4eef3;
+      background-color: #b2ebf2;
 }
 
 /* ============================= */
@@ -1978,9 +1983,9 @@
 }
 
 .btn-node-action.btn-add-prod:hover:not(:disabled) {
-      color: var(--pos-primary, #1e3a8a);
-      background-color: #eff6ff;
-      border-color: #bfdbfe;
+      color: #007c8c;
+      background-color: #e6f9fb;
+      border-color: #80deea;
 }
 
 .btn-node-action.btn-add:hover:not(:disabled) {
@@ -2073,8 +2078,8 @@
       width: 38px;
       height: 38px;
       border-radius: 10px;
-      background-color: #d4eef3;
-      color: #1e748a;
+      background-color: #e0f7fa;
+      color: #007c8c;
       flex-shrink: 0;
 }
 
@@ -2118,8 +2123,8 @@
 }
 
 .node-modal-input:focus {
-      border-color: #1e748a;
-      box-shadow: 0 0 0 3px rgba(30, 116, 138, 0.12);
+      border-color: #00aec5;
+      box-shadow: 0 0 0 3px rgba(0, 174, 197, 0.15);
 }
 
 .node-modal-hint {
@@ -2191,13 +2196,14 @@
 }
 
 .btn-modal-save {
-      background-color: #1e748a;
+      background-color: #00aec5;
       color: #ffffff;
+      font-size: 0.88rem;
 }
 
 .btn-modal-save:hover:not(:disabled) {
-      background-color: #17637a;
-      box-shadow: 0 4px 12px rgba(30, 116, 138, 0.25);
+      background-color: #0099ad;
+      box-shadow: 0 4px 12px rgba(0, 174, 197, 0.25);
 }
 
 .btn-modal-save:disabled,
@@ -2245,8 +2251,8 @@
 }
 
 .node-modal-select:focus {
-      border-color: #1e748a;
-      box-shadow: 0 0 0 3px rgba(30, 116, 138, 0.12);
+      border-color: #00aec5;
+      box-shadow: 0 0 0 3px rgba(0, 174, 197, 0.15);
 }
 
 .node-modal-select option {
@@ -2273,7 +2279,7 @@
       align-items: center;
       gap: 18px;
       padding: 10px 18px;
-      background: linear-gradient(135deg, #1e748a 0%, #1a8fa8 100%);
+      background: linear-gradient(135deg, #00838f 0%, #00aec5 100%);
       border-radius: 14px;
       box-shadow: 0 14px 34px rgba(15, 23, 42, 0.35);
       direction: rtl;
@@ -2297,14 +2303,14 @@
       align-items: center;
       gap: 8px;
       color: #ffffff;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       font-weight: 700;
       white-space: nowrap;
 }
 
 .bulk-bar-info .material-icons-outlined {
       font-size: 1.15rem;
-      color: #cce9ef;
+      color: #b2ebf2;
 }
 
 .bulk-count {
@@ -2325,7 +2331,7 @@
       height: 34px;
       padding: 0 14px;
       border-radius: 9px;
-      font-size: 0.78rem;
+      font-size: 0.84rem;
       font-weight: 700;
       font-family: inherit;
       cursor: pointer;
@@ -2336,11 +2342,11 @@
 .btn-bulk-move {
       background: #ffffff;
       border: 1px solid #ffffff;
-      color: #1e748a;
+      color: #007c8c;
 }
 
 .btn-bulk-move:hover {
-      background: #d4eef3;
+      background: #e0f7fa;
       transform: translateY(-1px);
 }
 
@@ -2402,7 +2408,7 @@
       background-color: #ffffff;
       border: 1.5px dashed #cbd5e1;
       border-radius: 9px;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       font-weight: 700;
       color: #475569;
       cursor: pointer;
@@ -2427,41 +2433,41 @@
 /* Category level add button */
 .btn-level-add.btn-add-category {
       background-color: #ffffff;
-      border-color: #9acfda;
-      color: #1e748a;
-      box-shadow: 0 1px 3px rgba(30, 116, 138, 0.06);
+      border-color: #80deea;
+      color: #007c8c;
+      box-shadow: 0 1px 3px rgba(0, 174, 197, 0.06);
 }
 
 .btn-level-add.btn-add-category:hover {
-      background-color: #eaf6f8;
-      border-color: #1e748a;
+      background-color: #e6f9fb;
+      border-color: #00aec5;
       border-style: solid;
-      box-shadow: 0 4px 12px rgba(30, 116, 138, 0.12);
+      box-shadow: 0 4px 12px rgba(0, 174, 197, 0.12);
 }
 
 /* Brand level add button */
 .btn-level-add.btn-add-brand {
-      background-color: #f5fbfc;
-      border-color: #9acfda;
-      color: #0d4f5e;
+      background-color: #f4fbfd;
+      border-color: #80deea;
+      color: #005662;
 }
 
 .btn-level-add.btn-add-brand:hover {
-      background-color: #d4eef3;
-      border-color: #1e748a;
+      background-color: #b2ebf2;
+      border-color: #00aec5;
       border-style: solid;
 }
 
 /* Group level add button */
 .btn-level-add.btn-add-group {
-      background-color: #f5fbfc;
-      border-color: #b8e3ec;
-      color: #247a8c;
+      background-color: #f4fbfd;
+      border-color: #b2ebf2;
+      color: #007c8c;
 }
 
 .btn-level-add.btn-add-group:hover {
-      background-color: #eaf6f8;
-      border-color: #1e748a;
+      background-color: #e6f9fb;
+      border-color: #00aec5;
       border-style: solid;
 }
 
@@ -2488,7 +2494,7 @@
       border: 1px dashed #cbd5e1;
       border-radius: 8px;
       color: #64748b;
-      font-size: 0.8rem;
+      font-size: 0.84rem;
 }
 
 .empty-branch-inline .material-icons-outlined {
@@ -2498,18 +2504,18 @@
 
 /* Create Modal Icon & Checkbox variants */
 .node-modal-icon.create-icon.category-create-icon {
-      background-color: #d4eef3;
-      color: #1e748a;
+      background-color: #ccf2f6;
+      color: #007c8c;
 }
 
 .node-modal-icon.create-icon.brand-create-icon {
-      background-color: #cce9ef;
-      color: #0d4f5e;
+      background-color: #b2ebf2;
+      color: #005662;
 }
 
 .node-modal-icon.create-icon.group-create-icon {
-      background-color: #eaf6f8;
-      color: #247a8c;
+      background-color: #e0f7fa;
+      color: #007c8c;
 }
 
 .modal-checkbox-row {
@@ -2535,17 +2541,17 @@
       width: 17px;
       height: 17px;
       cursor: pointer;
-      accent-color: var(--pos-primary, #1e3a8a);
+      accent-color: #00aec5;
 }
 
 .checkbox-text {
-      font-size: 0.82rem;
+      font-size: 0.86rem;
       font-weight: 700;
       color: var(--pos-text-primary, #0f172a);
 }
 
 .checkbox-subtext {
-      font-size: 0.72rem;
+      font-size: 0.76rem;
       color: #64748b;
       padding-inline-start: 25px;
 }
