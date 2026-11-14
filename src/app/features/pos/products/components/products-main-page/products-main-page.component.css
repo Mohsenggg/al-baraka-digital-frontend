@@ -177,6 +177,13 @@
 /* SEARCH FIELD (cashier-receipt style) */
 /* ============================= */
 
+.search-group-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+}
+
 .search-field-wrapper {
       position: relative;
       display: flex;
@@ -195,6 +202,44 @@
       flex: 0 1 130px;
       min-width: 95px;
       max-width: 155px;
+}
+
+.shared-search-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 8px;
+      background-color: var(--pos-primary, #1e3a8a);
+      color: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(30, 58, 138, 0.15);
+}
+
+.shared-search-btn:hover:not(:disabled) {
+      background-color: var(--pos-primary-hover, #1e40af);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(30, 58, 138, 0.25);
+}
+
+.shared-search-btn:active:not(:disabled) {
+      transform: translateY(0);
+}
+
+.shared-search-btn:disabled {
+      background-color: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+}
+
+.shared-search-btn .material-icons-outlined {
+      font-size: 1.15rem;
 }
 
 .search-field-wrapper:focus-within {
@@ -675,6 +720,64 @@
       100% {
             background-position: -200% 0;
       }
+}
+
+/* ============================= */
+/* BARCODE NOT FOUND ALERT */
+/* ============================= */
+
+.barcode-not-found-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      margin: 12px 18px 0 18px;
+      background-color: #fff1f2;
+      border: 1px solid #fecdd3;
+      border-radius: 8px;
+      color: #9f1239;
+      font-size: 0.82rem;
+      direction: rtl;
+}
+
+.barcode-not-found-alert .alert-icon {
+      font-size: 1.25rem;
+      color: #e11d48;
+      flex-shrink: 0;
+}
+
+.barcode-not-found-alert .alert-content {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+}
+
+.barcode-not-found-alert .alert-content strong {
+      font-weight: 700;
+}
+
+.barcode-not-found-alert .btn-dismiss-alert {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: #9f1239;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.15s ease;
+      margin-inline-start: auto;
+}
+
+.barcode-not-found-alert .btn-dismiss-alert:hover {
+      background-color: #ffe4e6;
+}
+
+.barcode-not-found-alert .btn-dismiss-alert .material-icons-outlined {
+      font-size: 1rem;
 }
 
 /* ============================= */
@@ -1995,6 +2098,64 @@
       100% {
             background-position: -200% 0;
       }
+}
+
+/* ============================= */
+/* BARCODE NOT FOUND ALERT */
+/* ============================= */
+
+.barcode-not-found-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      margin: 12px 18px 0 18px;
+      background-color: #fff1f2;
+      border: 1px solid #fecdd3;
+      border-radius: 8px;
+      color: #9f1239;
+      font-size: 0.82rem;
+      direction: rtl;
+}
+
+.barcode-not-found-alert .alert-icon {
+      font-size: 1.25rem;
+      color: #e11d48;
+      flex-shrink: 0;
+}
+
+.barcode-not-found-alert .alert-content {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+}
+
+.barcode-not-found-alert .alert-content strong {
+      font-weight: 700;
+}
+
+.barcode-not-found-alert .btn-dismiss-alert {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: #9f1239;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.15s ease;
+      margin-inline-start: auto;
+}
+
+.barcode-not-found-alert .btn-dismiss-alert:hover {
+      background-color: #ffe4e6;
+}
+
+.barcode-not-found-alert .btn-dismiss-alert .material-icons-outlined {
+      font-size: 1rem;
 }
 
 /* ============================= */

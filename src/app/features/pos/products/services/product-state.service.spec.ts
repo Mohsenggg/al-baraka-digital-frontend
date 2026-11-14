@@ -416,17 +416,33 @@ describe('ProductStateService Cascading Filters', () => {
       expect(filtered[0].id).toBe(3);
       expect(filtered[0].name).toBe('مياه نستله 600 مل');
 
-      // Partial barcode match
-      service.setSearchBarcodeQuery('222');
+      // Partial barcode match (contains mode by default)
+      service.setSearchBarcodeQuery('111', 'contains');
+      filtered = service.filteredProducts();
+      expect(filtered.length).toBe(4); // 111001, 111002, 111003, 111004
+
+      // Exact barcode match
+      service.setSearchBarcodeQuery('111', 'exact');
+      filtered = service.filteredProducts();
+      expect(filtered.length).toBe(0); // no exact match for '111'
+
+      service.setSearchBarcodeQuery('111001', 'exact');
       filtered = service.filteredProducts();
       expect(filtered.length).toBe(1);
-      expect(filtered[0].id).toBe(5);
-      expect(filtered[0].barcode).toBe('222001');
+      expect(filtered[0].id).toBe(1);
 
       // Searching name in barcode search should NOT match
       service.setSearchBarcodeQuery('نستله');
       filtered = service.filteredProducts();
       expect(filtered.length).toBe(0);
+    });
+
+    it('should check if exact barcode exists in catalog correctly via hasExactBarcodeMatch', () => {
+      expect(service.hasExactBarcodeMatch('111001')).toBeTrue();
+      expect(service.hasExactBarcodeMatch('222001')).toBeTrue();
+      expect(service.hasExactBarcodeMatch('111')).toBeFalse();
+      expect(service.hasExactBarcodeMatch('999999')).toBeFalse();
+      expect(service.hasExactBarcodeMatch('')).toBeFalse();
     });
 
     it('should filter correctly when both name and barcode searches are used together', () => {

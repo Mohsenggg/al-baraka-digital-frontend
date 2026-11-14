@@ -13,29 +13,40 @@
                         <div class="header-start-group">
                               <h1 class="page-title">المنتجات</h1>
 
-                              <!-- Search by Product Name -->
-                              <div class="search-field-wrapper search-name-wrapper">
-                                    <input type="text" class="pos-input search-input"
-                                          placeholder="بحث باسم المنتج..." [value]="localSearchName()"
-                                          (input)="onSearchNameInput($event)" (keydown)="onSearchNameKeyDown($event)"
-                                          autocomplete="off" dir="rtl" aria-label="بحث باسم المنتج">
-                                    <button type="button" class="clear-icon-button"
-                                          *ngIf="localSearchName() || searchNameQuery()" (click)="clearSearchName()"
-                                          aria-label="مسح بحث الاسم">
-                                          <span class="material-icons-outlined">close</span>
-                                    </button>
-                              </div>
+                              <!-- Search Inputs Group with One Shared Search Icon -->
+                              <div class="search-group-container">
+                                    <!-- Search by Product Name -->
+                                    <div class="search-field-wrapper search-name-wrapper">
+                                          <input type="text" class="pos-input search-input"
+                                                placeholder="بحث باسم المنتج..." [value]="localSearchName()"
+                                                (input)="onSearchNameInput($event)" (keydown)="onSearchNameKeyDown($event)"
+                                                autocomplete="off" dir="rtl" aria-label="بحث باسم المنتج">
+                                          <button type="button" class="clear-icon-button"
+                                                *ngIf="localSearchName() || searchNameQuery()" (click)="clearSearchName()"
+                                                aria-label="مسح بحث الاسم">
+                                                <span class="material-icons-outlined">close</span>
+                                          </button>
+                                    </div>
 
-                              <!-- Search by Barcode -->
-                              <div class="search-field-wrapper search-barcode-wrapper">
-                                    <input type="text" class="pos-input search-input"
-                                          placeholder="بحث بالباركود..." [value]="localSearchBarcode()"
-                                          (input)="onSearchBarcodeInput($event)" (keydown)="onSearchBarcodeInputKeyDown($event)"
-                                          autocomplete="off" dir="rtl" aria-label="بحث بالباركود">
-                                    <button type="button" class="clear-icon-button"
-                                          *ngIf="localSearchBarcode() || searchBarcodeQuery()" (click)="clearSearchBarcode()"
-                                          aria-label="مسح بحث الباركود">
-                                          <span class="material-icons-outlined">close</span>
+                                    <!-- Search by Barcode -->
+                                    <div class="search-field-wrapper search-barcode-wrapper">
+                                          <input type="text" class="pos-input search-input"
+                                                placeholder="بحث بالباركود..." [value]="localSearchBarcode()"
+                                                (input)="onSearchBarcodeInput($event)" (keydown)="onSearchBarcodeInputKeyDown($event)"
+                                                autocomplete="off" dir="rtl" aria-label="بحث بالباركود">
+                                          <button type="button" class="clear-icon-button"
+                                                *ngIf="localSearchBarcode() || searchBarcodeQuery()" (click)="clearSearchBarcode()"
+                                                aria-label="مسح بحث الباركود">
+                                                <span class="material-icons-outlined">close</span>
+                                          </button>
+                                    </div>
+
+                                    <!-- Shared Search Button -->
+                                    <button type="button" class="shared-search-btn"
+                                          (click)="executeSharedSearch()"
+                                          [disabled]="!localSearchName() && !localSearchBarcode()"
+                                          title="بحث" aria-label="بحث">
+                                          <span class="material-icons-outlined">search</span>
                                     </button>
                               </div>
 
@@ -262,11 +273,23 @@
             <!-- ============================= -->
             <div #tableWrapper class="table-wrapper">
 
+                  <!-- Barcode Not Found Banner -->
+                  <div class="barcode-not-found-alert" *ngIf="barcodeNotFoundQuery()">
+                        <span class="material-icons-outlined alert-icon">error_outline</span>
+                        <div class="alert-content">
+                              <strong>الباركود غير موجود:</strong>
+                              <span>لا يوجد أي منتج مسجل بالباركود ({{ barcodeNotFoundQuery() }})</span>
+                        </div>
+                        <button type="button" class="btn-dismiss-alert" (click)="clearBarcodeNotFound()" aria-label="إغلاق">
+                              <span class="material-icons-outlined">close</span>
+                        </button>
+                  </div>
+
                   <!-- Empty State -->
                   <div class="empty-state" *ngIf="!isLoading() && products().length === 0">
-                        <span class="material-icons-outlined empty-icon">inventory_2</span>
-                        <h3>لم يتم العثور على منتجات</h3>
-                        <p>جرب تغيير معايير البحث أو إنشاء منتج جديد.</p>
+                        <span class="material-icons-outlined empty-icon">{{ barcodeNotFoundQuery() ? 'search_off' : 'inventory_2' }}</span>
+                        <h3>{{ barcodeNotFoundQuery() ? 'الباركود غير موجود' : 'لم يتم العثور على منتجات' }}</h3>
+                        <p>{{ barcodeNotFoundQuery() ? 'لا يوجد أي منتج مسجل بالباركود (' + barcodeNotFoundQuery() + '). يرجى التحقق من الرقم أو إضافة منتج جديد.' : 'جرب تغيير معايير البحث أو إنشاء منتج جديد.' }}</p>
                         <button class="btn-add-product-empty" routerLink="/pos/product/manage">
                               <span class="material-icons-outlined">add_circle</span>
                               إضافة منتج

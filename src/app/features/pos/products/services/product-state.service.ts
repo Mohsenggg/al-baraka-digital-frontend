@@ -33,6 +33,7 @@ export class ProductStateService {
       public searchQuery = signal<string>('');
       public searchNameQuery = signal<string>('');
       public searchBarcodeQuery = signal<string>('');
+      public barcodeMatchMode = signal<'contains' | 'exact'>('contains');
       public selectedStatus = signal<string>('');
 
       // Selected IDs (Multi-select)
@@ -62,6 +63,7 @@ export class ProductStateService {
             const query = this.searchQuery().trim().toLowerCase();
             const nameQuery = this.searchNameQuery().trim().toLowerCase();
             const barcodeQuery = this.searchBarcodeQuery().trim().toLowerCase();
+            const barcodeMode = this.barcodeMatchMode();
             const status = this.selectedStatus().trim().toLowerCase();
             const selectedCats = this.selectedCategories().map(String);
             const selectedBrs = this.selectedBrands().map(String);
@@ -82,16 +84,20 @@ export class ProductStateService {
             const stMax = this.stockMax();
 
             return all.filter(p => {
-                  // Search by Product Name
+                  // Search by Product Name (contains search)
                   if (nameQuery) {
                         const matchName = p.name ? p.name.toLowerCase().includes(nameQuery) : false;
                         if (!matchName) return false;
                   }
 
-                  // Search by Barcode
+                  // Search by Barcode (contains while typing, exact on Enter/Search button)
                   if (barcodeQuery) {
-                        const matchBarcode = p.barcode ? p.barcode.toLowerCase().includes(barcodeQuery) : false;
-                        if (!matchBarcode) return false;
+                        const pBarcode = p.barcode ? p.barcode.trim().toLowerCase() : '';
+                        if (barcodeMode === 'exact') {
+                              if (pBarcode !== barcodeQuery) return false;
+                        } else {
+                              if (!pBarcode.includes(barcodeQuery)) return false;
+                        }
                   }
 
                   // Search query (matches name or barcode)
@@ -398,9 +404,21 @@ export class ProductStateService {
             this.currentPage.set(1);
       }
 
-      public setSearchBarcodeQuery(query: string): void {
+      public setSearchBarcodeQuery(query: string, matchMode: 'contains' | 'exact' = 'contains'): void {
             this.searchBarcodeQuery.set(query);
+            this.barcodeMatchMode.set(matchMode);
             this.currentPage.set(1);
+      }
+
+      public setBarcodeMatchMode(mode: 'contains' | 'exact'): void {
+            this.barcodeMatchMode.set(mode);
+            this.currentPage.set(1);
+      }
+
+      public hasExactBarcodeMatch(barcode: string): boolean {
+            const target = barcode.trim().toLowerCase();
+            if (!target) return false;
+            return this.catalogStore.products().some(p => (p.barcode ? p.barcode.trim().toLowerCase() : '') === target);
       }
 
       public setSelectedStatus(status: string): void {
@@ -451,6 +469,7 @@ export class ProductStateService {
             this.searchQuery.set('');
             this.searchNameQuery.set('');
             this.searchBarcodeQuery.set('');
+            this.barcodeMatchMode.set('contains');
             this.selectedCategories.set([]);
             this.selectedBrands.set([]);
             this.selectedProductGroups.set([]);

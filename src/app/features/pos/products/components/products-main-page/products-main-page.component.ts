@@ -15,6 +15,7 @@ import { RouterModule, Router } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { SidebarComponent } from '../../../../../shared/components/sidebar/sidebar.component';
 import { ProductStateService } from '../../services/product-state.service';
+import { NotificationService } from '../../../../../shared/services/notification.service';
 import {
       getStockClass,
       getStockLabel,
@@ -34,6 +35,7 @@ import {
 export class ProductsMainPageComponent implements OnInit, OnDestroy {
       private state = inject(ProductStateService);
       private router = inject(Router);
+      private notificationService = inject(NotificationService);
       private searchSubject = new Subject<string>();
       private searchNameSubject = new Subject<string>();
       private searchBarcodeSubject = new Subject<string>();
@@ -50,6 +52,9 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
 
       localSearchBarcode = signal(this.state.searchBarcodeQuery());
       searchBarcodeQuery = this.state.searchBarcodeQuery;
+
+      // Barcode Not Found State for Exact Search
+      barcodeNotFoundQuery = signal<string>('');
 
       // Legacy Search Signals
       localSearchTerm = signal(this.state.searchQuery());
@@ -112,7 +117,7 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
                   debounceTime(300),
                   distinctUntilChanged()
             ).subscribe(query => {
-                  this.state.setSearchBarcodeQuery(query);
+                  this.state.setSearchBarcodeQuery(query, 'contains');
             });
 
             this.searchSubject.pipe(
@@ -143,19 +148,19 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
       onSearchNameInput(event: Event): void {
             const input = event.target as HTMLInputElement;
             this.localSearchName.set(input.value);
+            this.barcodeNotFoundQuery.set('');
             this.resetScroll();
             this.searchNameSubject.next(input.value);
       }
 
       onSearchNameKeyDown(event: KeyboardEvent): void {
             if (event.key === 'Enter') {
-                  this.executeSearchName();
+                  this.executeSharedSearch();
             }
       }
 
       executeSearchName(): void {
-            this.resetScroll();
-            this.state.setSearchNameQuery(this.localSearchName());
+            this.executeSharedSearch();
       }
 
       clearSearchName(): void {
@@ -168,25 +173,57 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
       onSearchBarcodeInput(event: Event): void {
             const input = event.target as HTMLInputElement;
             this.localSearchBarcode.set(input.value);
+            this.barcodeNotFoundQuery.set('');
+            // As user types, default behavior is contains / partial match
+            this.state.setBarcodeMatchMode('contains');
             this.resetScroll();
             this.searchBarcodeSubject.next(input.value);
       }
 
       onSearchBarcodeInputKeyDown(event: KeyboardEvent): void {
             if (event.key === 'Enter') {
-                  this.executeSearchBarcode();
+                  this.executeSharedSearch();
             }
       }
 
       executeSearchBarcode(): void {
-            this.resetScroll();
-            this.state.setSearchBarcodeQuery(this.localSearchBarcode());
+            this.executeSharedSearch();
       }
 
       clearSearchBarcode(): void {
             this.localSearchBarcode.set('');
+            this.barcodeNotFoundQuery.set('');
             this.resetScroll();
-            this.state.setSearchBarcodeQuery('');
+            this.state.setSearchBarcodeQuery('', 'contains');
+      }
+
+      clearBarcodeNotFound(): void {
+            this.barcodeNotFoundQuery.set('');
+      }
+
+      // --- One Shared Search Action for Both Name & Barcode ---
+      executeSharedSearch(): void {
+            this.resetScroll();
+            const barcodeVal = this.localSearchBarcode().trim();
+            const nameVal = this.localSearchName().trim();
+
+            this.state.setSearchNameQuery(nameVal);
+
+            if (barcodeVal) {
+                  // Perform exact barcode match on Enter or shared search icon click
+                  this.state.setSearchBarcodeQuery(barcodeVal, 'exact');
+
+                  const exists = this.state.hasExactBarcodeMatch(barcodeVal);
+                  if (!exists) {
+                        this.barcodeNotFoundQuery.set(barcodeVal);
+                        this.notificationService.warning(`الباركود غير موجود: ${barcodeVal}`);
+                  } else {
+                        this.barcodeNotFoundQuery.set('');
+                  }
+            } else {
+                  this.barcodeNotFoundQuery.set('');
+                  this.state.setSearchBarcodeQuery('', 'contains');
+            }
       }
 
       // --- Backward-Compatible Generic Search Handlers ---
@@ -199,13 +236,12 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
 
       onSearchKeyDown(event: KeyboardEvent): void {
             if (event.key === 'Enter') {
-                  this.executeSearch();
+                  this.executeSharedSearch();
             }
       }
 
       executeSearch(): void {
-            this.resetScroll();
-            this.state.setSearchQuery(this.localSearchTerm());
+            this.executeSharedSearch();
       }
 
       clearSearch(): void {
@@ -376,6 +412,7 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
             this.localSearchName.set('');
             this.localSearchBarcode.set('');
             this.localSearchTerm.set('');
+            this.barcodeNotFoundQuery.set('');
             this.localBuyingPriceMin.set(null);
             this.localBuyingPriceMax.set(null);
             this.localSellingPriceMin.set(null);
