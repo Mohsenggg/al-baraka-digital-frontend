@@ -181,14 +181,20 @@
       position: relative;
       display: flex;
       align-items: center;
-      flex: 0 1 180px;
-      min-width: 125px;
-      max-width: 200px;
+      flex: 0 1 160px;
+      min-width: 105px;
+      max-width: 185px;
       border: 1.5px solid #e2e8f0;
       border-radius: 8px;
       background-color: #f8fafc;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
       overflow: hidden;
+}
+
+.search-field-wrapper.search-barcode-wrapper {
+      flex: 0 1 130px;
+      min-width: 95px;
+      max-width: 155px;
 }
 
 .search-field-wrapper:focus-within {

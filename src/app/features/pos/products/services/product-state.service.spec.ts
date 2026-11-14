@@ -374,6 +374,8 @@ describe('ProductStateService Cascading Filters', () => {
       service.setSelectedBrands([10]);
       service.setSelectedProductGroups([100]);
       service.setSearchQuery('بيبسي');
+      service.setSearchNameQuery('كانز');
+      service.setSearchBarcodeQuery('111001');
 
       service.clearFilters();
 
@@ -381,7 +383,80 @@ describe('ProductStateService Cascading Filters', () => {
       expect(service.selectedBrands()).toEqual([]);
       expect(service.selectedProductGroups()).toEqual([]);
       expect(service.searchQuery()).toBe('');
+      expect(service.searchNameQuery()).toBe('');
+      expect(service.searchBarcodeQuery()).toBe('');
       expect(service.filteredProducts().length).toBe(5);
+    });
+  });
+
+  describe('Validation Requirement 6: Independent Search by Product Name and Barcode', () => {
+    it('should search products exclusively by name when searchNameQuery is set', () => {
+      service.setSearchNameQuery('عصير');
+      let filtered = service.filteredProducts();
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].id).toBe(2);
+      expect(filtered[0].name).toBe('عصير برتقال تروبيكانا');
+
+      // Searching barcode value in name search should NOT match
+      service.setSearchNameQuery('111002');
+      filtered = service.filteredProducts();
+      expect(filtered.length).toBe(0);
+
+      // Substring case-insensitive match
+      service.setSearchNameQuery('مياه');
+      filtered = service.filteredProducts();
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].id).toBe(3);
+    });
+
+    it('should search products exclusively by barcode when searchBarcodeQuery is set', () => {
+      service.setSearchBarcodeQuery('111003');
+      let filtered = service.filteredProducts();
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].id).toBe(3);
+      expect(filtered[0].name).toBe('مياه نستله 600 مل');
+
+      // Partial barcode match
+      service.setSearchBarcodeQuery('222');
+      filtered = service.filteredProducts();
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].id).toBe(5);
+      expect(filtered[0].barcode).toBe('222001');
+
+      // Searching name in barcode search should NOT match
+      service.setSearchBarcodeQuery('نستله');
+      filtered = service.filteredProducts();
+      expect(filtered.length).toBe(0);
+    });
+
+    it('should filter correctly when both name and barcode searches are used together', () => {
+      // Both match product 1 ('بيبسي كانز 330 مل', '111001')
+      service.setSearchNameQuery('بيبسي');
+      service.setSearchBarcodeQuery('111001');
+      let filtered = service.filteredProducts();
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].id).toBe(1);
+
+      // Name matches product 1, but barcode matches product 2 ('111002') -> 0 results
+      service.setSearchBarcodeQuery('111002');
+      filtered = service.filteredProducts();
+      expect(filtered.length).toBe(0);
+    });
+
+    it('should report active filters correctly for name and barcode searches', () => {
+      expect(service.hasActiveFilters()).toBeFalse();
+
+      service.setSearchNameQuery('شيبس');
+      expect(service.hasActiveFilters()).toBeTrue();
+
+      service.setSearchNameQuery('');
+      expect(service.hasActiveFilters()).toBeFalse();
+
+      service.setSearchBarcodeQuery('222001');
+      expect(service.hasActiveFilters()).toBeTrue();
+
+      service.setSearchBarcodeQuery('');
+      expect(service.hasActiveFilters()).toBeFalse();
     });
   });
 });

@@ -13,21 +13,28 @@
                         <div class="header-start-group">
                               <h1 class="page-title">المنتجات</h1>
 
-                              <!-- Search Field (cashier-receipt style) -->
-                              <div class="search-field-wrapper">
+                              <!-- Search by Product Name -->
+                              <div class="search-field-wrapper search-name-wrapper">
                                     <input type="text" class="pos-input search-input"
-                                          placeholder="بحث بالاسم أو الباركود..." [value]="localSearchTerm()"
-                                          (input)="onSearchInput($event)" (keydown)="onSearchKeyDown($event)"
-                                          autocomplete="off" dir="rtl">
-                                    <!-- <button type="button" class="search-icon-button"
-                                          (click)="executeSearch()"
-                                          [disabled]="!localSearchTerm()"
-                                          aria-label="بحث">
-                                          <span class="material-icons-outlined">search</span>
-                                    </button> -->
+                                          placeholder="بحث باسم المنتج..." [value]="localSearchName()"
+                                          (input)="onSearchNameInput($event)" (keydown)="onSearchNameKeyDown($event)"
+                                          autocomplete="off" dir="rtl" aria-label="بحث باسم المنتج">
                                     <button type="button" class="clear-icon-button"
-                                          *ngIf="localSearchTerm() || searchQuery()" (click)="clearSearch()"
-                                          aria-label="مسح">
+                                          *ngIf="localSearchName() || searchNameQuery()" (click)="clearSearchName()"
+                                          aria-label="مسح بحث الاسم">
+                                          <span class="material-icons-outlined">close</span>
+                                    </button>
+                              </div>
+
+                              <!-- Search by Barcode -->
+                              <div class="search-field-wrapper search-barcode-wrapper">
+                                    <input type="text" class="pos-input search-input"
+                                          placeholder="بحث بالباركود..." [value]="localSearchBarcode()"
+                                          (input)="onSearchBarcodeInput($event)" (keydown)="onSearchBarcodeInputKeyDown($event)"
+                                          autocomplete="off" dir="rtl" aria-label="بحث بالباركود">
+                                    <button type="button" class="clear-icon-button"
+                                          *ngIf="localSearchBarcode() || searchBarcodeQuery()" (click)="clearSearchBarcode()"
+                                          aria-label="مسح بحث الباركود">
                                           <span class="material-icons-outlined">close</span>
                                     </button>
                               </div>

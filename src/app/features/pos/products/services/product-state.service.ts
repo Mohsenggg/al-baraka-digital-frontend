@@ -31,6 +31,8 @@ export class ProductStateService {
 
       // Search & Status filters
       public searchQuery = signal<string>('');
+      public searchNameQuery = signal<string>('');
+      public searchBarcodeQuery = signal<string>('');
       public selectedStatus = signal<string>('');
 
       // Selected IDs (Multi-select)
@@ -58,6 +60,8 @@ export class ProductStateService {
       public readonly filteredProducts = computed<CatalogProduct[]>(() => {
             const all = this.catalogStore.products();
             const query = this.searchQuery().trim().toLowerCase();
+            const nameQuery = this.searchNameQuery().trim().toLowerCase();
+            const barcodeQuery = this.searchBarcodeQuery().trim().toLowerCase();
             const status = this.selectedStatus().trim().toLowerCase();
             const selectedCats = this.selectedCategories().map(String);
             const selectedBrs = this.selectedBrands().map(String);
@@ -78,6 +82,18 @@ export class ProductStateService {
             const stMax = this.stockMax();
 
             return all.filter(p => {
+                  // Search by Product Name
+                  if (nameQuery) {
+                        const matchName = p.name ? p.name.toLowerCase().includes(nameQuery) : false;
+                        if (!matchName) return false;
+                  }
+
+                  // Search by Barcode
+                  if (barcodeQuery) {
+                        const matchBarcode = p.barcode ? p.barcode.toLowerCase().includes(barcodeQuery) : false;
+                        if (!matchBarcode) return false;
+                  }
+
                   // Search query (matches name or barcode)
                   if (query) {
                         const matchName = p.name ? p.name.toLowerCase().includes(query) : false;
@@ -377,6 +393,16 @@ export class ProductStateService {
             this.currentPage.set(1);
       }
 
+      public setSearchNameQuery(query: string): void {
+            this.searchNameQuery.set(query);
+            this.currentPage.set(1);
+      }
+
+      public setSearchBarcodeQuery(query: string): void {
+            this.searchBarcodeQuery.set(query);
+            this.currentPage.set(1);
+      }
+
       public setSelectedStatus(status: string): void {
             this.selectedStatus.set(status);
             this.currentPage.set(1);
@@ -423,6 +449,8 @@ export class ProductStateService {
 
       public clearFilters(): void {
             this.searchQuery.set('');
+            this.searchNameQuery.set('');
+            this.searchBarcodeQuery.set('');
             this.selectedCategories.set([]);
             this.selectedBrands.set([]);
             this.selectedProductGroups.set([]);
@@ -443,6 +471,8 @@ export class ProductStateService {
       public hasActiveFilters(): boolean {
             return !!(
                   this.searchQuery() ||
+                  this.searchNameQuery() ||
+                  this.searchBarcodeQuery() ||
                   this.selectedCategories().length > 0 ||
                   this.selectedBrands().length > 0 ||
                   this.selectedProductGroups().length > 0 ||

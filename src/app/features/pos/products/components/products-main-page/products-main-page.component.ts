@@ -35,6 +35,8 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
       private state = inject(ProductStateService);
       private router = inject(Router);
       private searchSubject = new Subject<string>();
+      private searchNameSubject = new Subject<string>();
+      private searchBarcodeSubject = new Subject<string>();
 
       @ViewChild('tableWrapper') tableWrapper?: ElementRef<HTMLElement>;
 
@@ -42,6 +44,14 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
 
       isLoading = this.state.isLoading;
 
+      // Independent Name & Barcode Search Signals
+      localSearchName = signal(this.state.searchNameQuery());
+      searchNameQuery = this.state.searchNameQuery;
+
+      localSearchBarcode = signal(this.state.searchBarcodeQuery());
+      searchBarcodeQuery = this.state.searchBarcodeQuery;
+
+      // Legacy Search Signals
       localSearchTerm = signal(this.state.searchQuery());
       searchQuery = this.state.searchQuery;
       selectedStatus = this.state.selectedStatus;
@@ -91,6 +101,20 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
       ngOnInit(): void {
             this.state.loadProducts();
 
+            this.searchNameSubject.pipe(
+                  debounceTime(300),
+                  distinctUntilChanged()
+            ).subscribe(query => {
+                  this.state.setSearchNameQuery(query);
+            });
+
+            this.searchBarcodeSubject.pipe(
+                  debounceTime(300),
+                  distinctUntilChanged()
+            ).subscribe(query => {
+                  this.state.setSearchBarcodeQuery(query);
+            });
+
             this.searchSubject.pipe(
                   debounceTime(300),
                   distinctUntilChanged()
@@ -100,6 +124,8 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
       }
 
       ngOnDestroy(): void {
+            this.searchNameSubject.complete();
+            this.searchBarcodeSubject.complete();
             this.searchSubject.complete();
       }
 
@@ -113,6 +139,57 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
             this.sidebarVisible.update(v => !v);
       }
 
+      // --- Name Search Handlers ---
+      onSearchNameInput(event: Event): void {
+            const input = event.target as HTMLInputElement;
+            this.localSearchName.set(input.value);
+            this.resetScroll();
+            this.searchNameSubject.next(input.value);
+      }
+
+      onSearchNameKeyDown(event: KeyboardEvent): void {
+            if (event.key === 'Enter') {
+                  this.executeSearchName();
+            }
+      }
+
+      executeSearchName(): void {
+            this.resetScroll();
+            this.state.setSearchNameQuery(this.localSearchName());
+      }
+
+      clearSearchName(): void {
+            this.localSearchName.set('');
+            this.resetScroll();
+            this.state.setSearchNameQuery('');
+      }
+
+      // --- Barcode Search Handlers ---
+      onSearchBarcodeInput(event: Event): void {
+            const input = event.target as HTMLInputElement;
+            this.localSearchBarcode.set(input.value);
+            this.resetScroll();
+            this.searchBarcodeSubject.next(input.value);
+      }
+
+      onSearchBarcodeInputKeyDown(event: KeyboardEvent): void {
+            if (event.key === 'Enter') {
+                  this.executeSearchBarcode();
+            }
+      }
+
+      executeSearchBarcode(): void {
+            this.resetScroll();
+            this.state.setSearchBarcodeQuery(this.localSearchBarcode());
+      }
+
+      clearSearchBarcode(): void {
+            this.localSearchBarcode.set('');
+            this.resetScroll();
+            this.state.setSearchBarcodeQuery('');
+      }
+
+      // --- Backward-Compatible Generic Search Handlers ---
       onSearchInput(event: Event): void {
             const input = event.target as HTMLInputElement;
             this.localSearchTerm.set(input.value);
@@ -133,6 +210,8 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
 
       clearSearch(): void {
             this.localSearchTerm.set('');
+            this.clearSearchName();
+            this.clearSearchBarcode();
             this.resetScroll();
             this.state.setSearchQuery('');
       }
@@ -294,6 +373,8 @@ export class ProductsMainPageComponent implements OnInit, OnDestroy {
 
       clearFilters(): void {
             this.resetScroll();
+            this.localSearchName.set('');
+            this.localSearchBarcode.set('');
             this.localSearchTerm.set('');
             this.localBuyingPriceMin.set(null);
             this.localBuyingPriceMax.set(null);
