@@ -2,8 +2,8 @@
 
 /* You can add global styles to this file, and also import other style files */
 body {
-      margin: 0;
-      display: block;
+    margin: 0;
+    display: block;
 }
 
 /* Shared Design System for Tree Panels (Edit & Invitation) */
@@ -24,18 +24,23 @@ body {
 
     /* POS Design System Variables */
     --pos-bg: #f5f6f8;
-    --pos-primary: #1e3a8a; /* Blue */
+    --pos-primary: #1e3a8a;
+    /* Blue */
     --pos-primary-hover: #1e40af;
-    --pos-danger: #fee2e2; /* Light Red */
-    --pos-danger-text: #ef4444; /* Red Text */
+    --pos-danger: #fee2e2;
+    /* Light Red */
+    --pos-danger-text: #ef4444;
+    /* Red Text */
     --pos-danger-hover: #fecaca;
-    --pos-success-bg: #e6fcf5; /* Light Green */
-    --pos-success-text: #047857; /* Dark Green Text */
+    --pos-success-bg: #e6fcf5;
+    /* Light Green */
+    --pos-success-text: #047857;
+    /* Dark Green Text */
     --pos-border: #929bad;
     --pos-card-bg: #ffffff;
     --pos-text-primary: #1f2937;
     --pos-text-secondary: #6b7280;
-    
+
     --pos-spacing-xs: 2px;
     --pos-spacing-sm: 4px;
     --pos-spacing-md: 8px;
@@ -67,6 +72,7 @@ body {
     background-color: var(--pos-primary);
     color: white;
 }
+
 .pos-btn-primary:hover {
     background-color: var(--pos-primary-hover);
 }
@@ -76,6 +82,7 @@ body {
     border-color: var(--pos-border);
     color: var(--pos-text-primary);
 }
+
 .pos-btn-outline:hover {
     background-color: #f9fafb;
     border-color: #d1d5db;
@@ -86,6 +93,7 @@ body {
     color: var(--pos-danger-text);
     border-color: var(--pos-danger);
 }
+
 .pos-btn-danger:hover {
     background-color: var(--pos-danger-hover);
 }
@@ -99,10 +107,12 @@ body {
     cursor: pointer;
     transition: color 0.2s, background-color 0.2s;
 }
+
 .pos-btn-icon-only:hover {
     color: var(--pos-primary);
     background-color: #f3f4f6;
 }
+
 .pos-btn-icon-only.danger:hover {
     color: var(--pos-danger-text);
     background-color: var(--pos-danger);
@@ -110,9 +120,9 @@ body {
 
 .pos-card {
     background: var(--pos-card-bg);
-    border-radius: var(--pos-radius-lg);
+    border-radius: 2px;
     border: 1px solid var(--pos-border);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .pos-input {
@@ -126,6 +136,7 @@ body {
     background-color: #ffffff;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
+
 .pos-input:focus {
     outline: none;
     border-color: var(--pos-primary);
@@ -148,8 +159,15 @@ body {
 }
 
 @keyframes panelSlideIn {
-    from { opacity: 0; transform: translateY(10px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .modern-panel.mobile-modal {

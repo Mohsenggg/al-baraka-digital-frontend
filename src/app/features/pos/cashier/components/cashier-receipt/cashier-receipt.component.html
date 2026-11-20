@@ -237,39 +237,6 @@
             </form>
       </div>
 
-      <!-- ============================= -->
-      <!-- TOTALS BAR -->
-      <!-- ============================= -->
-      <div class="totals-bar-container">
-            <div class="totals-row">
-                  <div class="total-item label-only">
-                        <span class="material-icons-outlined ti-icon">receipt_long</span>
-                        <span class="label">إجمالي الفاتورة</span>
-                  </div>
-
-                  <div class="total-stats">
-                        <div class="total-item">
-                              <span class="label">عدد الأصناف</span>
-                              <span class="value">{{ distinctItemsCount }}</span>
-                        </div>
-
-                        <div class="total-item">
-                              <span class="label">الكمية</span>
-                              <span class="value">{{ totalQuantity }}</span>
-                        </div>
-                  </div>
-
-                  <div class="total-item amount-due">
-                        <span class="material-icons-outlined due-icon">payments</span>
-                        <span class="label">المبلغ المطلوب</span>
-                        <span class="value">
-                              <span class="amount">{{ finalTotal | number:'1.2-2' }}</span>
-                              <span class="currency">جنية</span>
-                        </span>
-                  </div>
-            </div>
-      </div>
-
       <!-- Product Search Popup -->
       <app-product-search-popup [isOpen]="popupOpen" [products]="products" [trigger]="searchTriggerEl"
             [initialQuery]="popupInitialQuery" (productSelected)="onPopupProductSelected($event)"

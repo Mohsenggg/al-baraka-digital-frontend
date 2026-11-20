@@ -1455,126 +1455,150 @@
 }
 
 /* ============================= */
-/* TOTALS BAR */
+/* HEADER RECEIPT TOTAL CARD */
 /* ============================= */
 
-.totals-bar-container {
-      background-color: #ffffff;
-      border-radius: var(--pos-radius-md);
-      padding: 5px 12px;
-      margin-top: var(--pos-spacing-sm);
-      border: 1px solid var(--pos-border);
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
-      direction: rtl;
-}
-
-.totals-row {
+.header-total-card {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: var(--pos-spacing-md);
-      flex-wrap: wrap;
+      gap: 12px;
+      padding: 3px;
+      padding-inline-start: 12px;
+      padding-inline-end: 3px;
+      background: var(--pos-card-bg, #ffffff);
+      border: 1px solid var(--pos-border, #e2e8f0);
+      border-radius: var(--pos-radius-md, 10px);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      margin-right: auto;
+      margin-inline-start: auto;
+      flex-shrink: 0;
+      height: 38px;
+      box-sizing: border-box;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.total-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+.header-total-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-/* Heading */
-.label-only {
-      gap: 8px;
-}
-
-.label-only .ti-icon {
-      width: 24px;
-      height: 24px;
-      display: grid;
-      place-items: center;
-      border-radius: 7px;
-      background: #eff6ff;
-      color: var(--pos-primary);
-      font-size: 0.95rem;
-}
-
-.label-only .label {
-      font-size: 0.82rem;
-      font-weight: 800;
-      color: var(--pos-text-primary);
-}
-
-/* Secondary stat chips */
-.total-stats {
+/* Secondary Metrics (Pieces & Items) in Outer Card */
+.header-metrics-group {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
 }
 
-.total-stats .total-item {
-      background: #f8fafc;
-      border: 1px solid var(--pos-border);
-      border-radius: 20px;
-      padding: 2px 10px;
+.header-metrics-group .metric-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
 }
 
-.total-stats .label {
-      color: var(--pos-text-secondary);
-      font-size: 0.7rem;
+.header-metrics-group .metric-label {
+      font-size: 0.65rem;
       font-weight: 600;
+      color: #64748b;
+      line-height: 1.1;
+      white-space: nowrap;
 }
 
-.total-stats .value {
-      color: var(--pos-text-primary);
-      font-weight: 800;
-      font-size: 0.85rem;
+.header-metrics-group .metric-value {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+      white-space: nowrap;
 }
 
-/* Amount due - prominent green pill */
-.amount-due {
-      background: var(--pos-success-bg);
-      border: 1px solid rgba(4, 120, 87, 0.18);
-      border-radius: var(--pos-radius-md);
-      padding: 3px 6px 3px 12px;
-      gap: 7px;
+.header-metrics-group .metric-divider {
+      width: 1px;
+      height: 18px;
+      background-color: var(--pos-border, #e2e8f0);
+      flex-shrink: 0;
 }
 
-.amount-due .due-icon {
-      width: 24px;
-      height: 24px;
-      display: grid;
-      place-items: center;
+/* Inner Green Card (Amount Only) */
+.header-amount-card {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+      min-width: 135px;
+      padding: 0 12px;
+      background: var(--pos-success-bg, #e6fcf5);
+      border: 1px solid rgba(4, 120, 87, 0.22);
       border-radius: 7px;
-      background: #ffffff;
-      color: var(--pos-success-text);
-      font-size: 0.95rem;
-      box-shadow: 0 1px 2px rgba(4, 120, 87, 0.15);
+      box-sizing: border-box;
+      box-shadow: 0 1px 2px rgba(4, 120, 87, 0.06);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.amount-due .label {
-      color: var(--pos-success-text);
+.header-amount-card:hover {
+      border-color: rgba(4, 120, 87, 0.35);
+}
+
+.header-amount-card .amount-display {
+      display: inline-flex;
+      align-items: baseline;
+      direction: ltr;
+      line-height: 1;
+      gap: 1px;
+}
+
+.header-amount-card .total-integer {
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: var(--pos-success-text, #047857);
+      line-height: 1;
+      letter-spacing: -0.5px;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+}
+
+.header-amount-card .total-decimal {
+      font-size: 0.87rem;
+      /* Exactly 60% of 1.45rem */
+      font-weight: 700;
+      color: var(--pos-success-text, #047857);
+      line-height: 1;
+      opacity: 0.88;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+}
+
+.header-amount-card .total-currency {
       font-size: 0.72rem;
       font-weight: 700;
+      color: var(--pos-success-text, #047857);
+      line-height: 1;
+      margin-left: 3px;
+      opacity: 0.85;
 }
 
-.amount-due .value {
-      display: flex;
-      align-items: baseline;
-      gap: 2px;
-      font-size: 1.05rem;
-      font-weight: 800;
-      color: var(--pos-success-text);
+/* Adjustments when right sidebar is open */
+.cashier-layout.right-sidebar-visible .header-total-card {
+      gap: 8px;
+      padding-inline-start: 8px;
+      padding-inline-end: 3px;
 }
 
-.amount-due .amount {
-      font-size: 3rem;
+.cashier-layout.right-sidebar-visible .header-amount-card {
+      min-width: 125px;
+      padding: 0 8px;
 }
 
-.currency {
-      font-size: 0.78rem;
-      font-weight: 700;
-      margin-right: 2px;
+.cashier-layout.right-sidebar-visible .header-amount-card .total-integer {
+      font-size: 1.35rem;
+}
+
+.cashier-layout.right-sidebar-visible .header-amount-card .total-decimal {
+      font-size: 0.81rem;
+      /* Exactly 60% of 1.35rem */
 }
 
 /* ============================= */
@@ -1804,7 +1828,7 @@
 
 .pos-card {
       background-color: var(--pos-card-bg);
-      border-radius: var(--pos-radius-lg);
+      border-radius: 2px;
       border: 1px solid var(--pos-border);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
@@ -1881,13 +1905,19 @@
 
       .main-actions-bar {
             width: 100%;
-            order: 2;
+            order: 3;
             justify-content: center;
             margin-top: 8px;
       }
 
       .right-toggle {
             order: 1;
+      }
+
+      .header-total-card {
+            order: 2;
+            margin-right: 0;
+            margin-inline-start: 0;
       }
 
       .receipt-navigation-row {

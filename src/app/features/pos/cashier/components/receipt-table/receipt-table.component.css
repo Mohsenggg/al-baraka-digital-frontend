@@ -40,6 +40,10 @@
   transition: background-color 0.15s;
 }
 
+.table-container pos-card {
+  border-radius: 2px !important;
+}
+
 .table-row:hover {
   background-color: #f9fafb;
 }
@@ -59,14 +63,42 @@
 }
 
 /* Column widths */
-.num-col      { flex: 0.4; color: var(--pos-text-secondary); font-size: 0.75rem; }
-.code-col     { flex: 1.2; }
-.name-col     { flex: 2; justify-content: flex-start; padding-right: var(--pos-spacing-sm); }
-.price-col    { flex: 1; }
-.qty-col      { flex: 1.2; }
-.total-col    { flex: 1; }
-.balance-col  { flex: 1; }
-.actions-col  { flex: 0.8; gap: var(--pos-spacing-xs); }
+.num-col {
+  flex: 0.4;
+  color: var(--pos-text-secondary);
+  font-size: 0.75rem;
+}
+
+.code-col {
+  flex: 1.2;
+}
+
+.name-col {
+  flex: 2;
+  justify-content: flex-start;
+  padding-right: var(--pos-spacing-sm);
+}
+
+.price-col {
+  flex: 1;
+}
+
+.qty-col {
+  flex: 1.2;
+}
+
+.total-col {
+  flex: 1;
+}
+
+.balance-col {
+  flex: 1;
+}
+
+.actions-col {
+  flex: 0.8;
+  gap: var(--pos-spacing-xs);
+}
 
 /* Qty stepper inside table */
 .qty-stepper {
@@ -92,6 +124,7 @@
   justify-content: center;
   font-size: 1rem;
 }
+
 .stepper-btn:hover {
   background-color: #eff6ff;
 }
@@ -131,10 +164,12 @@
   font-size: 1rem;
   line-height: 1;
 }
+
 .pos-btn-icon-only:hover {
   color: var(--pos-primary);
   background-color: #f3f4f6;
 }
+
 .pos-btn-icon-only.danger:hover {
   color: var(--pos-danger-text);
   background-color: var(--pos-danger);

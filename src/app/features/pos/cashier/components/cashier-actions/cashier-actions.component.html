@@ -68,4 +68,29 @@
 
             </div>
       </div>
+
+      <!-- Receipt Totals Card (Outer Card: Metrics | Inner Green Card: Amount) -->
+      <div class="header-total-card">
+            <!-- Secondary Metrics: Total Pieces & Total Items -->
+            <div class="header-metrics-group">
+                  <div class="metric-item" title="عدد القطع الكلي">
+                        <span class="metric-label">القطع</span>
+                        <span class="metric-value">{{ totalQuantity }}</span>
+                  </div>
+                  <div class="metric-divider"></div>
+                  <div class="metric-item" title="عدد الأصناف المختلفة">
+                        <span class="metric-label">الأصناف</span>
+                        <span class="metric-value">{{ distinctItemsCount }}</span>
+                  </div>
+            </div>
+
+            <!-- Primary Metric: Inner Green Amount Card -->
+            <div class="header-amount-card">
+                  <div class="amount-display" dir="ltr">
+                        <span class="total-integer">{{ integerPart }}</span>
+                        <span class="total-decimal">{{ decimalPart }}</span>
+                        <span class="total-currency">جنية</span>
+                  </div>
+            </div>
+      </div>
 </div>
