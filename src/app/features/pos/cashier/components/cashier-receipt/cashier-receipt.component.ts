@@ -1,6 +1,6 @@
 import {
   Component, Input, Output, EventEmitter, ChangeDetectionStrategy,
-  ViewChild, ViewChildren, QueryList, ElementRef, OnInit, OnDestroy, inject, ChangeDetectorRef
+  ViewChild, ViewChildren, QueryList, ElementRef, OnInit, OnDestroy, inject, ChangeDetectorRef, signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -103,6 +103,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       popupOpen = false;
       popupInitialQuery = '';
       searchTerm = '';
+      barcodeNotFound = signal<string | null>(null);
       private quantityInputModified = false;
       private lastAddedProductId: number | null = null;
       private isSelectingFromPopup = false;
@@ -124,11 +125,21 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
                   debounceTime(80)
             ).subscribe(value => {
                   this.searchTerm = typeof value === 'string' ? value.trim() : '';
+                  if (this.barcodeNotFound() && this.searchTerm !== this.barcodeNotFound()) {
+                        this.clearNotFoundAlert();
+                  }
                   if (!this.searchTerm) {
                         this.popupOpen = false;
                   }
                   this.cdr.markForCheck();
             });
+      }
+
+      clearNotFoundAlert(): void {
+            if (this.barcodeNotFound()) {
+                  this.barcodeNotFound.set(null);
+                  this.cdr.markForCheck();
+            }
       }
 
       ngOnDestroy() {
@@ -203,24 +214,29 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
 
             const exact = this.productSearch.findExactByCode(this.products, term);
             if (exact) {
+                  this.clearNotFoundAlert();
                   this.onSelectProduct(exact);
                   return;
             }
 
             const matches = this.productSearch.filterProducts(this.products, { query: term });
             if (matches.length === 1) {
+                  this.clearNotFoundAlert();
                   this.onSelectProduct(matches[0]);
                   return;
             }
 
             if (matches.length > 1) {
+                  this.clearNotFoundAlert();
                   this.openProductPopup(term);
                   return;
             }
 
-            // If no match found, place the code in the search input and focus it
+            // If no match found, place the code in the search input and focus it, and show not found alert
+            this.barcodeNotFound.set(term);
             this.inputForm.patchValue({ barcode: term });
             this.focusBarcodeScanner();
+            this.cdr.markForCheck();
       }
 
       submitInputRow() {
@@ -246,6 +262,11 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       onSearchKeyDown(event: KeyboardEvent) {
             if (this.popupOpen) return;
 
+            if (event.key === 'Escape' && this.barcodeNotFound()) {
+                  this.clearNotFoundAlert();
+                  return;
+            }
+
             if (event.key === 'Enter') {
                   event.preventDefault();
                   event.stopPropagation();
@@ -254,6 +275,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       }
 
       onPopupProductSelected(product: Product): void {
+            this.clearNotFoundAlert();
             this.isSelectingFromPopup = true;
             this.onSelectProduct(product);
       }
@@ -269,6 +291,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       }
 
       onSelectProduct(product: Product) {
+            this.clearNotFoundAlert();
             const quantity = this.inputForm.get('quantity')?.value || 1;
             this.lastAddedProductId = product.id;
             this.addItem.emit({ product, quantity });

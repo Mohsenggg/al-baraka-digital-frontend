@@ -81,8 +81,7 @@
                         <div class="payment-stat paid">
                               <div class="payment-label">المدفوع نقداً</div>
                               <input type="number" #paidInput class="paid-amount-input no-spinner"
-                                    [value]="paidAmount || ''" 
-                                    (input)="onPaidAmountChange($event)"
+                                    [value]="paidAmount || ''" (input)="onPaidAmountChange($event)"
                                     (keyup.enter)="onPaymentInputEnter($event)">
                         </div>
 
@@ -131,8 +130,7 @@
                         <div class="table-row" *ngFor="let item of items; let i = index; trackBy: trackByProductId"
                               [class.stock-error-row]="!!item.stockError">
                               <button type="button" class="td-cell num-col copy-barcode"
-                                    [attr.title]="item.product.barcode || null"
-                                    aria-label="نسخ باركود الصنف"
+                                    [attr.title]="item.product.barcode || null" aria-label="نسخ باركود الصنف"
                                     (click)="copyProductBarcode(item.product.barcode)">{{ i + 1 }}</button>
                               <div class="td-cell name-col">
                                     <div class="name-cell-content">
@@ -143,8 +141,8 @@
                               </div>
                               <div class="td-cell price-col">
                                     <input type="number" *ngIf="receiptMode !== 'VIEW'"
-                                          class="pos-input text-center no-spinner qty-input"
-                                          [value]="item.sellingPrice" (input)="onInlineFieldChange(item, 'sellingPrice', $event)"
+                                          class="pos-input text-center no-spinner qty-input" [value]="item.sellingPrice"
+                                          (input)="onInlineFieldChange(item, 'sellingPrice', $event)"
                                           (keyup.enter)="onInlineFieldEnter(item, 'sellingPrice', $event)"
                                           style="width: 70px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; appearance: none; -moz-appearance: textfield;">
                                     <div *ngIf="receiptMode === 'VIEW'">{{ item.sellingPrice | number:'1.2-2' }}</div>
@@ -156,11 +154,9 @@
                                                 (click)="updateQuantity.emit({item: item, delta: -1})">-</button>
                                           <input type="text" inputmode="decimal" *ngIf="receiptMode !== 'VIEW'"
                                                 class="pos-input text-center no-spinner qty-input"
-                                                [value]="item.quantity"
-                                                (input)="onQuantityInput()"
+                                                [value]="item.quantity" (input)="onQuantityInput()"
                                                 (keydown)="onQuantityKeyDown(item, $event)"
-                                                (blur)="onQuantityBlur(item, $event)"
-                                                (focus)="onQuantityFocus($event)"
+                                                (blur)="onQuantityBlur(item, $event)" (focus)="onQuantityFocus($event)"
                                                 [attr.data-product-id]="item.productId" #rowQtyInput
                                                 style="width: 60px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; appearance: none; -moz-appearance: textfield;">
                                           <div class="qty-value" *ngIf="receiptMode === 'VIEW'">{{ item.quantity }}
@@ -172,8 +168,8 @@
 
                               <div class="td-cell total-col fw-bold">
                                     <input type="number" *ngIf="receiptMode !== 'VIEW'"
-                                          class="pos-input text-center no-spinner qty-input"
-                                          [value]="item.total" (input)="onInlineFieldChange(item, 'total', $event)"
+                                          class="pos-input text-center no-spinner qty-input" [value]="item.total"
+                                          (input)="onInlineFieldChange(item, 'total', $event)"
                                           (keyup.enter)="onInlineFieldEnter(item, 'total', $event)"
                                           [readonly]="!item.sellingPrice"
                                           style="width: 80px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; appearance: none; -moz-appearance: textfield;">
@@ -202,19 +198,28 @@
             <!-- ============================= -->
             <!-- RECEIPT INPUT ROW -->
             <!-- ============================= -->
-            <form [formGroup]="inputForm" (ngSubmit)="$event.preventDefault(); submitInputRow()" class="input-row compact-search-row"
-                  *ngIf="receiptMode !== 'VIEW'">
+            <form [formGroup]="inputForm" (ngSubmit)="$event.preventDefault(); submitInputRow()"
+                  class="input-row compact-search-row" *ngIf="receiptMode !== 'VIEW'">
 
                   <div class="search-field-wrapper">
-                        <input #searchInput type="text" formControlName="barcode"
-                              class="pos-input search-input" placeholder="مسح باركود أو كتابة اسم/كود الصنف"
-                              autofocus (keydown)="onSearchKeyDown($event)"
-                              (dblclick)="onSearchDoubleClick($event)"
+                        <input #searchInput type="text" formControlName="barcode" class="pos-input search-input"
+                              placeholder="مسح باركود أو كتابة اسم/كود الصنف" autofocus
+                              (keydown)="onSearchKeyDown($event)" (dblclick)="onSearchDoubleClick($event)"
                               autocomplete="off">
                         <button type="button" class="search-icon-button" (click)="onSearchClicked()"
                               [disabled]="!searchTerm" aria-label="بحث">
                               <span class="material-icons-outlined">search</span>
                         </button>
+
+                        <div class="barcode-not-found-alert" *ngIf="barcodeNotFound()">
+                              <span class="material-icons-outlined alert-icon">error_outline</span>
+                              <span class="alert-text">الصنف غير مسجل بالباركود: <strong>{{ barcodeNotFound()
+                                          }}</strong></span>
+                              <button type="button" class="btn-dismiss-alert" (click)="clearNotFoundAlert()"
+                                    aria-label="إغلاق">
+                                    <span class="material-icons-outlined">close</span>
+                              </button>
+                        </div>
                   </div>
 
                   <!-- <div class="quantity-field-wrapper">
