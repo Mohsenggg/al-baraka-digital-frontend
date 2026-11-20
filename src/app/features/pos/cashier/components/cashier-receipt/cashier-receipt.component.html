@@ -157,6 +157,7 @@
                                           <input type="text" inputmode="decimal" *ngIf="receiptMode !== 'VIEW'"
                                                 class="pos-input text-center no-spinner qty-input"
                                                 [value]="item.quantity"
+                                                (input)="onQuantityInput()"
                                                 (keydown)="onQuantityKeyDown(item, $event)"
                                                 (blur)="onQuantityBlur(item, $event)"
                                                 (focus)="onQuantityFocus($event)"

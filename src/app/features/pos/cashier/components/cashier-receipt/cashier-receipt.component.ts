@@ -103,6 +103,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       popupOpen = false;
       popupInitialQuery = '';
       searchTerm = '';
+      private quantityInputModified = false;
       private lastAddedProductId: number | null = null;
       private isSelectingFromPopup = false;
 
@@ -162,6 +163,11 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       private isBarcodeValue(value: string, currentItem: CartItem): boolean {
             const trimmed = (value || '').trim();
             if (!trimmed) return false;
+
+            // When the value matches the current item quantity, it is quantity confirmation, not a barcode scan
+            if (trimmed === String(currentItem.quantity)) {
+                  return false;
+            }
 
             // 1. If it matches the current item's barcode exactly, it is definitely a repeated scan
             if (currentItem.product?.barcode && trimmed.toLowerCase() === currentItem.product.barcode.toLowerCase()) {
@@ -275,7 +281,12 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
 
       @Output() updateItemField = new EventEmitter<{ item: CartItem, field: 'sellingPrice' | 'quantity' | 'total', value: number }>();
 
+      onQuantityInput(): void {
+            this.quantityInputModified = true;
+      }
+
       onQuantityFocus(event: FocusEvent): void {
+            this.quantityInputModified = false;
             const input = event.target as HTMLInputElement;
             input.select();
       }
@@ -286,6 +297,16 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
                   event.stopPropagation();
                   const input = event.target as HTMLInputElement;
                   const rawVal = input.value.trim();
+
+                  // If the user did not modify the field or value equals current quantity, confirm quantity and return to barcode input
+                  if (!this.quantityInputModified || rawVal === String(item.quantity)) {
+                        const qty = parseFloat(rawVal);
+                        if (!isNaN(qty) && qty > 0 && qty !== item.quantity) {
+                              this.updateItemField.emit({ item, field: 'quantity', value: qty });
+                        }
+                        this.focusBarcodeScanner();
+                        return;
+                  }
 
                   if (this.isBarcodeValue(rawVal, item)) {
                         input.value = String(item.quantity);
@@ -302,7 +323,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
             } else if (event.key === 'Tab') {
                   const input = event.target as HTMLInputElement;
                   const rawVal = input.value.trim();
-                  if (this.isBarcodeValue(rawVal, item)) {
+                  if (this.quantityInputModified && rawVal !== String(item.quantity) && this.isBarcodeValue(rawVal, item)) {
                         event.preventDefault();
                         input.value = String(item.quantity);
                         this.processBarcode(rawVal);
@@ -313,6 +334,16 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       onQuantityBlur(item: CartItem, event: FocusEvent): void {
             const input = event.target as HTMLInputElement;
             const rawVal = input.value.trim();
+
+            if (!this.quantityInputModified || rawVal === String(item.quantity)) {
+                  const qty = parseFloat(rawVal);
+                  if (!isNaN(qty) && qty > 0 && qty !== item.quantity) {
+                        this.updateItemField.emit({ item, field: 'quantity', value: qty });
+                  } else if (isNaN(qty) || qty <= 0) {
+                        input.value = String(item.quantity);
+                  }
+                  return;
+            }
 
             if (this.isBarcodeValue(rawVal, item)) {
                   input.value = String(item.quantity);
