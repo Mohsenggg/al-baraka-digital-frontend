@@ -74,6 +74,136 @@
       margin-bottom: 10px;
 }
 
+/* Sidebar Tabs (Permanent vs Temporary) */
+.sidebar-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 8px;
+}
+
+.sidebar-tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      border: none;
+      background: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+}
+
+.sidebar-tab-btn .material-icons-outlined {
+      font-size: 1rem;
+}
+
+.sidebar-tab-btn.active {
+      background: #ffffff;
+      color: var(--pos-primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-tab-btn:hover:not(.active) {
+      color: #0f172a;
+}
+
+.tab-badge {
+      background: #f59e0b;
+      color: #ffffff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 10px;
+      line-height: 1.2;
+}
+
+/* Temporary Card Specifics */
+.temporary-card {
+      border-color: #fed7aa;
+      background: #fffaf5;
+}
+
+.temporary-card:hover {
+      border-color: #f97316;
+}
+
+.temporary-card.active {
+      border-color: #ea580c;
+      background: #fff7ed;
+      box-shadow: 0 0 0 1px #ea580c;
+}
+
+.temp-id-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+}
+
+.temp-id-badge .temp-icon {
+      font-size: 1rem;
+      color: #ea580c;
+}
+
+.card-sub-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+}
+
+.item-count-chip {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #475569;
+}
+
+.customer-chip {
+      font-size: 0.65rem;
+      color: #64748b;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+}
+
+.btn-delete-draft {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 3px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+}
+
+.btn-delete-draft .material-icons-outlined {
+      font-size: 1.1rem;
+}
+
+.btn-delete-draft:hover {
+      color: #ef4444;
+      background: #fee2e2;
+}
+
+.empty-subtext {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-top: 4px;
+      text-align: center;
+}
+
 .header-top h3 {
       margin: 0;
       font-size: 0.85rem;
@@ -2908,4 +3038,244 @@
 .refill-shortage-banner strong {
       color: #c2410c;
       font-weight: 800;
+}
+
+/* POS Modal Dialogs (New Receipt, Navigation Protection & Conflict Handling) */
+.pos-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      direction: rtl;
+}
+
+.pos-modal-card {
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 480px;
+      overflow: hidden;
+      animation: modalFadeIn 0.2s ease-out;
+      border: 1px solid #e2e8f0;
+}
+
+.pos-modal-header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f1f5f9;
+      background: #ffffff;
+}
+
+.pos-modal-header-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+}
+
+.pos-modal-header-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+}
+
+.pos-modal-header-icon .material-icons-outlined {
+      font-size: 1.25rem;
+}
+
+.pos-modal-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+}
+
+.pos-modal-subtitle {
+      margin: 2px 0 0;
+      font-size: 0.75rem;
+      color: #64748b;
+}
+
+.pos-modal-body {
+      padding: 18px 20px;
+      font-size: 0.85rem;
+      color: #334155;
+      line-height: 1.5;
+}
+
+.pos-modal-prompt {
+      margin: 0 0 14px 0;
+      font-size: 0.82rem;
+      color: #475569;
+      font-weight: 600;
+}
+
+.pos-modal-actions-stacked {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+}
+
+/* Choice Buttons styled consistently with Header Action Buttons */
+.pos-action-choice-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+      color: #1e293b;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: right;
+      width: 100%;
+      box-sizing: border-box;
+}
+
+.pos-action-choice-btn:hover:not(:disabled) {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pos-action-choice-btn:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: none;
+}
+
+.pos-action-choice-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-color: #e2e8f0;
+      background: #f8fafc;
+}
+
+.pos-action-icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #475569;
+      transition: all 0.2s ease;
+}
+
+.pos-action-icon-box .material-icons-outlined {
+      font-size: 1.25rem;
+}
+
+.pos-action-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+}
+
+.pos-action-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+}
+
+.pos-action-en {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: #64748b;
+}
+
+.pos-action-desc {
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: #64748b;
+      line-height: 1.3;
+}
+
+/* Subtle contextual visual emphasis (neutral, professional) */
+.pos-action-choice-btn--temp:hover:not(:disabled) {
+      border-color: #94a3b8;
+}
+
+.pos-action-choice-btn--temp:hover:not(:disabled) .pos-action-icon-box {
+      background: #e2e8f0;
+      color: #0f172a;
+}
+
+.pos-action-choice-btn--permanent .pos-action-icon-box {
+      background: #eff6ff;
+      border-color: #dbeafe;
+      color: #1e40af;
+}
+
+.pos-action-choice-btn--permanent:hover:not(:disabled) {
+      border-color: #2b4c9b;
+}
+
+.pos-action-choice-btn--permanent:hover:not(:disabled) .pos-action-icon-box {
+      background: #dbeafe;
+      color: #1d4ed8;
+}
+
+.pos-action-choice-btn--delete:hover:not(:disabled) {
+      border-color: #fca5a5;
+      background: #fffafa;
+}
+
+.pos-action-choice-btn--delete:hover:not(:disabled) .pos-action-icon-box {
+      background: #fee2e2;
+      border-color: #fecaca;
+      color: #dc2626;
+}
+
+.pos-modal-footer {
+      padding: 10px 18px;
+      background: #f8fafc;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: flex-end;
+}
+
+.pos-modal-cancel-btn {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      padding: 5px 14px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      height: 32px;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+}
+
+.pos-modal-cancel-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+      color: #0f172a;
 }

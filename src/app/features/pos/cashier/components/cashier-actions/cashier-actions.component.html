@@ -38,20 +38,22 @@
 
           
 
-            <!-- Temporary Actions Group (Drafts) - Only visible when receipt is not yet saved -->
-            <div class="temporary-actions-group" *ngIf="!((receipt?.id && receiptMode !== 'NEW') || receiptMode === 'VIEW')">
-                  <button type="button" class="btn-temporary-save" title="حفظ مؤقت (Temporary Save)" aria-label="حفظ مؤقت">
+            <!-- Temporary Actions Group (Drafts) - Visible when receipt is new or is a draft -->
+            <div class="temporary-actions-group" *ngIf="receiptMode === 'NEW' || receipt?.status === 'DRAFT'">
+                  <button type="button" class="btn-temporary-save" (click)="temporarySave.emit()"
+                        [disabled]="isLoading || distinctItemsCount === 0"
+                        title="حفظ مؤقت (Temporary Save)" aria-label="حفظ مؤقت">
                         <span class="text">حفظ مؤقت</span>
                         <span class="material-icons-outlined">pause_circle_outline</span>
                   </button>
 
                   <button type="button" class="btn-temporary-receipts" (click)="drafts.emit()" title="الفواتير المؤقتة (Temporary Receipts)" aria-label="الفواتير المؤقتة">
                         <span class="material-icons-outlined">pending_actions</span>
-                        <span class="temporary-badge" aria-label="3 فواتير مؤقتة">{{ draftsCount || 3 }}</span>
+                        <span class="temporary-badge" [attr.aria-label]="draftsCount + ' فواتير مؤقتة'">{{ draftsCount }}</span>
                   </button>
             </div>
 
-            <div class="left-action-group" *ngIf="(receipt?.id && receiptMode !== 'NEW') || receiptMode === 'VIEW'">
+            <div class="left-action-group" *ngIf="((receipt?.id && receiptMode !== 'NEW') || receiptMode === 'VIEW') && receipt?.status !== 'DRAFT'">
                   <span class="group-label">
                         <span class="material-icons-outlined">info</span>
                         مرتد كاشير:

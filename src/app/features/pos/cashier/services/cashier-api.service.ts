@@ -69,6 +69,32 @@ export class CashierApiService {
     return `${this.apiUrl}/${id}/preview`;
   }
 
+  // --------- Temporary Receipts (Drafts) API ---------
+
+  public createTemporaryReceipt(payload: CreateReceiptInput): Observable<ReceiptResponse> {
+    return this.http.post<ReceiptResponse>(`${this.apiUrl}/temporary`, payload);
+  }
+
+  public updateTemporaryReceipt(id: number, payload: UpdateReceiptInput): Observable<ReceiptResponse> {
+    return this.http.put<ReceiptResponse>(`${this.apiUrl}/temporary/${id}`, payload);
+  }
+
+  public completeTemporaryReceipt(id: number, payload: CreateReceiptInput): Observable<ReceiptResponse> {
+    return this.http.post<ReceiptResponse>(`${this.apiUrl}/temporary/${id}/complete`, payload);
+  }
+
+  public deleteTemporaryReceipt(id: number): Observable<DeleteReceiptResponse> {
+    return this.http.delete<DeleteReceiptResponse>(`${this.apiUrl}/temporary/${id}`);
+  }
+
+  public getTemporaryReceipts(): Observable<ReceiptListItemDto[]> {
+    return this.http.get<ReceiptListItemDto[]>(`${this.apiUrl}/temporary`);
+  }
+
+  public getTemporaryReceiptsCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${this.apiUrl}/temporary/count`);
+  }
+
   // --------- Refill API ---------
   
   public validateRefill(payload: import('../../core/models/pos.models').RefillValidateRequest): Observable<import('../../core/models/pos.models').RefillValidateResponse> {

@@ -66,6 +66,12 @@ export class CashierStateService {
       private currentSavedReceiptSignal = signal<ReceiptResponse | null>(null);
       public currentReceipt = this.currentSavedReceiptSignal.asReadonly();
 
+      private draftsCountSignal = signal<number>(0);
+      public draftsCount = this.draftsCountSignal.asReadonly();
+
+      private temporaryReceiptsSignal = signal<ReceiptListItemDto[]>([]);
+      public temporaryReceipts = this.temporaryReceiptsSignal.asReadonly();
+
       private receiptModeSignal = signal<ReceiptMode>('NEW');
       public receiptMode = this.receiptModeSignal.asReadonly();
 
@@ -427,6 +433,152 @@ export class CashierStateService {
                   }),
                   finalize(() => this.setLoading(false))
             );
+      }
+
+      // --------- Temporary Receipts (Drafts) State Methods ---------
+
+      public loadTemporaryReceiptsCount(): void {
+            this.api.getTemporaryReceiptsCount().subscribe({
+                  next: (res) => this.draftsCountSignal.set(res.count),
+                  error: (err) => console.error('[State] Failed to load drafts count:', err)
+            });
+      }
+
+      public loadTemporaryReceipts(): void {
+            this.setLoading(true);
+            this.api.getTemporaryReceipts().subscribe({
+                  next: (list) => {
+                        this.temporaryReceiptsSignal.set(list || []);
+                        this.draftsCountSignal.set(list?.length || 0);
+                        this.clearError();
+                  },
+                  error: (err) => this.handleError(err),
+                  complete: () => this.setLoading(false)
+            });
+      }
+
+      public saveTemporaryReceipt(payload: CreateReceiptInput): Observable<ReceiptResponse> {
+            const current = this.currentSavedReceiptSignal();
+            const isExistingDraft = current?.id && current?.status === 'DRAFT';
+            this.setLoading(true);
+
+            const request$ = isExistingDraft
+                  ? this.api.updateTemporaryReceipt(current.id, payload)
+                  : this.api.createTemporaryReceipt(payload);
+
+            return request$.pipe(
+                  tap(() => {
+                        this.clearCart();
+                        this.loadTemporaryReceiptsCount();
+                        this.loadTemporaryReceipts();
+                        this.clearError();
+                  }),
+                  catchError((err) => {
+                        this.handleError(err);
+                        return throwError(() => err);
+                  }),
+                  finalize(() => this.setLoading(false))
+            );
+      }
+
+      public completeTemporaryReceipt(id: number, payload: CreateReceiptInput): Observable<ReceiptResponse> {
+            this.setLoading(true);
+            return this.api.completeTemporaryReceipt(id, payload).pipe(
+                  tap((receipt) => {
+                        this.updateProductsCacheFromReceipt(receipt);
+                        this.currentSavedReceiptSignal.set(receipt);
+                        this.clearCart();
+                        this.loadTemporaryReceiptsCount();
+                        this.loadTemporaryReceipts();
+                        this.clearError();
+                  }),
+                  catchError((err) => {
+                        this.handleError(err);
+                        return throwError(() => err);
+                  }),
+                  finalize(() => this.setLoading(false))
+            );
+      }
+
+      public deleteTemporaryReceipt(id: number): Observable<DeleteReceiptResponse> {
+            this.setLoading(true);
+            return this.api.deleteTemporaryReceipt(id).pipe(
+                  tap(() => {
+                        const updatedList = this.temporaryReceiptsSignal().filter(r => r.id !== id);
+                        this.temporaryReceiptsSignal.set(updatedList);
+                        this.draftsCountSignal.set(updatedList.length);
+                        if (this.currentSavedReceiptSignal()?.id === id) {
+                              this.clearCart();
+                        }
+                  }),
+                  catchError((err) => {
+                        this.handleError(err);
+                        return throwError(() => err);
+                  }),
+                  finalize(() => this.setLoading(false))
+            );
+      }
+
+      public loadDraftReceipt(id: number): Observable<ReceiptResponse> {
+            this.setLoading(true);
+            return this.api.getReceiptById(id).pipe(
+                  tap((receipt) => {
+                        this.setDraftReceiptAsCurrent(receipt);
+                        this.clearError();
+                  }),
+                  catchError((err) => {
+                        this.handleError(err);
+                        return throwError(() => err);
+                  }),
+                  finalize(() => this.setLoading(false))
+            );
+      }
+
+      public setDraftReceiptAsCurrent(receipt: ReceiptResponse): void {
+            this.setReceiptMode('EDIT');
+            this.currentSavedReceiptSignal.set(receipt);
+
+            this.draftItemsSignal.set(
+                  receipt.items.map((i, index) => {
+                        const foundProduct = this.catalogStore.findByBarcode(i.productCode);
+                        const uniqueId = foundProduct ? foundProduct.id : -(index + 1);
+                        const currentLiveStock = foundProduct
+                              ? foundProduct.stockQuantity
+                              : (i.currentRemainingStock ?? i.remainingStock ?? 0);
+
+                        const itemStockError = currentLiveStock < i.quantity
+                              ? `الكمية المطلوبة (${i.quantity}) تتجاوز الرصيد المتاح (${currentLiveStock})`
+                              : undefined;
+
+                        return {
+                              productId: uniqueId,
+                              productName: i.productName,
+                              quantity: i.quantity,
+                              sellingPrice: i.sellingPrice,
+                              buyingPrice: i.buyingPrice,
+                              discount: 0,
+                              total: i.totalPrice,
+                              remainingStock: currentLiveStock - i.quantity,
+                              product: foundProduct || this.seed.getPlaceholderProduct({
+                                    id: uniqueId,
+                                    name: i.productName,
+                                    barcode: i.productCode,
+                                    sellingPrice: i.sellingPrice,
+                                    buyingPrice: i.buyingPrice,
+                                    stockQuantity: currentLiveStock
+                              }),
+                              originalQuantity: i.quantity,
+                              originalRemainingStock: i.remainingStock,
+                              currentRemainingStock: currentLiveStock,
+                              stockError: itemStockError
+                        };
+                  })
+            );
+
+            this.navigationCache = [];
+            this.navCurrentIndex = -1;
+            this.navHasPrevious = false;
+            this.navHasNext = false;
       }
 
       private updateProductsCacheFromReceipt(receipt: ReceiptResponse): void {

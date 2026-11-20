@@ -4,11 +4,17 @@
       <!-- RIGHT SIDEBAR: RECEIPT HISTORY -->
       <!-- ============================= -->
       <app-cashier-sidebar
+            [activeTab]="sidebarActiveTab()"
+            [temporaryReceipts]="temporaryReceipts()"
+            [temporaryCount]="draftsCount()"
             [filteredReceipts]="filteredReceipts$ | async"
             [loading]="(loading$ | async) ?? false"
             [selectedReceiptId]="currentReceipt()?.id"
             (closeSidebar)="onToggleRightSidebar()"
             (selectReceipt)="onSelectReceipt($event)"
+            (selectTemporaryReceipt)="onSelectTemporaryReceipt($event)"
+            (deleteTemporaryReceipt)="onDeleteTemporaryReceipt($event)"
+            (tabChange)="sidebarActiveTab.set($event)"
             (applyFilters)="onApplyFilters($event)"
             (clearFilters)="onClearFilters()">
       </app-cashier-sidebar>
@@ -24,7 +30,7 @@
             <app-cashier-actions
                   [receipt]="currentReceipt()"
                   [receiptMode]="receiptMode()"
-                  [draftsCount]="5"
+                  [draftsCount]="draftsCount()"
                   [hasStockErrors]="hasStockErrors()"
                   [isLoading]="(loading$ | async) ?? false"
                   [finalTotal]="finalTotal()"
@@ -33,9 +39,10 @@
                   (toggleRightSidebar)="onToggleRightSidebar()"
                   (saveAndPrint)="onSaveAndPrint()"
                   (save)="onSave()"
+                  (temporarySave)="onTemporarySave()"
                   (edit)="onEdit()"
                   (newReceipt)="onNew()"
-                  (drafts)="onDrafts()"
+                  (drafts)="onOpenDraftsSidebar()"
                   (refundReceipt)="onRefund()">
             </app-cashier-actions>
 
@@ -61,7 +68,7 @@
                   (updateCustomerName)="onUpdateCustomerName($event)"
                   (updateCustomerPhone)="onUpdateCustomerPhone($event)"
                   [showPaymentScreen]="showPaymentScreen()"
-                  (closePaymentScreen)="showPaymentScreen.set(false)"
+                  (closePaymentScreen)="onClosePaymentScreen()"
                   (confirmPayment)="onConfirmPayment()">
             </app-cashier-receipt>
 
@@ -234,6 +241,133 @@
                               </button>
                         </div>
 
+                  </div>
+            </div>
+
+            <!-- ── Dialog: Starting New Receipt with In-Progress Data ── -->
+            <div class="pos-modal-overlay" *ngIf="showNewReceiptConfirmDialog()">
+                  <div class="pos-modal-card" role="dialog" aria-modal="true">
+                        <div class="pos-modal-header">
+                              <div class="pos-modal-header-content">
+                                    <div class="pos-modal-header-icon">
+                                          <span class="material-icons-outlined">pending_actions</span>
+                                    </div>
+                                    <div>
+                                          <h2 class="pos-modal-title">فاتورة قيد المعالجة</h2>
+                                          <p class="pos-modal-subtitle">توجد عناصر مسجلة في الفاتورة الحالية</p>
+                                    </div>
+                              </div>
+                              <button class="refill-dialog__close" (click)="onCancelNewReceiptDialog()" aria-label="إغلاق">
+                                    <span class="material-icons-outlined">close</span>
+                              </button>
+                        </div>
+
+                        <div class="pos-modal-body">
+                              <p class="pos-modal-prompt">
+                                    {{ pendingReceiptAction === 'PREVIOUS'
+                                          ? 'ماذا تريد أن تفعل بالفاتورة الحالية قبل الانتقال للفواتير السابقة؟'
+                                          : 'ماذا تريد أن تفعل بالفاتورة الحالية قبل بدء فاتورة جديدة؟' }}
+                              </p>
+                              
+                              <div class="pos-modal-actions-stacked">
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--temp" (click)="onConfirmNewWithTempSave()">
+                                          <div class="pos-action-icon-box">
+                                                <span class="material-icons-outlined">pause_circle_outline</span>
+                                          </div>
+                                          <div class="pos-action-content">
+                                                <div class="pos-action-title">
+                                                      <span>حفظ مؤقت</span>
+                                                      <span class="pos-action-en">(Save Temporarily)</span>
+                                                </div>
+                                                <div class="pos-action-desc">حفظ الفاتورة لاستئنافها لاحقاً دون خصم مخزون</div>
+                                          </div>
+                                    </button>
+
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--permanent" (click)="onConfirmNewWithPermanentSave()" [disabled]="hasStockErrors()">
+                                          <div class="pos-action-icon-box">
+                                                <span class="material-icons-outlined">check_circle_outline</span>
+                                          </div>
+                                          <div class="pos-action-content">
+                                                <div class="pos-action-title">
+                                                      <span>حفظ نهائي</span>
+                                                      <span class="pos-action-en">(Save Permanently)</span>
+                                                </div>
+                                                <div class="pos-action-desc">إتمام البيع وخصم المخزون وتسجيل الدفع</div>
+                                          </div>
+                                    </button>
+
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--delete" (click)="onConfirmNewWithDiscard()">
+                                          <div class="pos-action-icon-box">
+                                                <span class="material-icons-outlined">delete_outline</span>
+                                          </div>
+                                          <div class="pos-action-content">
+                                                <div class="pos-action-title">
+                                                      <span>حذف / تجاهل</span>
+                                                      <span class="pos-action-en">(Delete)</span>
+                                                </div>
+                                                <div class="pos-action-desc">تجاهل الفاتورة الحالية ومسح محتوياتها</div>
+                                          </div>
+                                    </button>
+                              </div>
+                        </div>
+
+                        <div class="pos-modal-footer">
+                              <button type="button" class="pos-modal-cancel-btn" (click)="onCancelNewReceiptDialog()">إلغاء والعودة للفاتورة</button>
+                        </div>
+                  </div>
+            </div>
+
+            <!-- ── Dialog: Conflict when Opening Temporary Receipt ── -->
+            <div class="pos-modal-overlay" *ngIf="showDraftConflictDialog()">
+                  <div class="pos-modal-card" role="dialog" aria-modal="true">
+                        <div class="pos-modal-header">
+                              <div class="pos-modal-header-content">
+                                    <div class="pos-modal-header-icon">
+                                          <span class="material-icons-outlined">warning</span>
+                                    </div>
+                                    <div>
+                                          <h2 class="pos-modal-title">استبدال الفاتورة الحالية</h2>
+                                          <p class="pos-modal-subtitle">توجد أصناف غير مكتملة في مساحة العمل</p>
+                                    </div>
+                              </div>
+                              <button class="refill-dialog__close" (click)="onCancelDraftConflict()" aria-label="إغلاق">
+                                    <span class="material-icons-outlined">close</span>
+                              </button>
+                        </div>
+
+                        <div class="pos-modal-body">
+                              <p class="pos-modal-prompt">توجد أصناف قيد الإدخال حالياً. قبل فتح الفاتورة المؤقتة، ماذا تريد أن تفعل بالأصناف الحالية؟</p>
+
+                              <div class="pos-modal-actions-stacked">
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--temp" (click)="onConflictSaveCurrentTemp()">
+                                          <div class="pos-action-icon-box">
+                                                <span class="material-icons-outlined">pause_circle_outline</span>
+                                          </div>
+                                          <div class="pos-action-content">
+                                                <div class="pos-action-title">
+                                                      <span>حفظ الفاتورة الحالية مؤقتاً أولاً</span>
+                                                </div>
+                                                <div class="pos-action-desc">حفظ الأصناف الحالية كمسودة ثم فتح الفاتورة المحددة</div>
+                                          </div>
+                                    </button>
+
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--delete" (click)="onConflictDiscardCurrent()">
+                                          <div class="pos-action-icon-box">
+                                                <span class="material-icons-outlined">delete_outline</span>
+                                          </div>
+                                          <div class="pos-action-content">
+                                                <div class="pos-action-title">
+                                                      <span>تجاهل الفاتورة الحالية وفتح المحددة</span>
+                                                </div>
+                                                <div class="pos-action-desc">مسح الأصناف الحالية وفتح الفاتورة المؤقتة مباشرة</div>
+                                          </div>
+                                    </button>
+                              </div>
+                        </div>
+
+                        <div class="pos-modal-footer">
+                              <button type="button" class="pos-modal-cancel-btn" (click)="onCancelDraftConflict()">إلغاء</button>
+                        </div>
                   </div>
             </div>
 

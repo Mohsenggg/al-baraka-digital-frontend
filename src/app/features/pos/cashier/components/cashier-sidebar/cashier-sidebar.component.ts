@@ -14,12 +14,18 @@ import { ReceiptListItemDto } from '../../../core/models/pos.models';
 export class CashierSidebarComponent {
       private fb = inject(FormBuilder);
 
+      @Input() activeTab: 'PERMANENT' | 'TEMPORARY' = 'PERMANENT';
+      @Input() temporaryReceipts: ReceiptListItemDto[] = [];
+      @Input() temporaryCount: number = 0;
       @Input() filteredReceipts: ReceiptListItemDto[] | null = [];
       @Input() loading = false;
       @Input() selectedReceiptId?: number | null;
 
       @Output() closeSidebar = new EventEmitter<void>();
       @Output() selectReceipt = new EventEmitter<number>();
+      @Output() selectTemporaryReceipt = new EventEmitter<number>();
+      @Output() deleteTemporaryReceipt = new EventEmitter<number>();
+      @Output() tabChange = new EventEmitter<'PERMANENT' | 'TEMPORARY'>();
       @Output() applyFilters = new EventEmitter<any>();
       @Output() clearFilters = new EventEmitter<void>();
 
@@ -38,6 +44,16 @@ export class CashierSidebarComponent {
                   paymentMethod: [''],
                   sort: ['receiptDate,DESC']
             });
+      }
+
+      setTab(tab: 'PERMANENT' | 'TEMPORARY') {
+            this.activeTab = tab;
+            this.tabChange.emit(tab);
+      }
+
+      onDeleteTemporary(event: Event, id: number) {
+            event.stopPropagation();
+            this.deleteTemporaryReceipt.emit(id);
       }
 
       toggleFilters() {

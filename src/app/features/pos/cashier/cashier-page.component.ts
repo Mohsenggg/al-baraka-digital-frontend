@@ -40,6 +40,7 @@ export class CashierPageComponent implements OnInit {
 
       sidebarVisible = signal(false);
       rightSidebarVisible = signal(false);
+      sidebarActiveTab = signal<'PERMANENT' | 'TEMPORARY'>('PERMANENT');
 
       // State bindings
       receipts$ = this.state.receipts$;
@@ -57,13 +58,21 @@ export class CashierPageComponent implements OnInit {
       receiptMode = this.state.receiptMode;
       hasStockErrors = this.state.hasStockErrors;
       products = this.state.products;
+      draftsCount = this.state.draftsCount;
+      temporaryReceipts = this.state.temporaryReceipts;
 
       showPaymentScreen = signal(false);
+      showNewReceiptConfirmDialog = signal(false);
+      showDraftConflictDialog = signal(false);
+      pendingDraftToLoad = signal<number | null>(null);
+      pendingReceiptAction: 'NEW' | 'PREVIOUS' | null = null;
 
       ngOnInit() {
             this.state.loadAllProducts().subscribe();
             // Initial fetch to populate sidebar
             this.state.filterReceipts({ page: 0, size: 20 });
+            this.state.loadTemporaryReceiptsCount();
+            this.state.loadTemporaryReceipts();
       }
 
       // Action Bar Events
@@ -94,31 +103,33 @@ export class CashierPageComponent implements OnInit {
                                     }
                                     // Reset intent after successful completion
                                     this.pendingPrintIntent = false;
+
+                                    if (this.pendingReceiptAction === 'PREVIOUS') {
+                                          this.pendingReceiptAction = null;
+                                          this.state.navigateReceipt('PREVIOUS');
+                                    } else {
+                                          this.pendingReceiptAction = null;
+                                    }
                               }
+                        },
+                        error: () => {
+                              this.pendingReceiptAction = null;
                         }
                   });
             }
       }
 
-      private doSave(): Observable<ReceiptResponse | null> {
-            const items = this.cartItems();
-            if (items.length === 0) return of(null);
-            if (this.hasStockErrors()) return of(null);
-            
-            if (!this.showPaymentScreen()) {
-                  this.showPaymentScreen.set(true);
-                  return of(null);
-            }
-
+      private buildReceiptPayload(): CreateReceiptInput {
             const receiptData = this.currentReceipt();
+            const items = this.cartItems();
+            const isEdit = this.receiptMode() === 'EDIT' && receiptData?.status !== 'DRAFT';
 
-            const isEdit = this.receiptMode() === 'EDIT';
-            const payload: CreateReceiptInput = {
+            return {
                   customerName: receiptData?.customerName || receiptData?.customer?.name || 'Walk-in Customer',
                   customerPhone: receiptData?.customerPhone || receiptData?.customer?.phone || '',
                   customerId: receiptData?.customerId || null,
                   cashierId: receiptData?.cashierId || 1,
-                  paymentMethod: receiptData?.paymentMethod || 'CASH',
+                  paymentMethod: (receiptData?.paymentMethod as PaymentMethod) || 'CASH',
                   receiptType: 'SELL',
                   totalQuantity: this.totalQuantity(),
                   items: items.map(item => ({
@@ -132,8 +143,29 @@ export class CashierPageComponent implements OnInit {
                         ...(isEdit && item.originalQuantity != null ? { originalQuantity: item.originalQuantity } : {})
                   }))
             };
+      }
 
-            if (this.receiptMode() === 'EDIT' && receiptData?.id) {
+      private doSave(): Observable<ReceiptResponse | null> {
+            const items = this.cartItems();
+            if (items.length === 0) return of(null);
+            if (this.hasStockErrors()) return of(null);
+            
+            if (!this.showPaymentScreen()) {
+                  this.showPaymentScreen.set(true);
+                  return of(null);
+            }
+
+            const receiptData = this.currentReceipt();
+            const payload = this.buildReceiptPayload();
+
+            if (receiptData?.status === 'DRAFT' && receiptData?.id) {
+                  return this.state.completeTemporaryReceipt(receiptData.id, payload).pipe(
+                        tap(() => {
+                              this.showPaymentScreen.set(false);
+                              this.state.filterReceipts({ page: 0, size: 20 });
+                        })
+                  );
+            } else if (this.receiptMode() === 'EDIT' && receiptData?.id) {
                   return this.state.updateReceipt(receiptData.id, payload).pipe(
                         tap(() => {
                               this.showPaymentScreen.set(false);
@@ -148,6 +180,29 @@ export class CashierPageComponent implements OnInit {
                         })
                   );
             }
+      }
+
+      onTemporarySave(onSuccess?: () => void) {
+            if (this.cartItems().length === 0) {
+                  this.notifications.warning('لا توجد عناصر لحفظها مؤقتاً');
+                  return;
+            }
+            const payload = this.buildReceiptPayload();
+            this.state.saveTemporaryReceipt(payload).subscribe({
+                  next: () => {
+                        this.notifications.success('تم حفظ الفاتورة مؤقتاً بنجاح');
+                        onSuccess?.();
+                  },
+                  error: () => {
+                        this.notifications.error('فشل حفظ الفاتورة مؤقتاً');
+                  }
+            });
+      }
+
+      onOpenDraftsSidebar() {
+            this.sidebarActiveTab.set('TEMPORARY');
+            this.rightSidebarVisible.set(true);
+            this.state.loadTemporaryReceipts();
       }
 
       onPrint() {
@@ -175,8 +230,128 @@ export class CashierPageComponent implements OnInit {
             });
       }
 
+      hasEnteredData(): boolean {
+            return this.receiptMode() !== 'VIEW' && this.cartItems().length > 0;
+      }
+
       onNew() {
-            this.state.clearCart();
+            if (this.hasEnteredData()) {
+                  this.pendingReceiptAction = 'NEW';
+                  this.showNewReceiptConfirmDialog.set(true);
+            } else {
+                  this.state.clearCart();
+            }
+      }
+
+      onConfirmNewWithTempSave() {
+            this.showNewReceiptConfirmDialog.set(false);
+            const action = this.pendingReceiptAction;
+            this.pendingReceiptAction = null;
+            this.onTemporarySave(() => {
+                  if (action === 'PREVIOUS') {
+                        this.state.navigateReceipt('PREVIOUS');
+                  }
+            });
+      }
+
+      onConfirmNewWithPermanentSave() {
+            this.showNewReceiptConfirmDialog.set(false);
+            this.onSave();
+      }
+
+      onConfirmNewWithDiscard() {
+            this.showNewReceiptConfirmDialog.set(false);
+            const action = this.pendingReceiptAction;
+            this.pendingReceiptAction = null;
+
+            const cur = this.currentReceipt();
+            if (cur?.id && cur?.status === 'DRAFT') {
+                  this.state.deleteTemporaryReceipt(cur.id).subscribe({
+                        next: () => {
+                              this.notifications.info(action === 'PREVIOUS' ? 'تم حذف الفاتورة المؤقتة والانتقال' : 'تم بدء فاتورة جديدة');
+                              if (action === 'PREVIOUS') {
+                                    this.state.navigateReceipt('PREVIOUS');
+                              }
+                        },
+                        error: () => {
+                              this.notifications.error('فشل حذف الفاتورة المؤقتة');
+                        }
+                  });
+            } else {
+                  this.state.clearCart();
+                  this.notifications.info(action === 'PREVIOUS' ? 'تم تجاهل الفاتورة والانتقال' : 'تم بدء فاتورة جديدة');
+                  if (action === 'PREVIOUS') {
+                        this.state.navigateReceipt('PREVIOUS');
+                  }
+            }
+      }
+
+      onCancelNewReceiptDialog() {
+            this.showNewReceiptConfirmDialog.set(false);
+            this.pendingReceiptAction = null;
+      }
+
+      onClosePaymentScreen() {
+            this.showPaymentScreen.set(false);
+            this.pendingReceiptAction = null;
+      }
+
+      onSelectTemporaryReceipt(id: number) {
+            if (this.cartItems().length > 0) {
+                  this.pendingDraftToLoad.set(id);
+                  this.showDraftConflictDialog.set(true);
+            } else {
+                  this.loadDraftDirectly(id);
+            }
+      }
+
+      onConflictSaveCurrentTemp() {
+            const draftId = this.pendingDraftToLoad();
+            this.showDraftConflictDialog.set(false);
+            const payload = this.buildReceiptPayload();
+            this.state.saveTemporaryReceipt(payload).subscribe({
+                  next: () => {
+                        if (draftId) {
+                              this.loadDraftDirectly(draftId);
+                        }
+                  }
+            });
+      }
+
+      onConflictDiscardCurrent() {
+            const draftId = this.pendingDraftToLoad();
+            this.showDraftConflictDialog.set(false);
+            if (draftId) {
+                  this.loadDraftDirectly(draftId);
+            }
+      }
+
+      onCancelDraftConflict() {
+            this.showDraftConflictDialog.set(false);
+            this.pendingDraftToLoad.set(null);
+      }
+
+      private loadDraftDirectly(id: number) {
+            this.state.loadDraftReceipt(id).subscribe({
+                  next: () => {
+                        this.notifications.success('تم فتح الفاتورة المؤقتة للمتابعة');
+                  },
+                  error: () => {
+                        this.notifications.error('فشل فتح الفاتورة المؤقتة');
+                  }
+            });
+      }
+
+      onDeleteTemporaryReceipt(id: number) {
+            if (!confirm('هل أنت متأكد من حذف هذه الفاتورة المؤقتة؟')) return;
+            this.state.deleteTemporaryReceipt(id).subscribe({
+                  next: () => {
+                        this.notifications.success('تم حذف الفاتورة المؤقتة بنجاح');
+                  },
+                  error: () => {
+                        this.notifications.error('فشل حذف الفاتورة المؤقتة');
+                  }
+            });
       }
 
       onEdit() {
@@ -201,13 +376,18 @@ export class CashierPageComponent implements OnInit {
                   }
             });
       }
-      onDrafts() { }
+      onDrafts() {
+            this.onOpenDraftsSidebar();
+      }
 
       onToggleSidebar() {
             this.sidebarVisible.update(v => !v);
       }
 
       onToggleRightSidebar() {
+            if (!this.rightSidebarVisible()) {
+                  this.sidebarActiveTab.set('PERMANENT');
+            }
             this.rightSidebarVisible.update(v => !v);
       }
 
@@ -490,7 +670,12 @@ export class CashierPageComponent implements OnInit {
       }
 
       onPreviousReceipt() {
-            this.state.navigateReceipt('PREVIOUS');
+            if (this.hasEnteredData()) {
+                  this.pendingReceiptAction = 'PREVIOUS';
+                  this.showNewReceiptConfirmDialog.set(true);
+            } else {
+                  this.state.navigateReceipt('PREVIOUS');
+            }
       }
 
       onNextReceipt() {

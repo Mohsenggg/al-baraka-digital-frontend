@@ -23,6 +23,7 @@ export class CashierActionsComponent {
       @Output() toggleRightSidebar = new EventEmitter<void>();
       @Output() saveAndPrint = new EventEmitter<void>();
       @Output() save = new EventEmitter<void>();
+      @Output() temporarySave = new EventEmitter<void>();
       @Output() print = new EventEmitter<void>();
       @Output() edit = new EventEmitter<void>();
       @Output() newReceipt = new EventEmitter<void>();

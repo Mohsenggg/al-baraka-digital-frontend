@@ -1,11 +1,21 @@
 <aside class="receipt-sidebar">
       <div class="sidebar-header-new">
             <div class="header-top">
-                  <h3>سجل الفواتير</h3>
+                  <div class="sidebar-tabs">
+                        <button type="button" class="sidebar-tab-btn" [class.active]="activeTab === 'PERMANENT'" (click)="setTab('PERMANENT')">
+                              <span class="material-icons-outlined">receipt_long</span>
+                              <span>الفواتير</span>
+                        </button>
+                        <button type="button" class="sidebar-tab-btn" [class.active]="activeTab === 'TEMPORARY'" (click)="setTab('TEMPORARY')">
+                              <span class="material-icons-outlined">pending_actions</span>
+                              <span>المؤقتة</span>
+                              <span class="tab-badge" *ngIf="temporaryCount > 0">{{ temporaryCount }}</span>
+                        </button>
+                  </div>
                   <button class="close-btn" (click)="closeSidebar.emit()">×</button>
             </div>
 
-            <div class="filter-container" [formGroup]="filterForm">
+            <div class="filter-container" [formGroup]="filterForm" *ngIf="activeTab === 'PERMANENT'">
                   <div class="quick-search-bar">
                         <span class="material-icons-outlined search-icon">search</span>
                         <input type="text" formControlName="code" placeholder="بحث برقم الفاتورة..." autocomplete="off"
@@ -71,26 +81,61 @@
       </div>
 
       <div class="list-viewport">
-            <div class="receipt-list-modern" *ngIf="!loading; else loader">
-                  <div class="receipt-card" *ngFor="let r of filteredReceipts" (click)="selectReceipt.emit(r.id)"
-                        [class.active]="selectedReceiptId === r.id">
-                        <div class="card-main">
-                              <span class="receipt-id">#{{ r.receiptCode }}</span>
-                              <span class="receipt-total">{{ r.totalAmount | number:'1.2-2' }} جنية</span>
+            <!-- View 1: Permanent Receipts -->
+            <ng-container *ngIf="activeTab === 'PERMANENT'">
+                  <div class="receipt-list-modern" *ngIf="!loading; else loader">
+                        <div class="receipt-card" *ngFor="let r of filteredReceipts" (click)="selectReceipt.emit(r.id)"
+                              [class.active]="selectedReceiptId === r.id">
+                              <div class="card-main">
+                                    <span class="receipt-id">#{{ r.receiptCode }}</span>
+                                    <span class="receipt-total">{{ r.totalAmount | number:'1.2-2' }} جنية</span>
+                              </div>
+                              <div class="card-sub">
+                                    <span class="receipt-time">{{ formatDate(r.receiptDate) }}</span>
+                                    <span class="pay-method" [class.cash]="r.paymentMethod === 'CASH'">
+                                          {{ getPaymentLabel(r.paymentMethod) }}
+                                    </span>
+                              </div>
                         </div>
-                        <div class="card-sub">
-                              <span class="receipt-time">{{ formatDate(r.receiptDate) }}</span>
-                              <span class="pay-method" [class.cash]="r.paymentMethod === 'CASH'">
-                                    {{ getPaymentLabel(r.paymentMethod) }}
-                              </span>
-                        </div>
-                  </div>
 
-                  <div class="empty-results" *ngIf="filteredReceipts?.length === 0">
-                        <span class="material-icons-outlined">receipt_long</span>
-                        <p>لا توجد فواتير مطابقة</p>
+                        <div class="empty-results" *ngIf="filteredReceipts?.length === 0">
+                              <span class="material-icons-outlined">receipt_long</span>
+                              <p>لا توجد فواتير مطابقة</p>
+                        </div>
                   </div>
-            </div>
+            </ng-container>
+
+            <!-- View 2: Temporary Receipts (Drafts) -->
+            <ng-container *ngIf="activeTab === 'TEMPORARY'">
+                  <div class="receipt-list-modern temporary-receipts-list" *ngIf="!loading; else loader">
+                        <div class="receipt-card temporary-card" *ngFor="let r of temporaryReceipts" (click)="selectTemporaryReceipt.emit(r.id)"
+                              [class.active]="selectedReceiptId === r.id">
+                              <div class="card-main">
+                                    <div class="temp-id-badge">
+                                          <span class="material-icons-outlined temp-icon">pause_circle_outline</span>
+                                          <span class="receipt-id">#{{ r.receiptCode }}</span>
+                                    </div>
+                                    <span class="receipt-total">{{ r.totalAmount | number:'1.2-2' }} جنية</span>
+                              </div>
+                              <div class="card-sub">
+                                    <div class="card-sub-info">
+                                          <span class="receipt-time">{{ formatDate(r.receiptDate) }}</span>
+                                          <span class="item-count-chip" *ngIf="r.totalItems">{{ r.totalItems }} أصناف</span>
+                                          <span class="customer-chip" *ngIf="r.customerName">{{ r.customerName }}</span>
+                                    </div>
+                                    <button type="button" class="btn-delete-draft" (click)="onDeleteTemporary($event, r.id)" title="حذف الفاتورة المؤقتة">
+                                          <span class="material-icons-outlined">delete_outline</span>
+                                    </button>
+                              </div>
+                        </div>
+
+                        <div class="empty-results" *ngIf="temporaryReceipts?.length === 0">
+                              <span class="material-icons-outlined">pending_actions</span>
+                              <p>لا توجد فواتير مؤقتة</p>
+                              <span class="empty-subtext">الفواتير المحفوظة مؤقتاً ستظهر هنا لمتابعتها لاحقاً</span>
+                        </div>
+                  </div>
+            </ng-container>
 
             <ng-template #loader>
                   <div class="loading-skeleton">
