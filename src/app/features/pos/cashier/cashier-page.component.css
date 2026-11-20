@@ -566,6 +566,24 @@
       padding: 2px 8px;
 }
 
+.cashier-layout.right-sidebar-visible .temporary-actions-group {
+      gap: 4px;
+      padding: 2px 4px;
+}
+
+.cashier-layout.right-sidebar-visible .btn-temporary-save {
+      padding: 2px 6px;
+      gap: 4px;
+}
+
+.cashier-layout.right-sidebar-visible .btn-temporary-save .text {
+      font-size: 0.7rem;
+}
+
+.cashier-layout.right-sidebar-visible .btn-temporary-receipts {
+      width: 30px;
+}
+
 
 /* Side Toggles */
 .side-toggle {
@@ -732,6 +750,136 @@
       background-color: #e2e8f0;
       color: #0f172a;
       border-color: #64748b;
+}
+
+/* Temporary Actions Group (Drafts) */
+.temporary-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background-color: #f8fafc;
+      padding: 3px 5px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-sizing: border-box;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.temporary-actions-group:hover {
+      border-color: #cbd5e1;
+}
+
+/* 1. Temporary Save Button */
+.btn-temporary-save {
+      background-color: #f1f5f9;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 2px 10px;
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #334155;
+      height: 32px;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+}
+
+.btn-temporary-save:hover {
+      background-color: #e2e8f0;
+      border-color: #94a3b8;
+      color: #0f172a;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.btn-temporary-save:active {
+      background-color: #cbd5e1;
+      transform: translateY(0);
+      box-shadow: none;
+}
+
+.btn-temporary-save .text {
+      font-weight: 700;
+      font-size: 0.75rem;
+      white-space: nowrap;
+}
+
+.btn-temporary-save .material-icons-outlined {
+      font-size: 1rem;
+      color: #475569;
+      transition: color 0.2s ease;
+}
+
+.btn-temporary-save:hover .material-icons-outlined {
+      color: #0f172a;
+}
+
+/* 2. Temporary Receipts Icon Button with Counter */
+.btn-temporary-receipts {
+      background-color: #f1f5f9;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      width: 34px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      color: #475569;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+      padding: 0;
+}
+
+.btn-temporary-receipts:hover {
+      background-color: #e2e8f0;
+      border-color: #94a3b8;
+      color: #0f172a;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.btn-temporary-receipts:active {
+      background-color: #cbd5e1;
+      transform: translateY(0);
+      box-shadow: none;
+}
+
+.btn-temporary-receipts .material-icons-outlined {
+      font-size: 1.15rem;
+      transition: color 0.2s ease;
+}
+
+.btn-temporary-receipts:hover .material-icons-outlined {
+      color: #0f172a;
+}
+
+/* Counter Badge */
+.temporary-badge {
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+      min-width: 17px;
+      height: 17px;
+      padding: 0 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 800;
+      line-height: 1;
+      border-radius: 9px;
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 1px 3px rgba(217, 119, 6, 0.35);
+      z-index: 2;
+      pointer-events: none;
+      box-sizing: border-box;
+      font-variant-numeric: tabular-nums;
 }
 
 /* Drafts Section */
@@ -1561,7 +1709,7 @@
 }
 
 .header-amount-card .total-decimal {
-      font-size: 0.87rem;
+      font-size: 1.2rem;
       /* Exactly 60% of 1.45rem */
       font-weight: 700;
       color: var(--pos-success-text, #047857);

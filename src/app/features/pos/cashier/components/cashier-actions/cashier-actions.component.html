@@ -7,7 +7,8 @@
       </div>
 
       <div class="main-actions-bar">
-            <button class="btn-main-action" (click)="receiptMode === 'VIEW' ? print.emit() : saveAndPrint.emit()" [disabled]="isLoading || hasStockErrors">
+            <button class="btn-main-action" (click)="receiptMode === 'VIEW' ? print.emit() : saveAndPrint.emit()"
+                  [disabled]="isLoading || hasStockErrors">
                   <div class="btn-content">
                         <span class="material-icons-outlined">print</span>
                         <ng-container *ngIf="receiptMode === 'VIEW'">
@@ -35,18 +36,20 @@
 
             </div>
 
-            <!-- TODO: re-enable draft section later when draft mode UX is finalized -->
-            <!--
-            <div class="drafts-section" (click)="drafts.emit()">
-                  <div class="drafts-card">
-                        <div class="badge" *ngIf="draftsCount > 0">{{ draftsCount }}</div>
-                        <div class="drafts-info">
-                              <span class="title">مسودة</span>
-                              <span class="subtitle">{{ draftsCount }} فواتير لم تحفظ</span>
-                        </div>
-                  </div>
+          
+
+            <!-- Temporary Actions Group (Drafts) - Only visible when receipt is not yet saved -->
+            <div class="temporary-actions-group" *ngIf="!((receipt?.id && receiptMode !== 'NEW') || receiptMode === 'VIEW')">
+                  <button type="button" class="btn-temporary-save" title="حفظ مؤقت (Temporary Save)" aria-label="حفظ مؤقت">
+                        <span class="text">حفظ مؤقت</span>
+                        <span class="material-icons-outlined">pause_circle_outline</span>
+                  </button>
+
+                  <button type="button" class="btn-temporary-receipts" (click)="drafts.emit()" title="الفواتير المؤقتة (Temporary Receipts)" aria-label="الفواتير المؤقتة">
+                        <span class="material-icons-outlined">pending_actions</span>
+                        <span class="temporary-badge" aria-label="3 فواتير مؤقتة">{{ draftsCount || 3 }}</span>
+                  </button>
             </div>
-            -->
 
             <div class="left-action-group" *ngIf="(receipt?.id && receiptMode !== 'NEW') || receiptMode === 'VIEW'">
                   <span class="group-label">
@@ -73,15 +76,16 @@
       <div class="header-total-card">
             <!-- Secondary Metrics: Total Pieces & Total Items -->
             <div class="header-metrics-group">
-                  <div class="metric-item" title="عدد القطع الكلي">
-                        <span class="metric-label">القطع</span>
-                        <span class="metric-value">{{ totalQuantity }}</span>
-                  </div>
-                  <div class="metric-divider"></div>
                   <div class="metric-item" title="عدد الأصناف المختلفة">
                         <span class="metric-label">الأصناف</span>
                         <span class="metric-value">{{ distinctItemsCount }}</span>
                   </div>
+                  <div class="metric-divider"></div>
+                  <div class="metric-item" title="عدد القطع الكلي">
+                        <span class="metric-label">القطع</span>
+                        <span class="metric-value">{{ totalQuantity }}</span>
+                  </div>
+
             </div>
 
             <!-- Primary Metric: Inner Green Amount Card -->
