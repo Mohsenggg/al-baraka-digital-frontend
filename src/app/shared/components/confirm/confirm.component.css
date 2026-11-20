@@ -24,7 +24,7 @@
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     direction: rtl;
-    font-family: 'Scheherazade', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family, 'Tajawal', sans-serif);
 }
 
 .confirm-icon {
