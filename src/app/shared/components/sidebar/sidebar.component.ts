@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, HostListener, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/services/auth.service';
@@ -10,8 +10,10 @@ import { AuthService } from '../../../core/auth/services/auth.service';
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css']
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   @Input() expanded = false;
+  @Input() cashierName?: string;
+  @Input() branchName?: string;
   @Output() toggle = new EventEmitter<void>();
 
   private authService = inject(AuthService);
@@ -28,8 +30,28 @@ export class SidebarComponent {
     { label: 'الإعدادات', icon: 'settings', route: '#' }
   ];
 
+  get resolvedCashierName(): string {
+    if (this.cashierName && this.cashierName.trim()) {
+      return this.cashierName.trim();
+    }
+    const user = this.authService.getUser();
+    return user?.name || user?.fullName || user?.username || 'أحمد محمود';
+  }
+
+  get resolvedBranchName(): string {
+    if (this.branchName && this.branchName.trim()) {
+      return this.branchName.trim();
+    }
+    const user = this.authService.getUser();
+    return user?.branch || user?.branchName || 'الفرع الرئيسي';
+  }
+
   ngOnInit(): void {
     this.syncFullscreenState();
+  }
+
+  onToggleSidebar(): void {
+    this.toggle.emit();
   }
 
   @HostListener('document:keydown.escape', ['$event'])

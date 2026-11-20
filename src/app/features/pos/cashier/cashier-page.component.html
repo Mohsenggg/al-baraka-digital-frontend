@@ -239,6 +239,10 @@
       <!-- ============================= -->
       <!-- LEFT SIDEBAR: NAVIGATION -->
       <!-- ============================= -->
-      <app-sidebar [expanded]="sidebarVisible()" (toggle)="onToggleSidebar()"></app-sidebar>
+      <app-sidebar 
+            [expanded]="sidebarVisible()" 
+            [cashierName]="currentReceipt()?.cashierName || currentReceipt()?.cashier?.name"
+            (toggle)="onToggleSidebar()">
+      </app-sidebar>
 
 </div>

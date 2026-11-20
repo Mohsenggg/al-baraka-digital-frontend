@@ -566,49 +566,6 @@
       padding: 2px 8px;
 }
 
-.compact-cashier-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 4px 10px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      margin-right: auto;
-      /* Pushes to left in RTL */
-}
-
-.cashier-avatar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      background-color: #eff6ff;
-      color: var(--pos-primary);
-      border-radius: 50%;
-}
-
-.cashier-avatar .material-icons-outlined {
-      font-size: 1.1rem;
-}
-
-.cashier-details {
-      display: flex;
-      flex-direction: column;
-}
-
-.cashier-name {
-      font-weight: 700;
-      font-size: 0.75rem;
-      color: var(--pos-text-primary);
-      line-height: 1.2;
-}
-
-.cashier-role {
-      font-size: 0.65rem;
-      color: var(--pos-text-secondary);
-}
 
 /* Side Toggles */
 .side-toggle {
@@ -1924,18 +1881,9 @@
 
       .main-actions-bar {
             width: 100%;
-            order: 4;
+            order: 2;
             justify-content: center;
             margin-top: 8px;
-      }
-
-      .compact-cashier-info {
-            order: 2;
-            margin-right: auto;
-      }
-
-      .left-toggle {
-            order: 3;
       }
 
       .right-toggle {

@@ -3,9 +3,14 @@
 <div class="sidebar-container" [class.expanded]="expanded">
   <aside class="sidebar" [class.expanded]="expanded">
     <div class="menu-btn-container">
-      <button class="menu-btn" (click)="toggle.emit()">
+      <button class="menu-btn" (click)="onToggleSidebar()" [attr.aria-label]="expanded ? 'طي القائمة' : 'توسيع القائمة'">
         <span class="material-icons-outlined">menu</span>
       </button>
+
+      <div class="header-cashier-info">
+        <span class="header-cashier-name" [title]="resolvedCashierName">{{ resolvedCashierName }}</span>
+        <span class="header-cashier-branch" [title]="resolvedBranchName">{{ resolvedBranchName }}</span>
+      </div>
     </div>
 
     <nav class="nav-menu">
