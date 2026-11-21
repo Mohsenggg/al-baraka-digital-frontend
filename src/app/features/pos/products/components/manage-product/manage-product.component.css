@@ -525,9 +525,12 @@
       font-size: 0.9rem;
 }
 
-.table-scroll {
-      overflow-x: auto;
-      padding: 0;
+.form-card-barcodes .table-scroll {
+      overflow: visible;
+}
+
+.form-card-barcodes {
+      overflow: visible;
 }
 
 .barcodes-table {
@@ -675,6 +678,236 @@
 
 .btn-row-delete .material-icons-outlined {
       font-size: 1rem;
+}
+
+/* ============================= */
+/* SELLING PRICE WARNING OVERLAY */
+/* ============================= */
+
+.price-input-anchor {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+}
+
+.price-input-anchor .form-input {
+      flex: 1;
+      min-width: 0;
+}
+
+.price-warning-overlay {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 120;
+      width: 310px;
+      max-width: 90vw;
+      background: #ffffff;
+      border: 1px solid var(--pos-border, #e5e7eb);
+      border-right: 3px solid #d97706;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      direction: rtl;
+      text-align: right;
+      font-family: var(--font-family);
+      animation: price-warning-fade-in 0.15s ease-out;
+}
+
+@keyframes price-warning-fade-in {
+      from {
+            opacity: 0;
+            transform: translateY(-4px);
+      }
+      to {
+            opacity: 1;
+            transform: translateY(0);
+      }
+}
+
+.warning-arrow {
+      position: absolute;
+      top: -5px;
+      right: 20px;
+      width: 8px;
+      height: 8px;
+      background: #ffffff;
+      border-top: 1px solid var(--pos-border, #e5e7eb);
+      border-right: 1px solid var(--pos-border, #e5e7eb);
+      transform: rotate(-45deg);
+}
+
+.warning-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+}
+
+.warning-header-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+}
+
+.warning-icon {
+      font-size: 1.1rem;
+      color: #d97706;
+      flex-shrink: 0;
+}
+
+.warning-title-text {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #92400e;
+}
+
+.warning-close-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--pos-text-secondary, #6b7280);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+}
+
+.warning-close-btn:hover {
+      background: #f1f5f9;
+      color: var(--pos-text-primary, #1f2937);
+}
+
+.warning-close-btn .material-icons-outlined {
+      font-size: 0.95rem;
+}
+
+.warning-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+}
+
+.warning-text {
+      margin: 0;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: var(--pos-text-primary, #1f2937);
+}
+
+.warning-text strong {
+      color: #1e3a8a;
+}
+
+.warning-diff-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 5px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #92400e;
+      width: fit-content;
+}
+
+.warning-diff-badge .material-icons-outlined {
+      font-size: 0.85rem;
+}
+
+.warning-card-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      padding-top: 4px;
+      border-top: 1px solid #f1f5f9;
+}
+
+.btn-warning-ack {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 28px;
+      padding: 0 10px;
+      background: #ffffff;
+      color: #d97706;
+      border: 1px solid #d97706;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      font-family: var(--font-family);
+      cursor: pointer;
+      transition: all 0.15s ease;
+}
+
+.btn-warning-ack:hover {
+      background: #fffbeb;
+      border-color: #b45309;
+      color: #b45309;
+}
+
+.btn-warning-ack .material-icons-outlined {
+      font-size: 0.9rem;
+}
+
+/* Row indicator when price is below buying price */
+.barcode-row.has-price-warning-unack {
+      background-color: #fffdf5;
+}
+
+.barcode-row.has-price-warning-unack .price-input-anchor .form-input {
+      border-color: #f59e0b;
+      background-color: #fffbeb;
+}
+
+.barcode-row.has-price-warning-ack .price-input-anchor .form-input {
+      border-color: #fcd34d;
+}
+
+.price-warning-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      margin-inline-start: 4px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+}
+
+.price-warning-badge.unack {
+      color: #b45309;
+      background: #fef3c7;
+}
+
+.price-warning-badge.unack:hover {
+      background: #fde68a;
+}
+
+.price-warning-badge.ack {
+      color: #047857;
+      background: #ecfdf5;
+}
+
+.price-warning-badge.ack:hover {
+      background: #d1fae5;
+}
+
+.price-warning-badge .material-icons-outlined {
+      font-size: 0.95rem;
 }
 
 /* Stock Indicator */

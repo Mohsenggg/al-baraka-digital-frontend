@@ -480,4 +480,247 @@ describe('ManageProductComponent', () => {
                   expect(percent.value).toBe('0');
             });
       });
+
+      describe('selling price live validation and anchored warning overlay', () => {
+            function getWarningOverlay() {
+                  return fixture.debugElement.query(By.css('.price-warning-overlay'));
+            }
+
+            function getWarningCloseBtn() {
+                  return fixture.debugElement.query(By.css('.warning-close-btn'));
+            }
+
+            function getWarningAckBtn() {
+                  return fixture.debugElement.query(By.css('.btn-warning-ack'));
+            }
+
+            it('should not display the warning while entering prices, but trigger on selling price blur', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(0)).toBeFalse();
+                  expect(getWarningOverlay()).toBeNull();
+
+                  // Selling price 5 < buying price 7 is entered (still entering, no blur yet)
+                  setSellingPrice(5);
+                  fixture.detectChanges();
+
+                  // Should NOT show warning yet while still entering
+                  expect(component.isPriceWarningOpen(0)).toBeFalse();
+                  expect(getWarningOverlay()).toBeNull();
+
+                  // User leaves the selling price input (blur)
+                  component.onSellingPriceBlur(0);
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(0)).toBeTrue();
+                  expect(component.hasPriceDiscrepancy(0)).toBeTrue();
+                  expect(component.isPriceWarningAcknowledged(0)).toBeFalse();
+
+                  const overlay = getWarningOverlay();
+                  expect(overlay).toBeTruthy();
+                  expect(overlay.nativeElement.textContent).toContain('سعر البيع أقل من سعر الشراء');
+                  expect(overlay.nativeElement.textContent).toContain('5.00');
+                  expect(overlay.nativeElement.textContent).toContain('7.00');
+            });
+
+            it('should automatically dismiss the warning overlay when selling price is corrected', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  setSellingPrice(5);
+                  component.onSellingPriceBlur(0);
+                  fixture.detectChanges();
+                  expect(component.isPriceWarningOpen(0)).toBeTrue();
+
+                  // Correct selling price to >= buying price (7)
+                  setSellingPrice(8);
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(0)).toBeFalse();
+                  expect(component.hasPriceDiscrepancy(0)).toBeFalse();
+                  expect(getWarningOverlay()).toBeNull();
+            });
+
+            it('should close the overlay when close button is clicked without acknowledging', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  setSellingPrice(5);
+                  component.onSellingPriceBlur(0);
+                  fixture.detectChanges();
+                  expect(component.isPriceWarningOpen(0)).toBeTrue();
+
+                  getWarningCloseBtn().nativeElement.click();
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(0)).toBeFalse();
+                  expect(component.isPriceWarningAcknowledged(0)).toBeFalse();
+                  expect(getWarningOverlay()).toBeNull();
+            });
+
+            it('should acknowledge the warning and close overlay when acknowledge button is clicked', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  setSellingPrice(5);
+                  component.onSellingPriceBlur(0);
+                  fixture.detectChanges();
+                  expect(component.isPriceWarningOpen(0)).toBeTrue();
+
+                  getWarningAckBtn().nativeElement.click();
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(0)).toBeFalse();
+                  expect(component.isPriceWarningAcknowledged(0)).toBeTrue();
+                  expect(getWarningOverlay()).toBeNull();
+            });
+
+            it('should block submission and re-open the warning overlay if selling price < buying price and not acknowledged', () => {
+                  loadProductForEdit(productDetail({ isPriceUnified: false }));
+                  fixture.detectChanges();
+
+                  setSellingPrice(5);
+                  component.onSellingPriceBlur(0);
+                  fixture.detectChanges();
+
+                  // User closes the overlay without acknowledging
+                  component.closePriceWarning(0);
+                  fixture.detectChanges();
+                  expect(component.isPriceWarningOpen(0)).toBeFalse();
+
+                  // Attempt save
+                  component.onSave();
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(0)).toBeTrue();
+                  expect(state.saveError()).toContain('يرجى تأكيد الإقرار بأن سعر البيع أقل من سعر الشراء قبل الحفظ');
+                  httpMock.expectNone(request => request.method === 'PUT');
+            });
+
+            it('should allow submission when the warning has been explicitly acknowledged', () => {
+                  loadProductForEdit(productDetail({ isPriceUnified: false }));
+                  fixture.detectChanges();
+
+                  setSellingPrice(5);
+                  component.onSellingPriceBlur(0);
+                  fixture.detectChanges();
+
+                  component.acknowledgePriceWarning(0);
+                  fixture.detectChanges();
+                  expect(component.isPriceWarningAcknowledged(0)).toBeTrue();
+
+                  component.onSave();
+
+                  const request = expectUpdateRequest();
+                  expect(request.request.method).toBe('PUT');
+                  request.flush(productDetail());
+            });
+
+            it('should reset acknowledgment and re-open warning on blur if price changes after acknowledgment', () => {
+                  loadProductForEdit(productDetail({ isPriceUnified: false }));
+                  fixture.detectChanges();
+
+                  setSellingPrice(5);
+                  component.onSellingPriceBlur(0);
+                  fixture.detectChanges();
+
+                  component.acknowledgePriceWarning(0);
+                  expect(component.isPriceWarningAcknowledged(0)).toBeTrue();
+                  expect(component.isPriceWarningOpen(0)).toBeFalse();
+
+                  // User modifies price further down (typing)
+                  setSellingPrice(4);
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningAcknowledged(0)).toBeFalse();
+                  expect(component.isPriceWarningOpen(0)).toBeFalse(); // Not shown while typing
+
+                  // User leaves the field (blur)
+                  component.onSellingPriceBlur(0);
+                  fixture.detectChanges();
+                  expect(component.isPriceWarningOpen(0)).toBeTrue();
+
+                  // Save should be blocked again
+                  component.onSave();
+                  expect(state.saveError()).toContain('يرجى تأكيد الإقرار بأن سعر البيع أقل من سعر الشراء قبل الحفظ');
+                  httpMock.expectNone(request => request.method === 'PUT');
+            });
+
+            it('should display warning overlay when selling price is driven below buying price via profit percent on blur', () => {
+                  loadProductForEdit(productDetail());
+                  fixture.detectChanges();
+
+                  // Buying price is 7. Setting -50% profit drives selling price to 3.5
+                  const percentInput = fixture.debugElement.query(By.css('.profit-input-pct')).nativeElement as HTMLInputElement;
+                  percentInput.dispatchEvent(new Event('focus'));
+                  percentInput.value = '-50';
+                  percentInput.dispatchEvent(new Event('input'));
+                  fixture.detectChanges();
+
+                  expect(state.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(3.5);
+                  expect(component.isPriceWarningOpen(0)).toBeFalse(); // Still in focus
+
+                  percentInput.dispatchEvent(new Event('blur'));
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(0)).toBeTrue();
+                  expect(getWarningOverlay()).toBeTruthy();
+            });
+
+            it('should apply price validation during product creation mode', () => {
+                  // In create mode (no route ID)
+                  state.resolveEditMode(null);
+                  flushLookups();
+                  state.barcodesFormArray.at(0).patchValue({ buyingPrice: 50, sellingPrice: 30 });
+                  state.productForm.get('baseName')?.setValue('منتج جديد');
+                  fixture.detectChanges();
+
+                  // Not blurred yet, but save triggers validation
+                  component.onSave();
+                  expect(component.isPriceWarningOpen(0)).toBeTrue();
+                  expect(state.saveError()).toContain('يرجى تأكيد الإقرار بأن سعر البيع أقل من سعر الشراء قبل الحفظ');
+                  httpMock.expectNone(request => request.method === 'POST');
+
+                  component.acknowledgePriceWarning(0);
+                  component.onSave();
+
+                  const createReq = httpMock.expectOne(`${API}/products`);
+                  expect(createReq.request.method).toBe('POST');
+                  createReq.flush({ id: 999, ...productDetail() });
+            });
+
+            it('should handle multiple barcode rows independently', () => {
+                  loadProductForEdit(productDetail());
+                  state.addBarcode();
+                  // Row 0: buying 7, selling 10 (ok)
+                  // Row 1: buying 20, selling 15 (warning on blur)
+                  state.barcodesFormArray.at(1).patchValue({ buyingPrice: 20, sellingPrice: 15 });
+                  component.onSellingPriceBlur(1);
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(0)).toBeFalse();
+                  expect(component.isPriceWarningOpen(1)).toBeTrue();
+
+                  component.acknowledgePriceWarning(1);
+                  expect(component.isPriceWarningAcknowledged(1)).toBeTrue();
+                  expect(component.isPriceWarningOpen(1)).toBeFalse();
+            });
+
+            it('should properly re-index warning states when a row is removed', () => {
+                  loadProductForEdit(productDetail());
+                  state.addBarcode();
+                  state.barcodesFormArray.at(1).patchValue({ buyingPrice: 20, sellingPrice: 15 });
+                  component.onSellingPriceBlur(1);
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(1)).toBeTrue();
+
+                  // Remove row 0 -> row 1 becomes row 0
+                  component.removeBarcode(0);
+                  fixture.detectChanges();
+
+                  expect(component.isPriceWarningOpen(0)).toBeTrue();
+            });
+      });
 });

@@ -100,4 +100,32 @@ describe('ProductManageStateService', () => {
 
     expect(service.barcodesFormArray.at(0).get('sellingPrice')?.value).toBe(0);
   });
+
+  describe('selling price validation helpers', () => {
+    it('should return true for hasSellingPriceBelowBuying when sellingPrice is less than buyingPrice', () => {
+      service.barcodesFormArray.at(0).patchValue({ buyingPrice: 50, sellingPrice: 40 });
+      expect(service.hasSellingPriceBelowBuying(0)).toBeTrue();
+    });
+
+    it('should return false for hasSellingPriceBelowBuying when sellingPrice is equal or greater than buyingPrice', () => {
+      service.barcodesFormArray.at(0).patchValue({ buyingPrice: 50, sellingPrice: 50 });
+      expect(service.hasSellingPriceBelowBuying(0)).toBeFalse();
+
+      service.barcodesFormArray.at(0).patchValue({ buyingPrice: 50, sellingPrice: 60 });
+      expect(service.hasSellingPriceBelowBuying(0)).toBeFalse();
+    });
+
+    it('should return false for hasSellingPriceBelowBuying when buyingPrice is zero', () => {
+      service.barcodesFormArray.at(0).patchValue({ buyingPrice: 0, sellingPrice: 0 });
+      expect(service.hasSellingPriceBelowBuying(0)).toBeFalse();
+    });
+
+    it('should calculate getPriceLoss correctly', () => {
+      service.barcodesFormArray.at(0).patchValue({ buyingPrice: 50, sellingPrice: 35.5 });
+      expect(service.getPriceLoss(0)).toBe(14.5);
+
+      service.barcodesFormArray.at(0).patchValue({ buyingPrice: 50, sellingPrice: 60 });
+      expect(service.getPriceLoss(0)).toBe(0);
+    });
+  });
 });

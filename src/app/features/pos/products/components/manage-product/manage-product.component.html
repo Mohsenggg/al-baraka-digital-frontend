@@ -265,16 +265,58 @@
                   </tr>
                 </thead>
                 <tbody formArrayName="barcodes">
-                  <tr *ngFor="let row of barcodesFormArray.controls; let i = index" [formGroupName]="i">
+                  <tr *ngFor="let row of barcodesFormArray.controls; let i = index" [formGroupName]="i"
+                    class="barcode-row"
+                    [class.has-price-warning-unack]="hasPriceDiscrepancy(i) && !isPriceWarningAcknowledged(i)"
+                    [class.has-price-warning-ack]="hasPriceDiscrepancy(i) && isPriceWarningAcknowledged(i)">
                     <td>
                       <input type="text" formControlName="barcode" class="form-input form-input-compact"
                         placeholder="رقم الباركود" dir="ltr">
                     </td>
-                         <td>
+                    <td>
                       <input type="number" formControlName="buyingPrice" class="form-input form-input-compact" min="0" step="0.01">
                     </td>
-                    <td>
-                      <input type="number" formControlName="sellingPrice" class="form-input form-input-compact" min="0" step="0.01">
+                    <td class="selling-price-cell">
+                      <div class="price-input-anchor">
+                        <input type="number" formControlName="sellingPrice" class="form-input form-input-compact" min="0" step="0.01"
+                          (blur)="onSellingPriceBlur(i)">
+                        <button type="button" *ngIf="hasPriceDiscrepancy(i)"
+                          class="price-warning-badge"
+                          [class.unack]="!isPriceWarningAcknowledged(i)"
+                          [class.ack]="isPriceWarningAcknowledged(i)"
+                          (click)="togglePriceWarning(i)"
+                          [title]="isPriceWarningAcknowledged(i) ? 'تم الإقرار: سعر البيع أقل من سعر الشراء (انقر للتفاصيل)' : 'تنبيه: سعر البيع أقل من سعر الشراء (انقر لعرض التحذير)'"
+                          aria-label="حالة تحذير سعر البيع">
+                          <span class="material-icons-outlined">{{ isPriceWarningAcknowledged(i) ? 'check_circle' : 'warning_amber' }}</span>
+                        </button>
+                        <div class="price-warning-overlay" *ngIf="isPriceWarningOpen(i)" (click)="$event.stopPropagation()" role="alert" dir="rtl">
+                          <div class="warning-arrow"></div>
+                          <div class="warning-card-header">
+                            <div class="warning-header-title">
+                              <span class="material-icons-outlined warning-icon">warning_amber</span>
+                              <span class="warning-title-text">سعر البيع أقل من سعر الشراء</span>
+                            </div>
+                            <button type="button" class="warning-close-btn" (click)="closePriceWarning(i)" title="إغلاق" aria-label="إغلاق">
+                              <span class="material-icons-outlined">close</span>
+                            </button>
+                          </div>
+                          <div class="warning-card-body">
+                            <p class="warning-text">
+                              سعر البيع (<strong>{{ getSellingPrice(i) | number:'1.2-2' }} ج.م</strong>) أقل من سعر الشراء (<strong>{{ getBuyingPrice(i) | number:'1.2-2' }} ج.م</strong>).
+                            </p>
+                            <div class="warning-diff-badge">
+                              <span class="material-icons-outlined">trending_down</span>
+                              <span>فارق الخسارة: {{ getPriceLoss(i) | number:'1.2-2' }} ج.م للقطعة</span>
+                            </div>
+                          </div>
+                          <div class="warning-card-actions">
+                            <button type="button" class="btn-warning-ack" (click)="acknowledgePriceWarning(i)">
+                              <span class="material-icons-outlined">check</span>
+                              <span>أقر بذلك ومتابعة</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </td>
                
                     <td>

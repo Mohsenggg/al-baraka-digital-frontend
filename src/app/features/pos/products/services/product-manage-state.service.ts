@@ -450,6 +450,24 @@ export class ProductManageStateService {
             return roundMoney(this.getBarcodeProfitMargin(index).percentage);
       }
 
+      /** True when the row's selling price is lower than its buying price (loss condition). */
+      hasSellingPriceBelowBuying(index: number): boolean {
+            const row = this.barcodesFormArray.at(index);
+            if (!row) return false;
+            const buyingPrice = Number(row.get('buyingPrice')?.value) || 0;
+            const sellingPrice = Number(row.get('sellingPrice')?.value) || 0;
+            return buyingPrice > 0 && sellingPrice < buyingPrice;
+      }
+
+      /** Difference between buying price and selling price for a row under loss condition. */
+      getPriceLoss(index: number): number {
+            const row = this.barcodesFormArray.at(index);
+            if (!row) return 0;
+            const buyingPrice = Number(row.get('buyingPrice')?.value) || 0;
+            const sellingPrice = Number(row.get('sellingPrice')?.value) || 0;
+            return Math.max(0, roundMoney(buyingPrice - sellingPrice));
+      }
+
       /**
        * Applies a profit amount typed by the user in the editable profit cell:
        * selling price = buying price + profit amount (never below zero).

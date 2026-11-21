@@ -40,6 +40,14 @@ export interface PriceDiscrepancyPromptState {
       existingPrices: number[];
 }
 
+/** State of the anchored selling-price warning overlay per barcode row. */
+export interface BarcodePriceWarningState {
+      buyingPrice: number;
+      sellingPrice: number;
+      isOpen: boolean;
+      isAcknowledged: boolean;
+}
+
 /** Tolerance used to ignore floating point noise when comparing selling prices (نصف قرش). */
 const SELLING_PRICE_EPSILON = 0.004;
 
@@ -107,6 +115,9 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       /** True while the group price summary is being fetched. */
       readonly isPricePromptBusy = signal(false);
 
+      /** Anchored selling price warning states tracked per barcode row index. */
+      readonly priceWarningStates = signal<Map<number, BarcodePriceWarningState>>(new Map());
+
       get productForm() {
             return this.state.productForm;
       }
@@ -165,8 +176,10 @@ export class ManageProductComponent implements OnInit, OnDestroy {
 
       ngOnInit(): void {
             this.state.initialize();
+            this.priceWarningStates.set(new Map());
             this.state.productForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
                   this.state.onFormValueChanged();
+                  this.checkPriceWarningsLive();
             });
             this.resolveEditMode();
       }
@@ -239,6 +252,8 @@ export class ManageProductComponent implements OnInit, OnDestroy {
 
       removeBarcode(index: number): void {
             this.state.removeBarcode(index);
+            this.reindexPriceWarnings(index);
+            this.checkPriceWarningsLive();
       }
 
       setDefaultBarcode(index: number): void {
@@ -281,6 +296,7 @@ export class ManageProductComponent implements OnInit, OnDestroy {
             } else {
                   this.state.applyBarcodeProfitValue(index, profit);
             }
+            this.checkPriceWarningsLive();
       }
 
       /** Unfreezes the profit input and snaps it to the value derived from the selling price. */
@@ -293,6 +309,7 @@ export class ManageProductComponent implements OnInit, OnDestroy {
             // The binding only rewrites the DOM when its value changes, so restore the derived value
             // explicitly (e.g. after the user emptied the input or typed an incomplete number).
             (event.target as HTMLInputElement).value = String(this.derivedProfitValue(index, field));
+            this.onSellingPriceBlur(index);
       }
 
       /** Profit amount or percentage of a row as derived from its current buying and selling prices. */
@@ -457,11 +474,16 @@ export class ManageProductComponent implements OnInit, OnDestroy {
       onCancel(): void {
             this.unifiedPricePrompt.set(null);
             this.priceDiscrepancyPrompt.set(null);
+            this.priceWarningStates.set(new Map());
             this.router.navigate(['/pos/products']);
       }
 
       onSave(): void {
             if (this.isPricePromptBusy()) return;
+
+            if (!this.validateSellingPrices()) {
+                  return;
+            }
 
             if (this.requiresGroupPriceDecision()) {
                   this.unifiedPricePrompt.set({
@@ -472,6 +494,203 @@ export class ManageProductComponent implements OnInit, OnDestroy {
             }
 
             this.persistProduct();
+      }
+
+      /* ============================= */
+      /* SELLING PRICE WARNING FLOW    */
+      /* ============================= */
+
+      /** Live validation: monitors buying and selling prices across all barcode rows. */
+      checkPriceWarningsLive(): void {
+            const barcodes = this.barcodesFormArray.controls;
+            barcodes.forEach((row, i) => {
+                  const buyingPrice = Number(row.get('buyingPrice')?.value) || 0;
+                  const sellingPrice = Number(row.get('sellingPrice')?.value) || 0;
+
+                  if (buyingPrice > 0 && sellingPrice < buyingPrice) {
+                        const current = this.priceWarningStates().get(i);
+                        if (current && (current.buyingPrice !== buyingPrice || current.sellingPrice !== sellingPrice)) {
+                              // Price modified while typing: keep warning closed until blur, reset previous ack
+                              this.updatePriceWarning(i, {
+                                    buyingPrice,
+                                    sellingPrice,
+                                    isOpen: false,
+                                    isAcknowledged: false
+                              });
+                        }
+                  } else {
+                        // Condition corrected or buyingPrice is zero: dismiss automatically
+                        if (this.priceWarningStates().has(i)) {
+                              this.removePriceWarning(i);
+                        }
+                  }
+            });
+
+            // If an unacknowledged price warning error was active, clear it if all warnings are satisfied
+            if (this.state.saveError() === 'يرجى تأكيد الإقرار بأن سعر البيع أقل من سعر الشراء قبل الحفظ') {
+                  const hasUnack = Array.from(this.priceWarningStates().values()).some(s => !s.isAcknowledged);
+                  if (!hasUnack) {
+                        this.state.saveError.set(null);
+                  }
+            }
+      }
+
+      /** Triggers selling-price validation when the user leaves the selling-price input. */
+      onSellingPriceBlur(index: number): void {
+            const row = this.barcodesFormArray.at(index);
+            if (!row) return;
+
+            const buyingPrice = Number(row.get('buyingPrice')?.value) || 0;
+            const sellingPrice = Number(row.get('sellingPrice')?.value) || 0;
+
+            if (buyingPrice > 0 && sellingPrice < buyingPrice) {
+                  const current = this.priceWarningStates().get(index);
+                  if (!current || !current.isAcknowledged) {
+                        this.updatePriceWarning(index, {
+                              buyingPrice,
+                              sellingPrice,
+                              isOpen: true,
+                              isAcknowledged: false
+                        });
+                  }
+            }
+      }
+
+      /** Returns true if row i has a selling price lower than buying price. */
+      hasPriceDiscrepancy(index: number): boolean {
+            return this.state.hasSellingPriceBelowBuying(index);
+      }
+
+      /** Returns true if the anchored warning overlay for row i is currently open. */
+      isPriceWarningOpen(index: number): boolean {
+            return !!this.priceWarningStates().get(index)?.isOpen;
+      }
+
+      /** Returns true if the user has explicitly acknowledged the price warning for row i. */
+      isPriceWarningAcknowledged(index: number): boolean {
+            return !!this.priceWarningStates().get(index)?.isAcknowledged;
+      }
+
+      /** Gets buying price for display in warning overlay. */
+      getBuyingPrice(index: number): number {
+            const row = this.barcodesFormArray.at(index);
+            return Number(row?.get('buyingPrice')?.value) || 0;
+      }
+
+      /** Gets selling price for display in warning overlay. */
+      getSellingPrice(index: number): number {
+            const row = this.barcodesFormArray.at(index);
+            return Number(row?.get('sellingPrice')?.value) || 0;
+      }
+
+      /** Gets calculated loss difference for display in warning overlay. */
+      getPriceLoss(index: number): number {
+            return this.state.getPriceLoss(index);
+      }
+
+      /** Explicitly closes the warning overlay without acknowledging it. */
+      closePriceWarning(index: number): void {
+            const current = this.priceWarningStates().get(index);
+            if (current) {
+                  this.updatePriceWarning(index, { ...current, isOpen: false });
+            }
+      }
+
+      /** Explicitly acknowledges the warning, closing the overlay and allowing submission. */
+      acknowledgePriceWarning(index: number): void {
+            const current = this.priceWarningStates().get(index);
+            if (current) {
+                  this.updatePriceWarning(index, { ...current, isOpen: false, isAcknowledged: true });
+            } else {
+                  this.updatePriceWarning(index, {
+                        buyingPrice: this.getBuyingPrice(index),
+                        sellingPrice: this.getSellingPrice(index),
+                        isOpen: false,
+                        isAcknowledged: true
+                  });
+            }
+            if (this.state.saveError() === 'يرجى تأكيد الإقرار بأن سعر البيع أقل من سعر الشراء قبل الحفظ') {
+                  this.state.saveError.set(null);
+            }
+      }
+
+      /** Toggles the warning overlay open/closed when clicking the row warning badge. */
+      togglePriceWarning(index: number): void {
+            const current = this.priceWarningStates().get(index);
+            if (current) {
+                  this.updatePriceWarning(index, { ...current, isOpen: !current.isOpen });
+            } else if (this.hasPriceDiscrepancy(index)) {
+                  this.updatePriceWarning(index, {
+                        buyingPrice: this.getBuyingPrice(index),
+                        sellingPrice: this.getSellingPrice(index),
+                        isOpen: true,
+                        isAcknowledged: false
+                  });
+            }
+      }
+
+      /** Validates selling prices before product submission. Blocks save if any warning is unacknowledged. */
+      validateSellingPrices(): boolean {
+            let hasUnacknowledged = false;
+            const barcodes = this.barcodesFormArray.controls;
+
+            for (let i = 0; i < barcodes.length; i++) {
+                  const row = barcodes[i];
+                  const buyingPrice = Number(row.get('buyingPrice')?.value) || 0;
+                  const sellingPrice = Number(row.get('sellingPrice')?.value) || 0;
+
+                  if (buyingPrice > 0 && sellingPrice < buyingPrice) {
+                        const current = this.priceWarningStates().get(i);
+                        if (!current || !current.isAcknowledged) {
+                              hasUnacknowledged = true;
+                              this.updatePriceWarning(i, {
+                                    buyingPrice,
+                                    sellingPrice,
+                                    isOpen: true,
+                                    isAcknowledged: false
+                              });
+                        }
+                  }
+            }
+
+            if (hasUnacknowledged) {
+                  this.activeTab = 'basic';
+                  this.state.saveError.set('يرجى تأكيد الإقرار بأن سعر البيع أقل من سعر الشراء قبل الحفظ');
+                  return false;
+            }
+
+            return true;
+      }
+
+      private updatePriceWarning(index: number, warningState: BarcodePriceWarningState): void {
+            this.priceWarningStates.update(map => {
+                  const next = new Map(map);
+                  next.set(index, warningState);
+                  return next;
+            });
+      }
+
+      private removePriceWarning(index: number): void {
+            this.priceWarningStates.update(map => {
+                  if (!map.has(index)) return map;
+                  const next = new Map(map);
+                  next.delete(index);
+                  return next;
+            });
+      }
+
+      private reindexPriceWarnings(removedIndex: number): void {
+            this.priceWarningStates.update(map => {
+                  const next = new Map<number, BarcodePriceWarningState>();
+                  map.forEach((state, idx) => {
+                        if (idx < removedIndex) {
+                              next.set(idx, state);
+                        } else if (idx > removedIndex) {
+                              next.set(idx - 1, state);
+                        }
+                  });
+                  return next;
+            });
       }
 
       /* ============================= */
