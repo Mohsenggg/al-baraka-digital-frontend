@@ -1899,6 +1899,12 @@
       gap: 20px;
 }
 
+.name-cell-content:focus {
+      outline: 2px solid var(--pos-primary, #1e3a8a);
+      outline-offset: 2px;
+      border-radius: 4px;
+}
+
 .stock-error-msg {
       color: #dc2626;
       font-size: 0.6rem;

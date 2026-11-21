@@ -302,12 +302,12 @@ describe('ManageProductComponent', () => {
 
                   const tabLabels = fixture.debugElement
                         .queryAll(By.css('.tab-btn'))
-                        .map(btn => (btn.nativeElement.textContent as string).trim());
+                        .map((btn: any) => (btn.nativeElement.textContent as string).trim());
 
                   expect(tabLabels.length).toBe(2);
-                  expect(tabLabels.some(label => label.includes('البيانات الأساسية'))).toBeTrue();
-                  expect(tabLabels.some(label => label.includes('مكونات المنتج'))).toBeTrue();
-                  expect(tabLabels.some(label => label.includes('التحويلات'))).toBeFalse();
+                  expect(tabLabels.some((label: string) => label.includes('البيانات الأساسية'))).toBeTrue();
+                  expect(tabLabels.some((label: string) => label.includes('مكونات المنتج'))).toBeTrue();
+                  expect(tabLabels.some((label: string) => label.includes('التحويلات'))).toBeFalse();
             });
 
             it('should render the sections with their content and without descriptions', () => {
@@ -394,7 +394,7 @@ describe('ManageProductComponent', () => {
             function typeBarcodeControl(controlName: string, value: string): void {
                   const control = fixture.debugElement
                         .queryAll(By.directive(FormControlName))
-                        .find(element => element.injector.get(FormControlName).name === controlName);
+                        .find((element: any) => element.injector.get(FormControlName).name === controlName);
 
                   const input = control?.nativeElement as HTMLInputElement | undefined;
                   if (!input) {

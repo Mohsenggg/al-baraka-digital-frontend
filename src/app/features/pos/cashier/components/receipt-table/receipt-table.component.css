@@ -174,3 +174,21 @@
   color: var(--pos-danger-text);
   background-color: var(--pos-danger);
 }
+
+.name-cell-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.name-cell-content:focus {
+  outline: 2px solid var(--pos-primary, #1e3a8a);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.qty-input:focus {
+  outline: none;
+  border-color: var(--pos-primary, #1e3a8a);
+  box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.15);
+}

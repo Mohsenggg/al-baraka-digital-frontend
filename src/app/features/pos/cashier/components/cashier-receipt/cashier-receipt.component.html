@@ -141,19 +141,24 @@
                                     [attr.title]="item.product.barcode || null" aria-label="نسخ باركود الصنف"
                                     (click)="copyProductBarcode(item.product.barcode)">{{ i + 1 }}</button>
                               <div class="td-cell name-col">
-                                    <div class="name-cell-content">
+                                    <div class="name-cell-content" tabindex="-1"
+                                          [attr.data-row]="i" [attr.data-col]="'name'"
+                                          (keydown)="onTableKeyDown($event, i, 'name')">
                                           <span>{{ item.productName }}</span>
                                           <span class="stock-error-msg" *ngIf="item.stockError">{{ item.stockError
                                                 }}</span>
                                     </div>
                               </div>
                               <div class="td-cell price-col">
-                                    <input type="number" *ngIf="receiptMode !== 'VIEW'"
+                                    <input type="text" inputmode="decimal" *ngIf="receiptMode !== 'VIEW'"
                                           class="pos-input text-center no-spinner qty-input" [value]="item.sellingPrice"
+                                          [attr.data-row]="i" [attr.data-col]="'sellingPrice'"
                                           (input)="onInlineFieldChange(item, 'sellingPrice', $event)"
                                           (keyup.enter)="onInlineFieldEnter(item, 'sellingPrice', $event)"
+                                          (keydown)="onTableKeyDown($event, i, 'sellingPrice')"
+                                          (focus)="onFieldFocus($event)"
                                           style="width: 70px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; appearance: none; -moz-appearance: textfield;">
-                                    <div *ngIf="receiptMode === 'VIEW'">{{ item.sellingPrice | number:'1.2-2' }}</div>
+                                    <div *ngIf="receiptMode === 'VIEW'" tabindex="-1" [attr.data-row]="i" [attr.data-col]="'sellingPrice'" (keydown)="onTableKeyDown($event, i, 'sellingPrice')">{{ item.sellingPrice | number:'1.2-2' }}</div>
                               </div>
 
                               <div class="td-cell qty-col">
@@ -163,11 +168,13 @@
                                           <input type="text" inputmode="decimal" *ngIf="receiptMode !== 'VIEW'"
                                                 class="pos-input text-center no-spinner qty-input"
                                                 [value]="item.quantity" (input)="onQuantityInput()"
-                                                (keydown)="onQuantityKeyDown(item, $event)"
+                                                (keydown)="onQuantityKeyDown(item, $event, i)"
                                                 (blur)="onQuantityBlur(item, $event)" (focus)="onQuantityFocus($event)"
-                                                [attr.data-product-id]="item.productId" #rowQtyInput
+                                                [attr.data-product-id]="item.productId"
+                                                [attr.data-row]="i" [attr.data-col]="'quantity'"
+                                                #rowQtyInput
                                                 style="width: 60px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; appearance: none; -moz-appearance: textfield;">
-                                          <div class="qty-value" *ngIf="receiptMode === 'VIEW'">{{ item.quantity }}
+                                          <div class="qty-value" *ngIf="receiptMode === 'VIEW'" tabindex="-1" [attr.data-row]="i" [attr.data-col]="'quantity'" (keydown)="onTableKeyDown($event, i, 'quantity')">{{ item.quantity }}
                                           </div>
                                           <button class="stepper-btn" *ngIf="receiptMode !== 'VIEW'"
                                                 (click)="updateQuantity.emit({item: item, delta: 1})">+</button>
@@ -175,13 +182,16 @@
                               </div>
 
                               <div class="td-cell total-col fw-bold">
-                                    <input type="number" *ngIf="receiptMode !== 'VIEW'"
+                                    <input type="text" inputmode="decimal" *ngIf="receiptMode !== 'VIEW'"
                                           class="pos-input text-center no-spinner qty-input" [value]="item.total"
+                                          [attr.data-row]="i" [attr.data-col]="'total'"
                                           (input)="onInlineFieldChange(item, 'total', $event)"
                                           (keyup.enter)="onInlineFieldEnter(item, 'total', $event)"
+                                          (keydown)="onTableKeyDown($event, i, 'total')"
+                                          (focus)="onFieldFocus($event)"
                                           [readonly]="!item.sellingPrice"
                                           style="width: 80px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; appearance: none; -moz-appearance: textfield;">
-                                    <div *ngIf="receiptMode === 'VIEW'">{{ item.total | number:'1.2-2' }}</div>
+                                    <div *ngIf="receiptMode === 'VIEW'" tabindex="-1" [attr.data-row]="i" [attr.data-col]="'total'" (keydown)="onTableKeyDown($event, i, 'total')">{{ item.total | number:'1.2-2' }}</div>
                               </div>
                               <div class="td-cell balance-col" *ngIf="receiptMode !== 'VIEW'">{{ item.remainingStock }}
                               </div>

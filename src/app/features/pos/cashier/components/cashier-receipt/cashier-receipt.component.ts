@@ -11,6 +11,9 @@ import { ProductSearchPopupComponent } from '../../../../../shared/components/pr
 import { ProductSearchService } from '../../../../../shared/services/product-search.service';
 import { NotificationService } from '../../../../../shared/services/notification.service';
 
+export type ReceiptTableNavCol = 'name' | 'sellingPrice' | 'quantity' | 'total';
+const RECEIPT_TABLE_NAV_COLS: ReceiptTableNavCol[] = ['name', 'sellingPrice', 'quantity', 'total'];
+
 @Component({
       selector: 'app-cashier-receipt',
       standalone: true,
@@ -24,6 +27,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       private cdr = inject(ChangeDetectorRef);
       private productSearch = inject(ProductSearchService);
       private notifications = inject(NotificationService);
+      private elementRef = inject(ElementRef);
       private destroy$ = new Subject<void>();
 
       @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
@@ -263,6 +267,12 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
       onSearchKeyDown(event: KeyboardEvent) {
             if (this.popupOpen) return;
 
+            if (event.key === 'ArrowUp' && this.items.length > 0) {
+                  event.preventDefault();
+                  this.focusTableCell(this.items.length - 1, 'quantity');
+                  return;
+            }
+
             if (event.key === 'Escape' && this.barcodeNotFound()) {
                   this.clearNotFoundAlert();
                   return;
@@ -305,6 +315,13 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
 
       @Output() updateItemField = new EventEmitter<{ item: CartItem, field: 'sellingPrice' | 'quantity' | 'total', value: number }>();
 
+      onFieldFocus(event: FocusEvent): void {
+            const input = event.target as HTMLInputElement;
+            if (input && typeof input.select === 'function') {
+                  input.select();
+            }
+      }
+
       onQuantityInput(): void {
             this.quantityInputModified = true;
       }
@@ -315,7 +332,12 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
             input.select();
       }
 
-      onQuantityKeyDown(item: CartItem, event: KeyboardEvent): void {
+      onQuantityKeyDown(item: CartItem, event: KeyboardEvent, rowIndex: number = 0): void {
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                  this.onTableKeyDown(event, rowIndex, 'quantity');
+                  return;
+            }
+
             if (event.key === 'Enter') {
                   event.preventDefault();
                   event.stopPropagation();
@@ -351,6 +373,121 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
                         event.preventDefault();
                         input.value = String(item.quantity);
                         this.processBarcode(rawVal);
+                  }
+            }
+      }
+
+      focusTableCell(rowIndex: number, col: ReceiptTableNavCol): boolean {
+            if (rowIndex < 0 || rowIndex >= this.items.length) {
+                  return false;
+            }
+
+            const selector = `[data-row="${rowIndex}"][data-col="${col}"]`;
+            const el = this.elementRef.nativeElement.querySelector(selector) as HTMLElement | null;
+            if (el) {
+                  el.focus();
+                  if (el instanceof HTMLInputElement) {
+                        el.select();
+                  }
+                  el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                  return true;
+            }
+            return false;
+      }
+
+      private shouldNavigateHorizontal(input: HTMLInputElement, direction: 'left' | 'right'): boolean {
+            try {
+                  const { selectionStart, selectionEnd, value } = input;
+                  if (selectionStart === null || selectionEnd === null) {
+                        return true;
+                  }
+
+                  // When entire text is selected (e.g. freshly focused cell), navigate to adjacent cell
+                  if (selectionStart === 0 && selectionEnd === value.length) {
+                        return true;
+                  }
+
+                  // Partial selection active: preserve text selection
+                  if (selectionStart !== selectionEnd) {
+                        return false;
+                  }
+
+                  // Caret in the middle of text: preserve native cursor movement inside input
+                  if (selectionStart > 0 && selectionStart < value.length) {
+                        return false;
+                  }
+
+                  // Caret at boundary: navigate out to adjacent cell
+                  return true;
+            } catch {
+                  return true;
+            }
+      }
+
+      onTableKeyDown(event: KeyboardEvent, rowIndex: number, col: ReceiptTableNavCol): void {
+            if (this.popupOpen || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+                  return;
+            }
+
+            const input = event.target as HTMLInputElement;
+            const isInput = input instanceof HTMLInputElement;
+
+            switch (event.key) {
+                  case 'ArrowUp': {
+                        event.preventDefault();
+                        if (rowIndex > 0) {
+                              this.focusTableCell(rowIndex - 1, col);
+                        }
+                        break;
+                  }
+
+                  case 'ArrowDown': {
+                        event.preventDefault();
+                        if (rowIndex < this.items.length - 1) {
+                              this.focusTableCell(rowIndex + 1, col);
+                        } else {
+                              this.focusBarcodeScanner();
+                        }
+                        break;
+                  }
+
+                  case 'ArrowLeft': {
+                        // In RTL: ArrowLeft moves visually left towards total (name -> sellingPrice -> quantity -> total)
+                        if (isInput && !this.shouldNavigateHorizontal(input, 'left')) {
+                              return;
+                        }
+
+                        const colIdx = RECEIPT_TABLE_NAV_COLS.indexOf(col);
+                        if (colIdx >= 0 && colIdx < RECEIPT_TABLE_NAV_COLS.length - 1) {
+                              event.preventDefault();
+                              this.focusTableCell(rowIndex, RECEIPT_TABLE_NAV_COLS[colIdx + 1]);
+                        } else if (colIdx === RECEIPT_TABLE_NAV_COLS.length - 1) {
+                              if (rowIndex < this.items.length - 1) {
+                                    event.preventDefault();
+                                    this.focusTableCell(rowIndex + 1, RECEIPT_TABLE_NAV_COLS[0]);
+                              } else {
+                                    event.preventDefault();
+                                    this.focusBarcodeScanner();
+                              }
+                        }
+                        break;
+                  }
+
+                  case 'ArrowRight': {
+                        // In RTL: ArrowRight moves visually right towards name (total -> quantity -> sellingPrice -> name)
+                        if (isInput && !this.shouldNavigateHorizontal(input, 'right')) {
+                              return;
+                        }
+
+                        const colIdx = RECEIPT_TABLE_NAV_COLS.indexOf(col);
+                        if (colIdx > 0) {
+                              event.preventDefault();
+                              this.focusTableCell(rowIndex, RECEIPT_TABLE_NAV_COLS[colIdx - 1]);
+                        } else if (colIdx === 0 && rowIndex > 0) {
+                              event.preventDefault();
+                              this.focusTableCell(rowIndex - 1, RECEIPT_TABLE_NAV_COLS[RECEIPT_TABLE_NAV_COLS.length - 1]);
+                        }
+                        break;
                   }
             }
       }

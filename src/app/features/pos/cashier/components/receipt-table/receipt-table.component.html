@@ -13,23 +13,47 @@
   <div class="table-body">
     <div class="table-row" *ngFor="let item of items; let i = index">
       <div class="td-cell num-col">{{ i + 1 }}</div>
-      <div class="td-cell code-col">{{ item.product?.barcode || '-' }}</div>
-      <div class="td-cell name-col">{{ item.productName }}</div>
-      <div class="td-cell price-col">{{ item.price | number:'1.2-2' }}</div>
+      <div class="td-cell code-col">{{ item.productCode || '-' }}</div>
+      <div class="td-cell name-col">
+        <div class="name-cell-content" tabindex="-1" [attr.data-row]="i" [attr.data-col]="'name'" (keydown)="onTableKeyDown($event, i, 'name')">
+          {{ item.productName }}
+        </div>
+      </div>
+      <div class="td-cell price-col">
+        <input type="text" inputmode="decimal" class="pos-input text-center no-spinner qty-input"
+          [value]="item.sellingPrice"
+          [attr.data-row]="i" [attr.data-col]="'price'"
+          (keydown)="onTableKeyDown($event, i, 'price')"
+          (focus)="onFieldFocus($event)"
+          style="width: 70px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; appearance: none; -moz-appearance: textfield;">
+      </div>
       
       <div class="td-cell qty-col">
         <div class="qty-stepper">
           <button class="stepper-btn" (click)="updateQuantity.emit({item: item, delta: -1})">-</button>
-          <div class="qty-value">{{ item.quantity }}</div>
+          <input type="text" inputmode="decimal" class="pos-input text-center no-spinner qty-input"
+            [value]="item.quantity"
+            [attr.data-row]="i" [attr.data-col]="'quantity'"
+            (keydown)="onTableKeyDown($event, i, 'quantity')"
+            (focus)="onFieldFocus($event)"
+            style="width: 50px; padding: 4px; border: none; text-align: center; font-weight: bold; appearance: none; -moz-appearance: textfield;">
           <button class="stepper-btn" (click)="updateQuantity.emit({item: item, delta: 1})">+</button>
         </div>
       </div>
 
-      <div class="td-cell total-col fw-bold">{{ item.total | number:'1.2-2' }}</div>
+      <div class="td-cell total-col fw-bold">
+        <input type="text" inputmode="decimal" class="pos-input text-center no-spinner qty-input"
+          [value]="item.totalPrice"
+          [attr.data-row]="i" [attr.data-col]="'total'"
+          (keydown)="onTableKeyDown($event, i, 'total')"
+          (focus)="onFieldFocus($event)"
+          readonly
+          style="width: 80px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; appearance: none; -moz-appearance: textfield;">
+      </div>
       <div class="td-cell balance-col">{{ item.remainingStock || 0 }}</div>
       
       <div class="td-cell actions-col">
-        <button class="pos-btn-icon-only danger" (click)="removeItem.emit(item.productId)">🗑️</button>
+        <button class="pos-btn-icon-only danger" (click)="onRemove(item, i)">🗑️</button>
         <button class="pos-btn-icon-only" (click)="viewItem.emit(item)">👁️</button>
       </div>
     </div>
