@@ -40,6 +40,14 @@
                                                 <option value="CASH">نقدي</option>
                                                 <option value="TRANSFER">تحويل</option>
                                           </select>
+                                          <button *ngIf="receiptMode !== 'VIEW' && (receipt?.paymentMethod || 'CASH') === 'CASH'"
+                                                type="button" class="btn-calc-change-trigger"
+                                                (click)="openPaymentScreen.emit()"
+                                                title="حساب المتبقي نقداً (شاشة الدفع)"
+                                                aria-label="حساب المتبقي نقداً"
+                                                style="background: transparent; border: 1px solid #cbd5e1; border-radius: 4px; height: 24px; width: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--pos-primary, #1e3a8a); margin-right: 4px; padding: 0;">
+                                                <span class="material-icons-outlined" style="font-size: 16px;">calculate</span>
+                                          </button>
                                     </div>
                               </div>
                         </div>

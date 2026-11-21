@@ -3,20 +3,13 @@
       <!-- ============================= -->
       <!-- RIGHT SIDEBAR: RECEIPT HISTORY -->
       <!-- ============================= -->
-      <app-cashier-sidebar
-            [activeTab]="sidebarActiveTab()"
-            [temporaryReceipts]="temporaryReceipts()"
-            [temporaryCount]="draftsCount()"
-            [filteredReceipts]="filteredReceipts$ | async"
-            [loading]="(loading$ | async) ?? false"
-            [selectedReceiptId]="currentReceipt()?.id"
-            (closeSidebar)="onToggleRightSidebar()"
-            (selectReceipt)="onSelectReceipt($event)"
+      <app-cashier-sidebar [activeTab]="sidebarActiveTab()" [temporaryReceipts]="temporaryReceipts()"
+            [temporaryCount]="draftsCount()" [filteredReceipts]="filteredReceipts$ | async"
+            [loading]="(loading$ | async) ?? false" [selectedReceiptId]="currentReceipt()?.id"
+            (closeSidebar)="onToggleRightSidebar()" (selectReceipt)="onSelectReceipt($event)"
             (selectTemporaryReceipt)="onSelectTemporaryReceipt($event)"
-            (deleteTemporaryReceipt)="onDeleteTemporaryReceipt($event)"
-            (tabChange)="sidebarActiveTab.set($event)"
-            (applyFilters)="onApplyFilters($event)"
-            (clearFilters)="onClearFilters()">
+            (deleteTemporaryReceipt)="onDeleteTemporaryReceipt($event)" (tabChange)="sidebarActiveTab.set($event)"
+            (applyFilters)="onApplyFilters($event)" (clearFilters)="onClearFilters()">
       </app-cashier-sidebar>
 
       <!-- ============================= -->
@@ -27,49 +20,28 @@
             <!-- ============================= -->
             <!-- ACTION BAR -->
             <!-- ============================= -->
-            <app-cashier-actions
-                  [receipt]="currentReceipt()"
-                  [receiptMode]="receiptMode()"
-                  [draftsCount]="draftsCount()"
-                  [hasStockErrors]="hasStockErrors()"
-                  [isLoading]="(loading$ | async) ?? false"
-                  [finalTotal]="finalTotal()"
-                  [totalQuantity]="totalQuantity()"
-                  [distinctItemsCount]="distinctItemsCount()"
-                  (toggleRightSidebar)="onToggleRightSidebar()"
-                  (saveAndPrint)="onSaveAndPrint()"
-                  (save)="onSave()"
-                  (temporarySave)="onTemporarySave()"
-                  (edit)="onEdit()"
-                  (newReceipt)="onNew()"
-                  (drafts)="onOpenDraftsSidebar()"
-                  (refundReceipt)="onRefund()">
+            <app-cashier-actions [receipt]="currentReceipt()" [receiptMode]="receiptMode()"
+                  [draftsCount]="draftsCount()" [hasStockErrors]="hasStockErrors()"
+                  [isLoading]="(loading$ | async) ?? false" [finalTotal]="finalTotal()"
+                  [totalQuantity]="totalQuantity()" [distinctItemsCount]="distinctItemsCount()"
+                  (toggleRightSidebar)="onToggleRightSidebar()" (saveAndPrint)="onSaveAndPrint()" (save)="onSave()"
+                  (temporarySave)="onTemporarySave()" (edit)="onEdit()" (newReceipt)="onNew()"
+                  (drafts)="onOpenDraftsSidebar()" (refundReceipt)="onRefund()">
             </app-cashier-actions>
 
             <!-- ============================= -->
             <!-- RECEIPT WORKSPACE -->
             <!-- ============================= -->
-            <app-cashier-receipt
-                  [items]="cartItems()"
-                  [receipt]="currentReceipt()"
-                  [receiptMode]="receiptMode()"
-                  [products]="products()"
-                  [finalTotal]="finalTotal()"
-                  [totalQuantity]="totalQuantity()"
-                  [distinctItemsCount]="distinctItemsCount()"
-                  (previousReceipt)="onPreviousReceipt()" 
-                  (nextReceipt)="onNextReceipt()"
-                  (removeItem)="onRemoveItem($event)"
-                  (viewItem)="onViewItem($event)"
-                  (updateQuantity)="onUpdateQuantity($event)"
-                  (updateItemField)="onUpdateItemField($event)"
-                  (addItem)="onAddItem($event)"
-                  (updatePaymentMethod)="onUpdatePaymentMethod($event)"
+            <app-cashier-receipt [items]="cartItems()" [receipt]="currentReceipt()" [receiptMode]="receiptMode()"
+                  [products]="products()" [finalTotal]="finalTotal()" [totalQuantity]="totalQuantity()"
+                  [distinctItemsCount]="distinctItemsCount()" (previousReceipt)="onPreviousReceipt()"
+                  (nextReceipt)="onNextReceipt()" (removeItem)="onRemoveItem($event)" (viewItem)="onViewItem($event)"
+                  (updateQuantity)="onUpdateQuantity($event)" (updateItemField)="onUpdateItemField($event)"
+                  (addItem)="onAddItem($event)" (updatePaymentMethod)="onUpdatePaymentMethod($event)"
                   (updateCustomerName)="onUpdateCustomerName($event)"
-                  (updateCustomerPhone)="onUpdateCustomerPhone($event)"
-                  [showPaymentScreen]="showPaymentScreen()"
-                  (closePaymentScreen)="onClosePaymentScreen()"
-                  (confirmPayment)="onConfirmPayment()">
+                  (updateCustomerPhone)="onUpdateCustomerPhone($event)" [showPaymentScreen]="showPaymentScreen()"
+                  (closePaymentScreen)="onClosePaymentScreen()" (confirmPayment)="onConfirmPayment()"
+                  (openPaymentScreen)="onOpenPaymentScreenManual()">
             </app-cashier-receipt>
 
             <!-- ============================= -->
@@ -96,14 +68,14 @@
 
                         <div class="refill-dialog__content">
                               <!-- Multiple Parent Sources Selector (if more than 1 option) -->
-                              <div class="refill-source-selector" *ngIf="(refillProduct?.refillOptions?.length ?? 0) > 1">
+                              <div class="refill-source-selector"
+                                    *ngIf="(refillProduct?.refillOptions?.length ?? 0) > 1">
                                     <span class="refill-source-label">اختر مصدر التعبئة:</span>
                                     <div class="refill-source-chips">
-                                          <button type="button"
-                                                  *ngFor="let opt of refillProduct?.refillOptions"
-                                                  class="refill-chip"
-                                                  [class.refill-chip--active]="opt.parentProductId === refillSelectedParentId"
-                                                  (click)="onRefillParentSelect(opt.parentProductId)">
+                                          <button type="button" *ngFor="let opt of refillProduct?.refillOptions"
+                                                class="refill-chip"
+                                                [class.refill-chip--active]="opt.parentProductId === refillSelectedParentId"
+                                                (click)="onRefillParentSelect(opt.parentProductId)">
                                                 <span class="refill-chip-title">{{ opt.parentProductName }}</span>
                                           </button>
                                     </div>
@@ -113,28 +85,26 @@
                               <section class="refill-section refill-section--transfer">
                                     <div class="refill-transfer-header">
                                           <span class="refill-field-caption">السحب من</span>
-                                          <strong class="refill-parent-name">{{ selectedRefillOption?.parentProductName }}</strong>
+                                          <strong class="refill-parent-name">{{ selectedRefillOption?.parentProductName
+                                                }}</strong>
                                     </div>
 
                                     <div class="refill-transfer-stepper">
                                           <button class="refill-stepper-btn" type="button"
-                                                  (click)="decrementRefillParentUnits()"
-                                                  [disabled]="refillParentUnits <= 1 || refillParentMaxUnits <= 0"
-                                                  aria-label="إنقاص الكمية">
+                                                (click)="decrementRefillParentUnits()"
+                                                [disabled]="refillParentUnits <= 1 || refillParentMaxUnits <= 0"
+                                                aria-label="إنقاص الكمية">
                                                 <span class="material-icons-outlined">remove</span>
                                           </button>
-                                          <input class="refill-stepper-input"
-                                                 type="number"
-                                                 [ngModel]="refillParentUnits"
-                                                 (ngModelChange)="onRefillParentUnitsChange($event)"
-                                                 (blur)="normalizeRefillParentUnits()"
-                                                 [min]="1"
-                                                 [max]="refillParentMaxUnits"
-                                                 [disabled]="refillParentMaxUnits <= 0" />
+                                          <input class="refill-stepper-input" type="number"
+                                                [ngModel]="refillParentUnits"
+                                                (ngModelChange)="onRefillParentUnitsChange($event)"
+                                                (blur)="normalizeRefillParentUnits()" [min]="1"
+                                                [max]="refillParentMaxUnits" [disabled]="refillParentMaxUnits <= 0" />
                                           <button class="refill-stepper-btn" type="button"
-                                                  (click)="incrementRefillParentUnits()"
-                                                  [disabled]="refillParentUnits >= refillParentMaxUnits || refillParentMaxUnits <= 0"
-                                                  aria-label="زيادة الكمية">
+                                                (click)="incrementRefillParentUnits()"
+                                                [disabled]="refillParentUnits >= refillParentMaxUnits || refillParentMaxUnits <= 0"
+                                                aria-label="زيادة الكمية">
                                                 <span class="material-icons-outlined">add</span>
                                           </button>
                                     </div>
@@ -145,20 +115,25 @@
                                     <div class="refill-preview-simple">
                                           <div class="refill-preview-info">
                                                 <span class="refill-field-caption">ستستلم</span>
-                                                <strong class="refill-received-item-name">{{ refillProduct?.name }}</strong>
+                                                <strong class="refill-received-item-name">{{ refillProduct?.name
+                                                      }}</strong>
                                           </div>
                                           <div class="refill-received-qty-badge">
-                                                <strong class="refill-received-qty" dir="ltr">+{{ refillChildUnitsAdded }}</strong>
+                                                <strong class="refill-received-qty" dir="ltr">+{{ refillChildUnitsAdded
+                                                      }}</strong>
                                           </div>
                                     </div>
                               </section>
 
                               <!-- Contextual Warning Alerts -->
-                              <div *ngIf="refillParentMaxUnits <= 0" class="refill-warning-text refill-warning-text--danger">
+                              <div *ngIf="refillParentMaxUnits <= 0"
+                                    class="refill-warning-text refill-warning-text--danger">
                                     <span class="material-icons-outlined">error_outline</span>
-                                    <span>رصيد المنتج المصدر ({{ selectedRefillOption?.parentProductName }}) غير كافٍ للتعبئة.</span>
+                                    <span>رصيد المنتج المصدر ({{ selectedRefillOption?.parentProductName }}) غير كافٍ
+                                          للتعبئة.</span>
                               </div>
-                              <div *ngIf="refillParentMaxUnits > 0 && refillParentRemainingAfter < 0" class="refill-warning-text">
+                              <div *ngIf="refillParentMaxUnits > 0 && refillParentRemainingAfter < 0"
+                                    class="refill-warning-text">
                                     <span class="material-icons-outlined">warning</span>
                                     <span>الكمية المحددة تتجاوز الرصيد المتاح للمصدر.</span>
                               </div>
@@ -166,9 +141,8 @@
 
                         <div class="refill-dialog__footer">
                               <button class="refill-btn refill-btn--cancel" (click)="cancelRefill()">إلغاء</button>
-                              <button class="refill-btn refill-btn--confirm"
-                                      (click)="confirmRefill()"
-                                      [disabled]="refillParentMaxUnits <= 0 || !refillParentUnits || refillParentUnits < 1 || refillChildUnitsAdded < 1 || refillParentRemainingAfter < 0 || isRefillLoading()">
+                              <button class="refill-btn refill-btn--confirm" (click)="confirmRefill()"
+                                    [disabled]="refillParentMaxUnits <= 0 || !refillParentUnits || refillParentUnits < 1 || refillChildUnitsAdded < 1 || refillParentRemainingAfter < 0 || isRefillLoading()">
                                     <span *ngIf="!isRefillLoading()" class="material-icons-outlined">check_circle</span>
                                     <span class="refill-spinner" *ngIf="isRefillLoading()"></span>
                                     {{ isRefillLoading() ? 'جاري التحقق...' : 'تأكيد وتعبئة' }}
@@ -204,16 +178,20 @@
                                           <span class="material-icons-outlined">shopping_cart</span>
                                           سعر الشراء
                                     </span>
-                                    <span class="pricing-change-table__current">{{ pricingValidation?.currentBuyingPrice }}</span>
-                                    <span class="pricing-change-table__new">{{ pricingValidation?.newBuyingPrice }}</span>
+                                    <span class="pricing-change-table__current">{{ pricingValidation?.currentBuyingPrice
+                                          }}</span>
+                                    <span class="pricing-change-table__new">{{ pricingValidation?.newBuyingPrice
+                                          }}</span>
                               </div>
                               <div class="pricing-change-table__row">
                                     <span class="pricing-change-table__label">
                                           <span class="material-icons-outlined">sell</span>
                                           سعر البيع
                                     </span>
-                                    <span class="pricing-change-table__current">{{ pricingValidation?.currentSellingPrice }}</span>
-                                    <span class="pricing-change-table__new pricing-change-table__new--neutral">{{ pricingValidation?.proposedSellingPrice }}</span>
+                                    <span class="pricing-change-table__current">{{
+                                          pricingValidation?.currentSellingPrice }}</span>
+                                    <span class="pricing-change-table__new pricing-change-table__new--neutral">{{
+                                          pricingValidation?.proposedSellingPrice }}</span>
                               </div>
                         </div>
 
@@ -226,15 +204,15 @@
 
                         <p class="refill-pricing-note">
                               <span class="material-icons-outlined">info</span>
-                              يتم تحديث سعر الشراء بناءً على تكلفة التعبئة، مع الحفاظ على نسبة هامش الربح الحالية ({{ pricingValidation?.currentMarkupPercentage }}%).
+                              يتم تحديث سعر الشراء بناءً على تكلفة التعبئة، مع الحفاظ على نسبة هامش الربح الحالية ({{
+                              pricingValidation?.currentMarkupPercentage }}%).
                         </p>
 
                         <!-- Footer Actions -->
                         <div class="refill-dialog__footer">
                               <button class="refill-btn refill-btn--cancel" (click)="cancelRefill()">إلغاء</button>
-                              <button class="refill-btn refill-btn--confirm"
-                                      (click)="executeRefill(true)"
-                                      [disabled]="isRefillLoading()">
+                              <button class="refill-btn refill-btn--confirm" (click)="executeRefill(true)"
+                                    [disabled]="isRefillLoading()">
                                     <span class="material-icons-outlined" *ngIf="!isRefillLoading()">done_all</span>
                                     <span class="refill-spinner" *ngIf="isRefillLoading()"></span>
                                     {{ isRefillLoading() ? 'جاري التنفيذ...' : 'موافق وتنفيذ' }}
@@ -257,7 +235,8 @@
                                           <p class="pos-modal-subtitle">توجد عناصر مسجلة في الفاتورة الحالية</p>
                                     </div>
                               </div>
-                              <button class="refill-dialog__close" (click)="onCancelNewReceiptDialog()" aria-label="إغلاق">
+                              <button class="refill-dialog__close" (click)="onCancelNewReceiptDialog()"
+                                    aria-label="إغلاق">
                                     <span class="material-icons-outlined">close</span>
                               </button>
                         </div>
@@ -265,12 +244,13 @@
                         <div class="pos-modal-body">
                               <p class="pos-modal-prompt">
                                     {{ pendingReceiptAction === 'PREVIOUS'
-                                          ? 'ماذا تريد أن تفعل بالفاتورة الحالية قبل الانتقال للفواتير السابقة؟'
-                                          : 'ماذا تريد أن تفعل بالفاتورة الحالية قبل بدء فاتورة جديدة؟' }}
+                                    ? 'ماذا تريد أن تفعل بالفاتورة الحالية قبل الانتقال للفواتير السابقة؟'
+                                    : 'ماذا تريد أن تفعل بالفاتورة الحالية قبل بدء فاتورة جديدة؟' }}
                               </p>
-                              
+
                               <div class="pos-modal-actions-stacked">
-                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--temp" (click)="onConfirmNewWithTempSave()">
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--temp"
+                                          (click)="onConfirmNewWithTempSave()">
                                           <div class="pos-action-icon-box">
                                                 <span class="material-icons-outlined">pause_circle_outline</span>
                                           </div>
@@ -279,11 +259,13 @@
                                                       <span>حفظ مؤقت</span>
                                                       <span class="pos-action-en">(Save Temporarily)</span>
                                                 </div>
-                                                <div class="pos-action-desc">حفظ الفاتورة لاستئنافها لاحقاً دون خصم مخزون</div>
+                                                <div class="pos-action-desc">حفظ الفاتورة لاستئنافها لاحقاً دون خصم
+                                                      مخزون</div>
                                           </div>
                                     </button>
 
-                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--permanent" (click)="onConfirmNewWithPermanentSave()" [disabled]="hasStockErrors()">
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--permanent"
+                                          (click)="onConfirmNewWithPermanentSave()" [disabled]="hasStockErrors()">
                                           <div class="pos-action-icon-box">
                                                 <span class="material-icons-outlined">check_circle_outline</span>
                                           </div>
@@ -296,7 +278,8 @@
                                           </div>
                                     </button>
 
-                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--delete" (click)="onConfirmNewWithDiscard()">
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--delete"
+                                          (click)="onConfirmNewWithDiscard()">
                                           <div class="pos-action-icon-box">
                                                 <span class="material-icons-outlined">delete_outline</span>
                                           </div>
@@ -312,7 +295,8 @@
                         </div>
 
                         <div class="pos-modal-footer">
-                              <button type="button" class="pos-modal-cancel-btn" (click)="onCancelNewReceiptDialog()">إلغاء والعودة للفاتورة</button>
+                              <button type="button" class="pos-modal-cancel-btn"
+                                    (click)="onCancelNewReceiptDialog()">إلغاء والعودة للفاتورة</button>
                         </div>
                   </div>
             </div>
@@ -336,10 +320,12 @@
                         </div>
 
                         <div class="pos-modal-body">
-                              <p class="pos-modal-prompt">توجد أصناف قيد الإدخال حالياً. قبل فتح الفاتورة المؤقتة، ماذا تريد أن تفعل بالأصناف الحالية؟</p>
+                              <p class="pos-modal-prompt">توجد أصناف قيد الإدخال حالياً. قبل فتح الفاتورة المؤقتة، ماذا
+                                    تريد أن تفعل بالأصناف الحالية؟</p>
 
                               <div class="pos-modal-actions-stacked">
-                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--temp" (click)="onConflictSaveCurrentTemp()">
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--temp"
+                                          (click)="onConflictSaveCurrentTemp()">
                                           <div class="pos-action-icon-box">
                                                 <span class="material-icons-outlined">pause_circle_outline</span>
                                           </div>
@@ -347,11 +333,13 @@
                                                 <div class="pos-action-title">
                                                       <span>حفظ الفاتورة الحالية مؤقتاً أولاً</span>
                                                 </div>
-                                                <div class="pos-action-desc">حفظ الأصناف الحالية كمسودة ثم فتح الفاتورة المحددة</div>
+                                                <div class="pos-action-desc">حفظ الأصناف الحالية كمسودة ثم فتح الفاتورة
+                                                      المحددة</div>
                                           </div>
                                     </button>
 
-                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--delete" (click)="onConflictDiscardCurrent()">
+                                    <button type="button" class="pos-action-choice-btn pos-action-choice-btn--delete"
+                                          (click)="onConflictDiscardCurrent()">
                                           <div class="pos-action-icon-box">
                                                 <span class="material-icons-outlined">delete_outline</span>
                                           </div>
@@ -359,14 +347,16 @@
                                                 <div class="pos-action-title">
                                                       <span>تجاهل الفاتورة الحالية وفتح المحددة</span>
                                                 </div>
-                                                <div class="pos-action-desc">مسح الأصناف الحالية وفتح الفاتورة المؤقتة مباشرة</div>
+                                                <div class="pos-action-desc">مسح الأصناف الحالية وفتح الفاتورة المؤقتة
+                                                      مباشرة</div>
                                           </div>
                                     </button>
                               </div>
                         </div>
 
                         <div class="pos-modal-footer">
-                              <button type="button" class="pos-modal-cancel-btn" (click)="onCancelDraftConflict()">إلغاء</button>
+                              <button type="button" class="pos-modal-cancel-btn"
+                                    (click)="onCancelDraftConflict()">إلغاء</button>
                         </div>
                   </div>
             </div>
@@ -376,8 +366,7 @@
       <!-- ============================= -->
       <!-- LEFT SIDEBAR: NAVIGATION -->
       <!-- ============================= -->
-      <app-sidebar 
-            [expanded]="sidebarVisible()" 
+      <app-sidebar [expanded]="sidebarVisible()"
             [cashierName]="currentReceipt()?.cashierName || currentReceipt()?.cashier?.name"
             (toggle)="onToggleSidebar()">
       </app-sidebar>

@@ -49,6 +49,7 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
 
       @Output() closePaymentScreen = new EventEmitter<void>();
       @Output() confirmPayment = new EventEmitter<void>();
+      @Output() openPaymentScreen = new EventEmitter<void>();
       
       @ViewChild('paidInput') paidInput?: ElementRef<HTMLInputElement>;
       

@@ -12,4 +12,5 @@ export const routes: Routes = [
       { path: 'pos/products/tree', loadComponent: () => import('./features/pos/products/components/new/productTreeView/product-tree-view.component').then(c => c.ProductTreeViewComponent), canActivate: [authGuard] },
       { path: 'pos/product/manage', loadComponent: () => import('./features/pos/products/components/manage-product/manage-product.component').then(c => c.ManageProductComponent), canActivate: [authGuard] },
       { path: 'pos/product/manage/:id', loadComponent: () => import('./features/pos/products/components/manage-product/manage-product.component').then(c => c.ManageProductComponent), canActivate: [authGuard] },
+      { path: 'pos/settings', loadComponent: () => import('./features/pos/settings/settings-page.component').then(c => c.SettingsPageComponent), canActivate: [authGuard] },
 ];

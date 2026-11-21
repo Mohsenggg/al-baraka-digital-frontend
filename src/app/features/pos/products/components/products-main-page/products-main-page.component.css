@@ -2762,7 +2762,7 @@
 .leaf-products-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.82rem;
+      font-size: 1.2rem;
       background: #ffffff;
 }
 
@@ -2785,7 +2785,7 @@
 }
 
 .leaf-products-table tbody tr {
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid #b7b7b7;
       transition: background-color 0.15s ease;
 }
 
@@ -2851,14 +2851,14 @@
       align-items: baseline;
       gap: 3px;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 1.2rem;
 }
 
 .buying-price  { color: #374151; }
 .selling-price { color: var(--pos-primary, #1e3a8a); }
 
 .curr {
-      font-size: 0.68rem;
+      font-size: 0.8rem;
       color: #64748b;
       font-weight: 500;
 }
@@ -2881,7 +2881,7 @@
       align-items: baseline;
       gap: 3px;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 1rem;
       color: #059669;
 }
 
@@ -2892,7 +2892,7 @@
       background-color: #d1fae5;
       color: #065f46;
       border-radius: 20px;
-      font-size: 0.68rem;
+      font-size: 0.8rem;
       font-weight: 700;
       white-space: nowrap;
       border: 1px solid #a7f3d0;

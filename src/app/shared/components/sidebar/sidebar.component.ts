@@ -27,7 +27,7 @@ export class SidebarComponent implements OnInit {
     { label: 'إدارة المخزون', icon: 'inventory_2', route: '/pos/products' },
     { label: 'تقارير المبيعات', icon: 'bar_chart', route: '/pos/receipts' },
     { label: 'أدوات الطباعة', icon: 'print', route: '/pos/receipt-form' },
-    { label: 'الإعدادات', icon: 'settings', route: '#' }
+    { label: 'الإعدادات', icon: 'settings', route: '/pos/settings' }
   ];
 
   get resolvedCashierName(): string {

@@ -16,6 +16,7 @@ import { CashierStateService } from './services/cashier-state.service';
 import { CreateReceiptInput, Product, CartItem, PaymentMethod } from '../core/models/pos.models';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { ProductCatalogStore } from '../../../core/products/services/product-catalog.store';
+import { SettingsService } from '../../../core/services/settings.service';
 
 @Component({
       selector: 'app-cashier-page',
@@ -37,6 +38,7 @@ export class CashierPageComponent implements OnInit {
       private state = inject(CashierStateService);
       private catalogStore = inject(ProductCatalogStore);
       private notifications = inject(NotificationService);
+      private settingsService = inject(SettingsService);
 
       sidebarVisible = signal(false);
       rightSidebarVisible = signal(false);
@@ -73,6 +75,7 @@ export class CashierPageComponent implements OnInit {
             this.state.filterReceipts({ page: 0, size: 20 });
             this.state.loadTemporaryReceiptsCount();
             this.state.loadTemporaryReceipts();
+            this.settingsService.loadSettings().subscribe();
       }
 
       // Action Bar Events
@@ -125,7 +128,7 @@ export class CashierPageComponent implements OnInit {
             const isEdit = this.receiptMode() === 'EDIT' && receiptData?.status !== 'DRAFT';
 
             return {
-                  customerName: receiptData?.customerName || receiptData?.customer?.name || 'Walk-in Customer',
+                  customerName: receiptData?.customerName || receiptData?.customer?.name || '',
                   customerPhone: receiptData?.customerPhone || receiptData?.customer?.phone || '',
                   customerId: receiptData?.customerId || null,
                   cashierId: receiptData?.cashierId || 1,
@@ -149,13 +152,25 @@ export class CashierPageComponent implements OnInit {
             const items = this.cartItems();
             if (items.length === 0) return of(null);
             if (this.hasStockErrors()) return of(null);
-            
-            if (!this.showPaymentScreen()) {
+
+            const receiptData = this.currentReceipt();
+            const paymentMethod = (receiptData?.paymentMethod as PaymentMethod) || 'CASH';
+            const total = this.finalTotal();
+            const threshold = this.settingsService.remainingAmountThreshold();
+            const isThresholdEnabled = this.settingsService.enableRemainingAmountThreshold();
+
+            // Conditional Payment Screen Rule:
+            // - Always bypass if paymentMethod is TRANSFER (no cash change applicable)
+            // - Bypass if threshold is enabled and total <= threshold
+            // - Require overlay if payment is CASH and (threshold disabled OR total > threshold)
+            const requiresPaymentOverlay = paymentMethod === 'CASH' &&
+                                           (!isThresholdEnabled || total > threshold);
+
+            if (requiresPaymentOverlay && !this.showPaymentScreen()) {
                   this.showPaymentScreen.set(true);
                   return of(null);
             }
 
-            const receiptData = this.currentReceipt();
             const payload = this.buildReceiptPayload();
 
             if (receiptData?.status === 'DRAFT' && receiptData?.id) {
@@ -294,6 +309,10 @@ export class CashierPageComponent implements OnInit {
       onClosePaymentScreen() {
             this.showPaymentScreen.set(false);
             this.pendingReceiptAction = null;
+      }
+
+      onOpenPaymentScreenManual() {
+            this.showPaymentScreen.set(true);
       }
 
       onSelectTemporaryReceipt(id: number) {
