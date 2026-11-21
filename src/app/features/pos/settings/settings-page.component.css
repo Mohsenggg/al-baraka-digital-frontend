@@ -3,13 +3,31 @@
    Reference: cashier-page.component.css & receipt totals appearance
    ========================================================================== */
 
+:host {
+      display: block;
+      width: 100%;
+      height: 100%;
+}
+
 .settings-workspace {
       display: flex;
-      flex-direction: column;
-      min-height: 100vh;
+      height: 100vh;
+      width: 100vw;
       background-color: var(--pos-bg, #f5f6f8);
       font-family: var(--font-family, 'Tajawal', sans-serif);
       color: var(--pos-text-primary, #1f2937);
+      overflow: hidden;
+      direction: rtl;
+}
+
+.settings-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-width: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
       direction: rtl;
 }
 
@@ -28,6 +46,7 @@
       position: sticky;
       top: 0;
       z-index: 20;
+      flex-shrink: 0;
 }
 
 .action-start-group,
@@ -619,4 +638,17 @@
 }
 .no-spinner {
       -moz-appearance: textfield;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+      .sync-status-indicator {
+            display: none;
+      }
+      .btn-back-action .btn-label {
+            display: none;
+      }
+      .settings-content-layout {
+            padding: 16px 12px;
+      }
 }

@@ -130,4 +130,14 @@ describe('CashierReceiptComponent keyboard navigation', () => {
     component.onTableKeyDown(eventRight, 0, 'quantity');
     expect(focusSpy).toHaveBeenCalledWith(0, 'sellingPrice');
   });
+
+  it('should open product search list when pressing Enter while the search input is empty', () => {
+    component.inputForm.patchValue({ barcode: '' });
+    const event = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+    component.onSearchKeyDown(event);
+
+    expect(event.defaultPrevented).toBeTrue();
+    expect(component.popupOpen).toBeTrue();
+    expect(component.popupInitialQuery).toBe('');
+  });
 });

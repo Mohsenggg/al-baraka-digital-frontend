@@ -246,7 +246,11 @@ export class CashierReceiptComponent implements OnInit, OnDestroy {
 
       submitInputRow() {
             const term = (this.inputForm.get('barcode')?.value || '').trim();
-            if (!term) return;
+            if (!term) {
+                  this.clearNotFoundAlert();
+                  this.openProductPopup('');
+                  return;
+            }
             this.processBarcode(term);
       }
 

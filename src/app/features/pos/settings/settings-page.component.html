@@ -1,236 +1,250 @@
 <div class="settings-workspace" dir="rtl">
 
-      <!-- ============================= -->
-      <!-- TOP ACTION BAR -->
-      <!-- ============================= -->
-      <header class="settings-action-bar">
-            <!-- Right (Start in RTL): Menu & Return -->
-            <div class="action-start-group">
-                  <button type="button" class="btn-menu-toggle" (click)="toggleSidebar()" title="القائمة الرئيسية" aria-label="القائمة">
-                        <span class="material-icons-outlined">menu</span>
-                  </button>
+      <!-- Main Workspace Container (Header & Content) -->
+      <div class="settings-container">
 
-                  <button type="button" class="btn-back-action" (click)="goBack()" title="العودة لشاشة الكاشير">
-                        <span class="material-icons-outlined">arrow_forward</span>
-                        <span class="btn-label">العودة لشاشة البيع</span>
-                  </button>
+            <!-- ============================= -->
+            <!-- TOP ACTION BAR -->
+            <!-- ============================= -->
+            <header class="settings-action-bar">
+                  <!-- Right (Start in RTL): Return & Title -->
+                  <div class="action-start-group">
+                        <!-- <button type="button" class="btn-back-action" (click)="goBack()" title="العودة لشاشة الكاشير">
+                              <span class="material-icons-outlined">arrow_forward</span>
+                              <span class="btn-label">العودة لشاشة البيع</span>
+                        </button> -->
 
-                  <div class="page-title-badge">
-                        <span class="material-icons-outlined title-icon">tune</span>
-                        <span class="title-text">إعدادات نقطة البيع</span>
-                  </div>
-            </div>
-
-            <!-- Left (End in RTL): Primary Save & Status Actions -->
-            <div class="action-end-group">
-                  <div class="sync-status-indicator" title="متصل بالخادم المركزي">
-                        <span class="status-dot"></span>
-                        <span class="status-label">متصل بقاعدة البيانات</span>
-                  </div>
-
-                  <button type="button" class="btn-action-outline" (click)="onReset()" [disabled]="isSaving()">
-                        <span class="material-icons-outlined">restart_alt</span>
-                        <span class="btn-text">استعادة الافتراضي</span>
-                  </button>
-
-                  <button type="button" class="btn-action-primary" (click)="onSave()" [disabled]="isSaving()">
-                        <span class="material-icons-outlined" *ngIf="!isSaving()">save</span>
-                        <span class="spinner" *ngIf="isSaving()"></span>
-                        <span class="btn-text">حفظ التغييرات <span class="shortcut">(F11)</span></span>
-                  </button>
-            </div>
-      </header>
-
-      <!-- ============================= -->
-      <!-- MAIN WORKSPACE CONTENT -->
-      <!-- ============================= -->
-      <main class="settings-content-layout">
-
-            <!-- Category Tabs (Reference to POS tabs) -->
-            <nav class="settings-nav-tabs">
-                  <button type="button" class="settings-tab-btn" 
-                          [class.active]="activeTab() === 'PAYMENT'"
-                          (click)="activeTab.set('PAYMENT')">
-                        <span class="material-icons-outlined">payments</span>
-                        <span>الدفع والمتبقي</span>
-                  </button>
-
-                  <button type="button" class="settings-tab-btn" 
-                          [class.active]="activeTab() === 'PRINTING'"
-                          (click)="activeTab.set('PRINTING')">
-                        <span class="material-icons-outlined">print</span>
-                        <span>الطباعة والفواتير</span>
-                        <span class="badge-soon">قريباً</span>
-                  </button>
-
-                  <button type="button" class="settings-tab-btn" 
-                          [class.active]="activeTab() === 'GENERAL'"
-                          (click)="activeTab.set('GENERAL')">
-                        <span class="material-icons-outlined">storefront</span>
-                        <span>بيانات المتجر</span>
-                        <span class="badge-soon">قريباً</span>
-                  </button>
-            </nav>
-
-            <!-- Settings Card: Payment & Remaining Change -->
-            <div class="settings-card-wrapper" *ngIf="activeTab() === 'PAYMENT'">
-
-                  <!-- Main Configuration Card -->
-                  <div class="pos-panel-card">
-                        <div class="panel-card-header">
-                              <div class="header-icon-box">
-                                    <span class="material-icons-outlined">point_of_sale</span>
-                              </div>
-                              <div class="header-text-block">
-                                    <h2 class="panel-title">حساب المتبقي (صرف النقدية)</h2>
-                                    <p class="panel-subtitle">
-                                          تحديد الحد الأدنى لقيمة الفاتورة النقدية التي تتطلب إظهار شاشة استلام النقدية وحساب المتبقي
-                                    </p>
-                              </div>
-                        </div>
-
-                        <!-- Card Body -->
-                        <div class="panel-card-body">
-
-                              <!-- Row 1: Master Enable Toggle -->
-                              <div class="setting-item-row">
-                                    <div class="item-description">
-                                          <label class="item-title" for="masterToggle">تفعيل الفحص الشرطي للحد المالي</label>
-                                          <p class="item-hint">
-                                                عند التعطيل، ستظهر شاشة حساب المتبقي دائماً لجميع الفواتير النقدية بصرف النظر عن قيمتها
-                                          </p>
-                                    </div>
-
-                                    <div class="item-control">
-                                          <label class="pos-switch">
-                                                <input id="masterToggle" type="checkbox" 
-                                                       [ngModel]="enableThreshold()" 
-                                                       (ngModelChange)="onToggleThreshold($event)">
-                                                <span class="switch-slider"></span>
-                                          </label>
-                                    </div>
-                              </div>
-
-                              <!-- Row 2: Threshold Numeric Field with Steppers -->
-                              <div class="setting-item-row" [class.is-disabled]="!enableThreshold()">
-                                    <div class="item-description">
-                                          <label class="item-title" for="thresholdInput">حد الفاتورة النقدية</label>
-                                          <p class="item-hint">
-                                                الفواتير الأقل من أو تساوي هذا المبلغ يتم حفظها فوراً بنقرة واحدة لتسريع عملية البيع
-                                          </p>
-                                    </div>
-
-                                    <div class="item-control">
-                                          <div class="stepper-input-group">
-                                                <button type="button" class="stepper-btn btn-minus" 
-                                                        [disabled]="!enableThreshold() || thresholdInput() <= 0"
-                                                        (click)="decrementThreshold(5)" title="إنقاص 5 ج.م">
-                                                      <span class="material-icons-outlined">remove</span>
-                                                </button>
-
-                                                <div class="input-unit-wrapper">
-                                                      <input id="thresholdInput" type="number" 
-                                                             class="threshold-number-input no-spinner"
-                                                             min="0" step="5"
-                                                             [disabled]="!enableThreshold()"
-                                                             [ngModel]="thresholdInput()" 
-                                                             (ngModelChange)="thresholdInput.set($event)">
-                                                      <span class="unit-label">جنية</span>
-                                                </div>
-
-                                                <button type="button" class="stepper-btn btn-plus" 
-                                                        [disabled]="!enableThreshold()"
-                                                        (click)="incrementThreshold(5)" title="زيادة 5 ج.م">
-                                                      <span class="material-icons-outlined">add</span>
-                                                </button>
-                                          </div>
-                                    </div>
-                              </div>
-
-                              <!-- Row 3: Preset Quick Chips -->
-                              <div class="setting-item-row presets-row" *ngIf="enableThreshold()">
-                                    <div class="item-description">
-                                          <span class="item-title">قيم سريعة جاهزة</span>
-                                          <p class="item-hint">انقر لاختيار حد شائع مباشرة</p>
-                                    </div>
-
-                                    <div class="item-control">
-                                          <div class="preset-chips-container">
-                                                <button *ngFor="let p of presets" type="button"
-                                                        class="preset-chip"
-                                                        [class.active]="thresholdInput() === p"
-                                                        (click)="selectPreset(p)">
-                                                      <span class="chip-dot" *ngIf="thresholdInput() === p"></span>
-                                                      <span class="chip-text">{{ p === 0 ? '0 (إظهار دائماً)' : p + ' ج.م' }}</span>
-                                                </button>
-                                          </div>
-                                    </div>
-                              </div>
-
-                              <!-- Live Visual Behavior Preview (Inspired by Receipt Totals Appearance) -->
-                              <div class="behavior-preview-section">
-                                    <div class="preview-header">
-                                          <span class="material-icons-outlined">visibility</span>
-                                          <span class="preview-title">معاينة سلوك الكاشير المباشر</span>
-                                    </div>
-
-                                    <div class="preview-cards-grid">
-                                          <!-- Scenario A: Sub-threshold Fast Checkout -->
-                                          <div class="preview-stat-card fast-checkout" [class.dimmed]="!enableThreshold()">
-                                                <div class="stat-card-badge">
-                                                      <span class="material-icons-outlined">flash_on</span>
-                                                      <span>حفظ سريع بنقرة واحدة</span>
-                                                </div>
-                                                <div class="stat-card-condition">
-                                                      الفاتورة &le; <strong class="highlight-val">{{ enableThreshold() ? thresholdInput() : '---' }}</strong> ج.م
-                                                </div>
-                                                <p class="stat-card-desc">
-                                                      عند الضغط على حفظ (F11/F12)، تُحفظ الفاتورة فوراً دون مقاطعة الكاشير بشاشة حساب المتبقي.
-                                                </p>
-                                          </div>
-
-                                          <!-- Scenario B: Super-threshold Change Calculator -->
-                                          <div class="preview-stat-card change-calculator">
-                                                <div class="stat-card-badge">
-                                                      <span class="material-icons-outlined">calculate</span>
-                                                      <span>حساب المتبقي تلقائياً</span>
-                                                </div>
-                                                <div class="stat-card-condition">
-                                                      <ng-container *ngIf="enableThreshold()">
-                                                            الفاتورة &gt; <strong class="highlight-val">{{ thresholdInput() }}</strong> ج.م
-                                                      </ng-container>
-                                                      <ng-container *ngIf="!enableThreshold()">
-                                                            جميع الفواتير النقدية
-                                                      </ng-container>
-                                                </div>
-                                                <p class="stat-card-desc">
-                                                      تظهر شاشة استلام النقدية تلقائياً لإدخال المدفوع وعرض المتبقي (صرف) بدقة لمنع الأخطاء الحسابية.
-                                                </p>
-                                          </div>
-                                    </div>
-                              </div>
-
+                        <div class="page-title-badge">
+                              <span class="material-icons-outlined title-icon">tune</span>
+                              <span class="title-text">إعدادات نقطة البيع</span>
                         </div>
                   </div>
 
-            </div>
+                  <!-- Left (End in RTL): Primary Save, Status Actions & Menu Toggle -->
+                  <div class="action-end-group">
+                        <div class="sync-status-indicator" title="متصل بالخادم المركزي">
+                              <span class="status-dot"></span>
+                              <span class="status-label">متصل بقاعدة البيانات</span>
+                        </div>
 
-            <!-- Other tabs placeholder -->
-            <div class="coming-soon-panel pos-panel-card" *ngIf="activeTab() !== 'PAYMENT'">
-                  <div class="coming-soon-content">
-                        <span class="material-icons-outlined soon-icon">construction</span>
-                        <h3 class="soon-title">قسم قيد التطوير</h3>
-                        <p class="soon-desc">
-                              سيتم إضافة المزيد من الإعدادات المركزية (إعدادات الطابعات الحرارية، ضريبة القيمة المضافة، وسلوك الباركود) قريباً عبر محرك الإعدادات الموحد.
-                        </p>
-                        <button type="button" class="btn-action-outline" (click)="activeTab.set('PAYMENT')">
-                              العودة لإعدادات الدفع والمتبقي
+                        <button type="button" class="btn-action-outline" (click)="onReset()" [disabled]="isSaving()">
+                              <span class="material-icons-outlined">restart_alt</span>
+                              <span class="btn-text">استعادة الافتراضي</span>
                         </button>
+
+                        <button type="button" class="btn-action-primary" (click)="onSave()" [disabled]="isSaving()">
+                              <span class="material-icons-outlined" *ngIf="!isSaving()">save</span>
+                              <span class="spinner" *ngIf="isSaving()"></span>
+                              <span class="btn-text">حفظ التغييرات <span class="shortcut">(F11)</span></span>
+                        </button>
+<!-- 
+                        <button type="button" class="btn-menu-toggle" (click)="toggleSidebar()" title="القائمة الرئيسية"
+                              aria-label="القائمة">
+                              <span class="material-icons-outlined">menu</span>
+                        </button> -->
                   </div>
-            </div>
+            </header>
 
-      </main>
+            <!-- ============================= -->
+            <!-- MAIN WORKSPACE CONTENT -->
+            <!-- ============================= -->
+            <main class="settings-content-layout">
 
-      <!-- App Shared Navigation Sidebar -->
+                  <!-- Category Tabs (Reference to POS tabs) -->
+                  <nav class="settings-nav-tabs">
+                        <button type="button" class="settings-tab-btn" [class.active]="activeTab() === 'PAYMENT'"
+                              (click)="activeTab.set('PAYMENT')">
+                              <span class="material-icons-outlined">payments</span>
+                              <span>الدفع والمتبقي</span>
+                        </button>
+
+                        <button type="button" class="settings-tab-btn" [class.active]="activeTab() === 'PRINTING'"
+                              (click)="activeTab.set('PRINTING')">
+                              <span class="material-icons-outlined">print</span>
+                              <span>الطباعة والفواتير</span>
+                              <span class="badge-soon">قريباً</span>
+                        </button>
+
+                        <button type="button" class="settings-tab-btn" [class.active]="activeTab() === 'GENERAL'"
+                              (click)="activeTab.set('GENERAL')">
+                              <span class="material-icons-outlined">storefront</span>
+                              <span>بيانات المتجر</span>
+                              <span class="badge-soon">قريباً</span>
+                        </button>
+                  </nav>
+
+                  <!-- Settings Card: Payment & Remaining Change -->
+                  <div class="settings-card-wrapper" *ngIf="activeTab() === 'PAYMENT'">
+
+                        <!-- Main Configuration Card -->
+                        <div class="pos-panel-card">
+                              <div class="panel-card-header">
+                                    <div class="header-icon-box">
+                                          <span class="material-icons-outlined">point_of_sale</span>
+                                    </div>
+                                    <div class="header-text-block">
+                                          <h2 class="panel-title">حساب المتبقي (صرف النقدية)</h2>
+                                          <p class="panel-subtitle">
+                                                تحديد الحد الأدنى لقيمة الفاتورة النقدية التي تتطلب إظهار شاشة استلام
+                                                النقدية وحساب المتبقي
+                                          </p>
+                                    </div>
+                              </div>
+
+                              <!-- Card Body -->
+                              <div class="panel-card-body">
+
+                                    <!-- Row 1: Master Enable Toggle -->
+                                    <div class="setting-item-row">
+                                          <div class="item-description">
+                                                <label class="item-title" for="masterToggle">تفعيل الفحص الشرطي للحد
+                                                      المالي</label>
+                                                <p class="item-hint">
+                                                      عند التعطيل، ستظهر شاشة حساب المتبقي دائماً لجميع الفواتير النقدية
+                                                      بصرف النظر عن قيمتها
+                                                </p>
+                                          </div>
+
+                                          <div class="item-control">
+                                                <label class="pos-switch">
+                                                      <input id="masterToggle" type="checkbox"
+                                                            [ngModel]="enableThreshold()"
+                                                            (ngModelChange)="onToggleThreshold($event)">
+                                                      <span class="switch-slider"></span>
+                                                </label>
+                                          </div>
+                                    </div>
+
+                                    <!-- Row 2: Threshold Numeric Field with Steppers -->
+                                    <div class="setting-item-row" [class.is-disabled]="!enableThreshold()">
+                                          <div class="item-description">
+                                                <label class="item-title" for="thresholdInput">حد الفاتورة
+                                                      النقدية</label>
+                                                <p class="item-hint">
+                                                      الفواتير الأقل من أو تساوي هذا المبلغ يتم حفظها فوراً بنقرة واحدة
+                                                      لتسريع عملية البيع
+                                                </p>
+                                          </div>
+
+                                          <div class="item-control">
+                                                <div class="stepper-input-group">
+                                                      <button type="button" class="stepper-btn btn-minus"
+                                                            [disabled]="!enableThreshold() || thresholdInput() <= 0"
+                                                            (click)="decrementThreshold(5)" title="إنقاص 5 ج.م">
+                                                            <span class="material-icons-outlined">remove</span>
+                                                      </button>
+
+                                                      <div class="input-unit-wrapper">
+                                                            <input id="thresholdInput" type="number"
+                                                                  class="threshold-number-input no-spinner" min="0"
+                                                                  step="5" [disabled]="!enableThreshold()"
+                                                                  [ngModel]="thresholdInput()"
+                                                                  (ngModelChange)="thresholdInput.set($event)">
+                                                            <span class="unit-label">جنية</span>
+                                                      </div>
+
+                                                      <button type="button" class="stepper-btn btn-plus"
+                                                            [disabled]="!enableThreshold()"
+                                                            (click)="incrementThreshold(5)" title="زيادة 5 ج.م">
+                                                            <span class="material-icons-outlined">add</span>
+                                                      </button>
+                                                </div>
+                                          </div>
+                                    </div>
+
+                                    <!-- Row 3: Preset Quick Chips -->
+                                    <div class="setting-item-row presets-row" *ngIf="enableThreshold()">
+                                          <div class="item-description">
+                                                <span class="item-title">قيم سريعة جاهزة</span>
+                                                <p class="item-hint">انقر لاختيار حد شائع مباشرة</p>
+                                          </div>
+
+                                          <div class="item-control">
+                                                <div class="preset-chips-container">
+                                                      <button *ngFor="let p of presets" type="button"
+                                                            class="preset-chip" [class.active]="thresholdInput() === p"
+                                                            (click)="selectPreset(p)">
+                                                            <span class="chip-dot"
+                                                                  *ngIf="thresholdInput() === p"></span>
+                                                            <span class="chip-text">{{ p === 0 ? '0 (إظهار دائماً)' : p
+                                                                  + ' ج.م' }}</span>
+                                                      </button>
+                                                </div>
+                                          </div>
+                                    </div>
+
+                                    <!-- Live Visual Behavior Preview (Inspired by Receipt Totals Appearance) -->
+                                    <div class="behavior-preview-section">
+                                          <div class="preview-header">
+                                                <span class="material-icons-outlined">visibility</span>
+                                                <span class="preview-title">معاينة سلوك الكاشير المباشر</span>
+                                          </div>
+
+                                          <div class="preview-cards-grid">
+                                                <!-- Scenario A: Sub-threshold Fast Checkout -->
+                                                <div class="preview-stat-card fast-checkout"
+                                                      [class.dimmed]="!enableThreshold()">
+                                                      <div class="stat-card-badge">
+                                                            <span class="material-icons-outlined">flash_on</span>
+                                                            <span>حفظ سريع بنقرة واحدة</span>
+                                                      </div>
+                                                      <div class="stat-card-condition">
+                                                            الفاتورة &le; <strong class="highlight-val">{{
+                                                                  enableThreshold() ? thresholdInput() : '---'
+                                                                  }}</strong> ج.م
+                                                      </div>
+                                                      <p class="stat-card-desc">
+                                                            عند الضغط على حفظ (F11/F12)، تُحفظ الفاتورة فوراً دون مقاطعة
+                                                            الكاشير بشاشة حساب المتبقي.
+                                                      </p>
+                                                </div>
+
+                                                <!-- Scenario B: Super-threshold Change Calculator -->
+                                                <div class="preview-stat-card change-calculator">
+                                                      <div class="stat-card-badge">
+                                                            <span class="material-icons-outlined">calculate</span>
+                                                            <span>حساب المتبقي تلقائياً</span>
+                                                      </div>
+                                                      <div class="stat-card-condition">
+                                                            <ng-container *ngIf="enableThreshold()">
+                                                                  الفاتورة &gt; <strong class="highlight-val">{{
+                                                                        thresholdInput() }}</strong> ج.م
+                                                            </ng-container>
+                                                            <ng-container *ngIf="!enableThreshold()">
+                                                                  جميع الفواتير النقدية
+                                                            </ng-container>
+                                                      </div>
+                                                      <p class="stat-card-desc">
+                                                            تظهر شاشة استلام النقدية تلقائياً لإدخال المدفوع وعرض
+                                                            المتبقي (صرف) بدقة لمنع الأخطاء الحسابية.
+                                                      </p>
+                                                </div>
+                                          </div>
+                                    </div>
+
+                              </div>
+                        </div>
+
+                  </div>
+
+                  <!-- Other tabs placeholder -->
+                  <div class="coming-soon-panel pos-panel-card" *ngIf="activeTab() !== 'PAYMENT'">
+                        <div class="coming-soon-content">
+                              <span class="material-icons-outlined soon-icon">construction</span>
+                              <h3 class="soon-title">قسم قيد التطوير</h3>
+                              <p class="soon-desc">
+                                    سيتم إضافة المزيد من الإعدادات المركزية (إعدادات الطابعات الحرارية، ضريبة القيمة
+                                    المضافة، وسلوك الباركود) قريباً عبر محرك الإعدادات الموحد.
+                              </p>
+                              <button type="button" class="btn-action-outline" (click)="activeTab.set('PAYMENT')">
+                                    العودة لإعدادات الدفع والمتبقي
+                              </button>
+                        </div>
+                  </div>
+
+            </main>
+      </div>
+
+      <!-- App Shared Navigation Sidebar (Docked on the Left) -->
       <app-sidebar [expanded]="sidebarVisible()" (toggle)="toggleSidebar()"></app-sidebar>
 </div>
